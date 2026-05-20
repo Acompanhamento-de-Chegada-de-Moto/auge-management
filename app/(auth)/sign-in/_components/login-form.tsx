@@ -33,7 +33,7 @@ export default function LoginForm() {
       await authClient.signIn.email({
         email: data.email,
         password: data.password,
-        callbackURL: `${process.env.NEXT_PUBLIC_BETTER_AUTH_URL}/`,
+        callbackURL: `${process.env.NEXT_PUBLIC_BETTER_AUTH_URL}/bdc`,
       });
     });
   };
