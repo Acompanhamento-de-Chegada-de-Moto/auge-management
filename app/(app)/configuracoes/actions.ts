@@ -1,11 +1,12 @@
 "use server";
 
+import { headers } from "next/headers";
 import { requireUser } from "@/app/data/require-user";
 import { prisma } from "@/lib/db";
+import { auth } from "@/lib/auth";
 import { createAuditLog, getAuditLogs } from "@/lib/data/audit-log";
 import { sanitizeForAudit } from "@/lib/utils";
 import type { AuditAction, EntityType } from "@/src/generated/prisma/client";
-import bcryptjs from "bcryptjs";
 
 export async function createUserAction(data: {
   name: string;
@@ -28,33 +29,18 @@ export async function createUserAction(data: {
       };
     }
 
-    const hashedPassword = await bcryptjs.hash(data.password, 10);
-
-    // Cria o usuário com role USER
-    const user = await prisma.user.create({
-      data: {
-        id: crypto.randomUUID(),
+    // Usa a API nativa do better-auth para criar o usuário corretamente
+    const result = await auth.api.signUpEmail({
+      body: {
         name: data.name,
         email: data.email,
-        emailVerified: true,
+        password: data.password,
         role: "USER",
-        createdAt: new Date(),
-        updatedAt: new Date(),
       },
+      headers: await headers(),
     });
 
-    // Cria a account com a senha hashed para o better-auth
-    await prisma.account.create({
-      data: {
-        id: crypto.randomUUID(),
-        accountId: data.email,
-        providerId: "credential",
-        userId: user.id,
-        password: hashedPassword,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-    });
+    const user = result.user;
 
     await createAuditLog({
       userId: admin.id,
