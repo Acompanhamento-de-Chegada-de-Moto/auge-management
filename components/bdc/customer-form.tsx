@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
@@ -26,9 +26,17 @@ const defaultValues: CustomerFormData = {
   dataEmplacamento: undefined,
 };
 
-export function CustomerForm() {
+interface CustomerFormProps {
+  initialData?: Partial<CustomerFormData>;
+  mode?: "create" | "edit";
+}
+
+export function CustomerForm({
+  initialData,
+  mode = "create",
+}: CustomerFormProps) {
   const router = useRouter();
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2>(mode === "edit" ? 2 : 1);
   const [sidebarData, setSidebarData] = useState<{
     found: boolean;
     modelo?: string;
@@ -37,8 +45,22 @@ export function CustomerForm() {
 
   const form = useForm<CustomerFormData>({
     resolver: zodResolver(customerSchema),
-    defaultValues,
+    defaultValues: {
+      ...defaultValues,
+      ...initialData,
+    },
   });
+
+  // Set sidebar data when editing
+  useEffect(() => {
+    if (mode === "edit" && initialData?.chassi) {
+      setSidebarData({
+        found: true,
+        modelo: initialData.modelo || undefined,
+        cidade: initialData.cidade || undefined,
+      });
+    }
+  }, [mode, initialData]);
 
   const handleSearchResult = (
     found: boolean,
@@ -68,8 +90,11 @@ export function CustomerForm() {
   };
 
   const handleSubmit = (data: CustomerFormData) => {
-    console.log("Formulário enviado:", data);
-    // Redireciona para a página do BDC após salvar
+    if (mode === "edit") {
+      console.log("Cliente atualizado:", data);
+    } else {
+      console.log("Formulário enviado:", data);
+    }
     router.push("/bdc");
   };
 

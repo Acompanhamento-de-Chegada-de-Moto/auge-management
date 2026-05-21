@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { CheckIcon, CopyIcon, PencilIcon, Trash2Icon } from "lucide-react";
 import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -11,129 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-const items = [
-  {
-    id: "1",
-    cliente: "João Silva",
-    vendedor: "Carlos Mendes",
-    cidade: "São Paulo",
-    modelo: "Honda Civic EXL",
-    chassi: "9BWHE21JX24060961",
-    faturamento: "R$ 142.900,00",
-    chegada: "Transportadora Sul",
-    dataChegada: "15/03/2025",
-    situacao: "Disponível",
-  },
-  {
-    id: "2",
-    cliente: "Maria Oliveira",
-    vendedor: "Ana Paula Costa",
-    cidade: "Rio de Janeiro",
-    modelo: "Toyota Corolla XEI",
-    chassi: "3VWFE21C4YM543210",
-    faturamento: "R$ 138.500,00",
-    chegada: "Transportadora Norte",
-    dataChegada: "18/03/2025",
-    situacao: "Reservado",
-  },
-  {
-    id: "3",
-    cliente: "Pedro Santos",
-    vendedor: "Carlos Mendes",
-    cidade: "Belo Horizonte",
-    modelo: "Jeep Compass Limited",
-    chassi: "1FTFW1EF7EKG12345",
-    faturamento: "R$ 185.000,00",
-    chegada: "Transportadora Sul",
-    dataChegada: "20/03/2025",
-    situacao: "Vendido",
-  },
-  {
-    id: "4",
-    cliente: "Fernanda Lima",
-    vendedor: "Roberto Almeida",
-    cidade: "Curitiba",
-    modelo: "Hyundai Creta Platinum",
-    chassi: "5NPEB4AC8BH123456",
-    faturamento: "R$ 128.700,00",
-    chegada: "Transportadora Centro",
-    dataChegada: "22/03/2025",
-    situacao: "Disponível",
-  },
-  {
-    id: "5",
-    cliente: "Lucas Pereira",
-    vendedor: "Ana Paula Costa",
-    cidade: "Porto Alegre",
-    modelo: "Volkswagen T-Cross Highline",
-    chassi: "WVGZZZ5NZAW123456",
-    faturamento: "R$ 152.300,00",
-    chegada: "Transportadora Sul",
-    dataChegada: "25/03/2025",
-    situacao: "Em Trânsito",
-  },
-  {
-    id: "6",
-    cliente: "Camila Rodrigues",
-    vendedor: "Roberto Almeida",
-    cidade: "Salvador",
-    modelo: "Chevrolet Tracker Premier",
-    chassi: "3GNDA13D76S123456",
-    faturamento: "R$ 119.900,00",
-    chegada: "Transportadora Nordeste",
-    dataChegada: "28/03/2025",
-    situacao: "Disponível",
-  },
-  {
-    id: "7",
-    cliente: "Rafael Souza",
-    vendedor: "Carlos Mendes",
-    cidade: "São Paulo",
-    modelo: "BMW 320i Sport",
-    chassi: "WBA3B1C51DF123456",
-    faturamento: "R$ 245.000,00",
-    chegada: "Transportadora Premium",
-    dataChegada: "01/04/2025",
-    situacao: "Reservado",
-  },
-  {
-    id: "8",
-    cliente: "Juliana Martins",
-    vendedor: "Ana Paula Costa",
-    cidade: "Campinas",
-    modelo: "Mercedes-Benz A200",
-    chassi: "WDD1770431J123456",
-    faturamento: "R$ 198.500,00",
-    chegada: "Transportadora Premium",
-    dataChegada: "05/04/2025",
-    situacao: "Disponível",
-  },
-  {
-    id: "9",
-    cliente: "Marcos Duarte",
-    vendedor: "Roberto Almeida",
-    cidade: "Brasília",
-    modelo: "Ford Bronco Wildtrak",
-    chassi: "1FMCU0F60LUA12345",
-    faturamento: "R$ 320.000,00",
-    chegada: "Transportadora Centro",
-    dataChegada: "08/04/2025",
-    situacao: "Vendido",
-  },
-  {
-    id: "10",
-    cliente: "Patrícia Gomes",
-    vendedor: "Carlos Mendes",
-    cidade: "Florianópolis",
-    modelo: "BYD Dolphin Plus",
-    chassi: "LGXCG4DG9N1234567",
-    faturamento: "R$ 168.900,00",
-    chegada: "Transportadora Sul",
-    dataChegada: "10/04/2025",
-    situacao: "Em Trânsito",
-  },
-];
+import { bdcItems } from "@/lib/bdc-data";
 
 function getSituacaoColor(situacao: string) {
   switch (situacao) {
@@ -151,6 +30,7 @@ function getSituacaoColor(situacao: string) {
 }
 
 const BDCTable = () => {
+  const router = useRouter();
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const handleCopy = useCallback((text: string, id: string) => {
@@ -159,6 +39,10 @@ const BDCTable = () => {
       setTimeout(() => setCopiedId(null), 2000);
     });
   }, []);
+
+  const handleEdit = (id: string) => {
+    router.push(`/bdc/cliente/editar?id=${id}`);
+  };
 
   return (
     <div className="w-full">
@@ -179,7 +63,7 @@ const BDCTable = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {items.map((item) => (
+            {bdcItems.map((item) => (
               <TableRow key={item.id}>
                 <TableCell className="font-medium">{item.cliente}</TableCell>
                 <TableCell>{item.vendedor}</TableCell>
@@ -224,6 +108,7 @@ const BDCTable = () => {
                       size="icon"
                       className="rounded-full"
                       aria-label={`editar-${item.id}`}
+                      onClick={() => handleEdit(item.id)}
                     >
                       <PencilIcon />
                     </Button>
