@@ -25,7 +25,7 @@ export const bdcItems: BDCItem[] = [
     chassi: "9BWHE21JX24060961",
     dataFaturamento: "10/03/2025",
     dataChegada: "15/03/2025",
-    situacao: "Disponível",
+    situacao: "Pendente",
   },
   {
     id: "2",
@@ -36,7 +36,7 @@ export const bdcItems: BDCItem[] = [
     chassi: "3VWFE21C4YM543210",
     dataFaturamento: "05/03/2025",
     dataChegada: "18/03/2025",
-    situacao: "Reservado",
+    situacao: "Em Emplacamento",
   },
   {
     id: "3",
@@ -47,7 +47,7 @@ export const bdcItems: BDCItem[] = [
     chassi: "1FTFW1EF7EKG12345",
     dataFaturamento: "01/03/2025",
     dataChegada: "20/03/2025",
-    situacao: "Vendido",
+    situacao: "Emplacado",
   },
   {
     id: "4",
@@ -58,7 +58,7 @@ export const bdcItems: BDCItem[] = [
     chassi: "5NPEB4AC8BH123456",
     dataFaturamento: "08/03/2025",
     dataChegada: "22/03/2025",
-    situacao: "Disponível",
+    situacao: "Pendente",
   },
   {
     id: "5",
@@ -69,7 +69,7 @@ export const bdcItems: BDCItem[] = [
     chassi: "WVGZZZ5NZAW123456",
     dataFaturamento: "02/03/2025",
     dataChegada: "25/03/2025",
-    situacao: "Em Trânsito",
+    situacao: "Pendente",
   },
   {
     id: "6",
@@ -80,7 +80,7 @@ export const bdcItems: BDCItem[] = [
     chassi: "3GNDA13D76S123456",
     dataFaturamento: "12/03/2025",
     dataChegada: "28/03/2025",
-    situacao: "Disponível",
+    situacao: "Pendente",
   },
   {
     id: "7",
@@ -91,7 +91,7 @@ export const bdcItems: BDCItem[] = [
     chassi: "WBA3B1C51DF123456",
     dataFaturamento: "15/03/2025",
     dataChegada: "01/04/2025",
-    situacao: "Reservado",
+    situacao: "Em Emplacamento",
   },
   {
     id: "8",
@@ -102,7 +102,7 @@ export const bdcItems: BDCItem[] = [
     chassi: "WDD1770431J123456",
     dataFaturamento: "18/03/2025",
     dataChegada: "05/04/2025",
-    situacao: "Disponível",
+    situacao: "Pendente",
   },
   {
     id: "9",
@@ -113,7 +113,7 @@ export const bdcItems: BDCItem[] = [
     chassi: "1FMCU0F60LUA12345",
     dataFaturamento: "20/03/2025",
     dataChegada: "08/04/2025",
-    situacao: "Vendido",
+    situacao: "Emplacado",
   },
   {
     id: "10",
@@ -124,7 +124,7 @@ export const bdcItems: BDCItem[] = [
     chassi: "LGXCG4DG9N1234567",
     dataFaturamento: "22/03/2025",
     dataChegada: "10/04/2025",
-    situacao: "Em Trânsito",
+    situacao: "Pendente",
   },
 ];
 
