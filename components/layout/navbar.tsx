@@ -13,6 +13,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 import { ModeToggle } from "@/components/mode-toggle";
+import { BreadcrumbNav } from "@/components/layout/breadcrumb-nav";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -29,13 +30,6 @@ const navigationData = [
   { title: "Home", href: "/" },
   { title: "BDC", href: "/bdc" },
   { title: "Logística", href: "/logistica" },
-];
-
-const filterPlaceholders = [
-  { title: "Todos", href: "#" },
-  { title: "Pendentes", href: "#" },
-  { title: "Concluídos", href: "#" },
-  { title: "Atrasados", href: "#" },
 ];
 
 const Navbar = () => {
@@ -202,23 +196,12 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* ─── Bottom Row (Toolbar) ─── */}
+        {/* ─── Bottom Row (Breadcrumb + Search) ─── */}
         <div className="flex items-center justify-between h-11 gap-4 border-t border-border/40">
-          {/* Filter placeholders — left */}
-          <nav className="hidden sm:flex items-center gap-5 overflow-x-auto">
-            {filterPlaceholders.map((filter) => (
-              <Link
-                key={filter.title}
-                href={filter.href}
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap"
-              >
-                {filter.title}
-              </Link>
-            ))}
-          </nav>
-
-          {/* Spacer for mobile so search stays right */}
-          <div className="sm:hidden" />
+          {/* Breadcrumb — left */}
+          <div className="hidden sm:flex items-center overflow-x-auto">
+            <BreadcrumbNav />
+          </div>
 
           {/* Search — right */}
           <div className="flex items-center gap-2">

@@ -75,3 +75,20 @@ export async function deleteClient(id: string) {
     where: { id },
   });
 }
+
+export async function searchClientsByName(name: string) {
+  return prisma.client.findMany({
+    where: {
+      name: {
+        contains: name,
+        mode: "insensitive",
+      },
+    },
+    include: {
+      motorcycles: true,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+}

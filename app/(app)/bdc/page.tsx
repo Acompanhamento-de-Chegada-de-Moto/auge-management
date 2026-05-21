@@ -4,6 +4,7 @@ import BDCTable from "@/components/shadcn-studio/table/bdc-table";
 import { Button } from "@/components/ui/button";
 import { PlusIcon } from "lucide-react";
 import { getClientsAction } from "./actions";
+import { SpreadsheetUploadDialog } from "@/components/bdc/spreadsheet-upload-dialog";
 
 export const metadata: Metadata = {
   title: "BDC",
@@ -18,12 +19,15 @@ export default async function BDCPage() {
         <p className="text-muted-foreground mt-2 mb-6">
           Acompanhamento de Clientes.
         </p>
-        <Button asChild>
-          <Link href="/bdc/cliente/novo">
-            <PlusIcon className="mr-2 size-4" />
-            Adicionar Cliente
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <SpreadsheetUploadDialog />
+          <Button asChild>
+            <Link href="/bdc/cliente/novo">
+              <PlusIcon className="mr-2 size-4" />
+              Adicionar Cliente
+            </Link>
+          </Button>
+        </div>
       </div>
       <BDCTable clients={clients} />
     </div>
