@@ -2,7 +2,7 @@
 
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, ArrowLeftIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
@@ -31,10 +31,11 @@ import type { UseFormReturn } from "react-hook-form";
 import type { CustomerFormData } from "@/validators/customer-schema";
 
 interface CustomerDataStepProps {
+  onBack: () => void;
   form: UseFormReturn<CustomerFormData>;
 }
 
-export function CustomerDataStep({ form }: CustomerDataStepProps) {
+export function CustomerDataStep({ form, onBack }: CustomerDataStepProps) {
   const motoChegou = form.watch("motoChegou");
   const statusRegistro = form.watch("statusRegistro");
 
@@ -231,7 +232,7 @@ export function CustomerDataStep({ form }: CustomerDataStepProps) {
           name="statusRegistro"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Status de Registro</FormLabel>
+              <FormLabel>Status de Emplacamento</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
@@ -240,8 +241,10 @@ export function CustomerDataStep({ form }: CustomerDataStepProps) {
                 </FormControl>
                 <SelectContent>
                   <SelectItem value="Pendente">Pendente</SelectItem>
-                  <SelectItem value="Em Registro">Em Registro</SelectItem>
-                  <SelectItem value="Registrado">Registrado</SelectItem>
+                  <SelectItem value="Em Emplacamento">
+                    Em Emplacamento
+                  </SelectItem>
+                  <SelectItem value="Emplacado">Emplacado</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -252,13 +255,13 @@ export function CustomerDataStep({ form }: CustomerDataStepProps) {
         {statusRegistro !== "Pendente" && (
           <FormField
             control={form.control}
-            name="dataRegistro"
+            name="dataEmplacamento"
             render={({ field }) => (
               <FormItem className="flex flex-col">
                 <FormLabel>
-                  {statusRegistro === "Em Registro"
-                    ? "Data Agendada para Registro"
-                    : "Data do Registro"}
+                  {statusRegistro === "Em Emplacamento"
+                    ? "Data Agendada para Emplacamento"
+                    : "Data do Emplacamento"}
                 </FormLabel>
                 <Popover>
                   <PopoverTrigger asChild>
@@ -297,7 +300,7 @@ export function CustomerDataStep({ form }: CustomerDataStepProps) {
         )}
       </div>
 
-      <div className="flex justify-end pt-4">
+      <div className="flex justify-between pt-4">
         <Button type="submit">Salvar</Button>
       </div>
     </div>

@@ -159,7 +159,7 @@ export function SidebarResumo({
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <FileText className="size-3" />
-                      <span>Status</span>
+                      <span>Status Emplacamento</span>
                     </div>
                     <Badge variant="outline" className="text-xs">
                       {statusRegistro}

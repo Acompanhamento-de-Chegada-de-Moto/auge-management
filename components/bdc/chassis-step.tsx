@@ -10,7 +10,7 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
-import { SearchIcon } from "lucide-react";
+import { SearchIcon, ScanBarcodeIcon } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
 import type { CustomerFormData } from "@/validators/customer-schema";
 
@@ -112,22 +112,36 @@ export function ChassisStep({ form, onSearchResult }: ChassisStepProps) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-md py-8">
+      <div className="mb-8 text-center">
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+          <ScanBarcodeIcon className="size-8 text-primary" />
+        </div>
+        <h2 className="text-xl font-semibold">Consultar Chassi</h2>
+        <p className="text-sm text-muted-foreground">
+          Digite o número do chassi para consultar na logística.
+        </p>
+      </div>
+
       <FormField
         control={form.control}
         name="chassi"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Chassi</FormLabel>
+            <FormLabel className="sr-only">Chassi</FormLabel>
             <div className="flex gap-2">
               <FormControl>
-                <Input placeholder="Digite o número do chassi" {...field} />
+                <Input
+                  placeholder="Ex: 9BWHE21JX24060961"
+                  {...field}
+                  className="h-11"
+                />
               </FormControl>
               <Button
                 type="button"
                 onClick={handleSearch}
                 disabled={isSearching}
-                className="shrink-0"
+                className="h-11 shrink-0"
               >
                 {isSearching ? (
                   <span className="animate-spin">⏳</span>

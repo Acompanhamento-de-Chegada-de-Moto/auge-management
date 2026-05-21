@@ -10,19 +10,20 @@ export const customerSchema = z
     dataFaturamento: z.date().optional(),
     motoChegou: z.boolean(),
     dataChegada: z.date().optional(),
-    statusRegistro: z.enum(["Pendente", "Em Registro", "Registrado"]),
-    dataRegistro: z.date().optional(),
+    statusRegistro: z.enum(["Pendente", "Em Emplacamento", "Emplacado"]),
+    dataEmplacamento: z.date().optional(),
   })
   .refine(
     (data) => {
-      if (data.statusRegistro !== "Pendente" && !data.dataRegistro) {
+      if (data.statusRegistro !== "Pendente" && !data.dataEmplacamento) {
         return false;
       }
       return true;
     },
     {
-      message: "Data do registro é obrigatória quando o status não é Pendente",
-      path: ["dataRegistro"],
+      message:
+        "Data do emplacamento é obrigatória quando o status não é Pendente",
+      path: ["dataEmplacamento"],
     },
   );
 

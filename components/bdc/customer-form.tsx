@@ -23,7 +23,7 @@ const defaultValues: CustomerFormData = {
   motoChegou: false,
   dataChegada: undefined,
   statusRegistro: "Pendente",
-  dataRegistro: undefined,
+  dataEmplacamento: undefined,
 };
 
 export function CustomerForm() {
@@ -50,6 +50,21 @@ export function CustomerForm() {
       cidade: data?.cidade,
     });
     setStep(2);
+  };
+
+  const handleBack = () => {
+    setStep(1);
+    form.setValue("chassi", "");
+    form.setValue("modelo", "");
+    form.setValue("cidade", "");
+    form.setValue("motoChegou", false);
+    form.setValue("cliente", "");
+    form.setValue("vendedor", "");
+    form.setValue("dataFaturamento", undefined);
+    form.setValue("dataChegada", undefined);
+    form.setValue("statusRegistro", "Pendente");
+    form.setValue("dataEmplacamento", undefined);
+    setSidebarData({ found: false });
   };
 
   const handleSubmit = (data: CustomerFormData) => {
@@ -98,21 +113,23 @@ export function CustomerForm() {
               <ChassisStep form={form} onSearchResult={handleSearchResult} />
             )}
 
-            {step === 2 && <CustomerDataStep form={form} />}
+            {step === 2 && <CustomerDataStep form={form} onBack={handleBack} />}
           </form>
         </Form>
       </div>
 
-      <SidebarResumo
-        chassi={watchedValues.chassi}
-        found={sidebarData.found}
-        modelo={watchedValues.modelo || sidebarData.modelo}
-        cidade={watchedValues.cidade || sidebarData.cidade}
-        cliente={watchedValues.cliente}
-        vendedor={watchedValues.vendedor}
-        statusRegistro={watchedValues.statusRegistro}
-        motoChegou={watchedValues.motoChegou}
-      />
+      {step === 2 && (
+        <SidebarResumo
+          chassi={watchedValues.chassi}
+          found={sidebarData.found}
+          modelo={watchedValues.modelo || sidebarData.modelo}
+          cidade={watchedValues.cidade || sidebarData.cidade}
+          cliente={watchedValues.cliente}
+          vendedor={watchedValues.vendedor}
+          statusRegistro={watchedValues.statusRegistro}
+          motoChegou={watchedValues.motoChegou}
+        />
+      )}
     </div>
   );
 }
