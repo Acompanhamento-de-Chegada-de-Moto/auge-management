@@ -89,6 +89,41 @@ enum RegistrationStatus {
   COMPLETED
 }
 
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  IMPORT
+  LOGIN
+  LOGOUT
+}
+
+enum EntityType {
+  CLIENT
+  MOTORCYCLE
+  USER
+  SPREADSHEET
+}
+
+model AuditLog {
+  id         String      @id @default(uuid())
+  userId     String?
+  userName   String?
+  action     AuditAction
+  entityType EntityType
+  entityId   String?
+  entityName String?
+  oldValue   Json?
+  newValue   Json?
+  metadata   Json?
+  createdAt  DateTime    @default(now())
+
+  @@index([createdAt])
+  @@index([entityType, entityId])
+  @@index([userId])
+  @@map("audit_log")
+}
+
 model Client {
   id          String    @id @default(uuid())
   name        String

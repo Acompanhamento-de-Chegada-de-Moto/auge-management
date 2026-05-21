@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
+import { auditLogoutAction } from "@/app/(app)/audit-actions";
 import { cn } from "@/lib/utils";
 
 const navigationData = [
@@ -49,6 +50,11 @@ const Navbar = () => {
   }, [handleScroll]);
 
   const handleSignOut = async () => {
+    try {
+      await auditLogoutAction();
+    } catch {
+      // Ignora erro de audit — logout deve sempre funcionar
+    }
     await authClient.signOut({
       fetchOptions: {
         onSuccess: () => router.push("/sign-in"),

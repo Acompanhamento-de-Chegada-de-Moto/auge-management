@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
+import { auditLoginAction } from "@/app/(auth)/sign-in/actions";
 import { type LoginInputType, loginSchema } from "@/validators/login-schema";
 
 export default function LoginForm() {
@@ -30,11 +31,19 @@ export default function LoginForm() {
 
   const onSubmit = async (data: LoginInputType) => {
     startEmailAndPasswordTransition(async () => {
-      await authClient.signIn.email({
+      const result = await authClient.signIn.email({
         email: data.email,
         password: data.password,
         callbackURL: `${process.env.NEXT_PUBLIC_BETTER_AUTH_URL}/bdc`,
       });
+
+      if (!result.error) {
+        try {
+          await auditLoginAction();
+        } catch {
+          // Ignora erro de audit — login já foi bem-sucedido
+        }
+      }
     });
   };
 

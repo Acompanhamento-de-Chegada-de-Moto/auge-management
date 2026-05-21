@@ -2,6 +2,9 @@
 
 import { requireUser } from "@/app/data/require-user";
 import { prisma } from "@/lib/db";
+import { createAuditLog, getAuditLogs } from "@/lib/data/audit-log";
+import { sanitizeForAudit } from "@/lib/utils";
+import type { AuditAction, EntityType } from "@/src/generated/prisma/client";
 import bcryptjs from "bcryptjs";
 
 export async function createUserAction(data: {
@@ -11,7 +14,7 @@ export async function createUserAction(data: {
 }) {
   try {
     // Verifica se quem chama é ADMIN
-    await requireUser();
+    const admin = await requireUser();
 
     // Verifica se o email já existe
     const existingUser = await prisma.user.findUnique({
@@ -28,7 +31,7 @@ export async function createUserAction(data: {
     const hashedPassword = await bcryptjs.hash(data.password, 10);
 
     // Cria o usuário com role USER
-    await prisma.user.create({
+    const user = await prisma.user.create({
       data: {
         id: crypto.randomUUID(),
         name: data.name,
@@ -46,13 +49,26 @@ export async function createUserAction(data: {
         id: crypto.randomUUID(),
         accountId: data.email,
         providerId: "credential",
-        userId: (await prisma.user.findUnique({
-          where: { email: data.email },
-        }))!.id,
+        userId: user.id,
         password: hashedPassword,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
+    });
+
+    await createAuditLog({
+      userId: admin.id,
+      userName: admin.name,
+      action: "CREATE",
+      entityType: "USER",
+      entityId: user.id,
+      entityName: user.name,
+      newValue: sanitizeForAudit({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      }),
     });
 
     return { success: true };
@@ -63,4 +79,16 @@ export async function createUserAction(data: {
       error: "Erro ao criar usuário. Tente novamente.",
     };
   }
+}
+
+export async function getAuditLogsAction(filters: {
+  page?: number;
+  limit?: number;
+  action?: AuditAction;
+  entityType?: EntityType;
+  startDate?: Date;
+  endDate?: Date;
+}) {
+  await requireUser();
+  return getAuditLogs(filters);
 }

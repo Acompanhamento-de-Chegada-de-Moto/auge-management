@@ -11,6 +11,8 @@ import {
   getMotorcycleByChassis,
   updateMotorcycleByChassis,
 } from "@/lib/data/motorcycle";
+import { createAuditLog } from "@/lib/data/audit-log";
+import { sanitizeForAudit } from "@/lib/utils";
 import { customerSchema } from "@/validators/customer-schema";
 
 function mapStatusRegistro(
@@ -30,7 +32,7 @@ export async function getClientByIdAction(id: string) {
 }
 
 export async function updateClientAction(clientId: string, formData: unknown) {
-  await requireAuth();
+  const user = await requireAuth();
 
   const parsed = customerSchema.safeParse(formData);
   if (!parsed.success) {
@@ -44,19 +46,43 @@ export async function updateClientAction(clientId: string, formData: unknown) {
   const data = parsed.data;
 
   try {
-    await dalUpdateClient(clientId, {
+    const oldClient = await dalGetClientById(clientId);
+    const updatedClient = await dalUpdateClient(clientId, {
       name: data.cliente,
       sellerName: data.vendedor,
       city: data.cidade,
       billingDate: data.dataFaturamento ?? null,
     });
 
+    await createAuditLog({
+      userId: user.id,
+      userName: user.name,
+      action: "UPDATE",
+      entityType: "CLIENT",
+      entityId: clientId,
+      entityName: updatedClient.name,
+      oldValue: sanitizeForAudit(oldClient),
+      newValue: sanitizeForAudit(updatedClient),
+    });
+
     if (data.chassi) {
-      await updateMotorcycleByChassis(data.chassi, {
+      const oldMoto = await getMotorcycleByChassis(data.chassi);
+      const updatedMoto = await updateMotorcycleByChassis(data.chassi, {
         model: data.modelo,
         arrivalDate: data.motoChegou ? data.dataChegada : null,
         registrationStatus: mapStatusRegistro(data.statusRegistro),
         registrationStatusDate: data.dataEmplacamento,
+      });
+
+      await createAuditLog({
+        userId: user.id,
+        userName: user.name,
+        action: "UPDATE",
+        entityType: "MOTORCYCLE",
+        entityId: oldMoto?.id ?? updatedMoto.id,
+        entityName: data.modelo,
+        oldValue: sanitizeForAudit(oldMoto),
+        newValue: sanitizeForAudit(updatedMoto),
       });
     }
 
