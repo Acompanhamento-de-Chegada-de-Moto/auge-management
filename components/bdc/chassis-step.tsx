@@ -1,17 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import type { UseFormReturn } from "react-hook-form";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
-  FormControl,
   FormField,
   FormItem,
   FormLabel,
+  FormControl,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { SearchIcon } from "lucide-react";
+import type { UseFormReturn } from "react-hook-form";
 import type { CustomerFormData } from "@/validators/customer-schema";
 
 const motosMock = [
@@ -69,10 +69,13 @@ const motosMock = [
 
 interface ChassisStepProps {
   form: UseFormReturn<CustomerFormData>;
-  onNext: () => void;
+  onSearchResult: (
+    found: boolean,
+    data?: { modelo: string; cidade: string },
+  ) => void;
 }
 
-export function ChassisStep({ form, onNext }: ChassisStepProps) {
+export function ChassisStep({ form, onSearchResult }: ChassisStepProps) {
   const [isSearching, setIsSearching] = useState(false);
 
   const handleSearch = async () => {
@@ -96,16 +99,16 @@ export function ChassisStep({ form, onNext }: ChassisStepProps) {
       form.setValue("modelo", found.modelo);
       form.setValue("cidade", found.cidade);
       form.setValue("motoChegou", true);
+      onSearchResult(true, { modelo: found.modelo, cidade: found.cidade });
     } else {
       // Se não encontrado, limpa os campos para preenchimento manual
       form.setValue("modelo", "");
       form.setValue("cidade", "");
       form.setValue("motoChegou", false);
+      onSearchResult(false);
     }
 
     setIsSearching(false);
-    // Avança para o Step 2 automaticamente
-    onNext();
   };
 
   return (

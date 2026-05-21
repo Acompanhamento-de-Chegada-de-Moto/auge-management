@@ -3,13 +3,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import { useRouter } from "next/navigation";
 import { Form } from "@/components/ui/form";
 import {
   customerSchema,
@@ -17,11 +11,7 @@ import {
 } from "@/validators/customer-schema";
 import { ChassisStep } from "./chassis-step";
 import { CustomerDataStep } from "./customer-data-step";
-
-interface CustomerDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}
+import { SidebarResumo } from "./sidebar-resumo";
 
 const defaultValues: CustomerFormData = {
   chassi: "",
@@ -36,49 +26,43 @@ const defaultValues: CustomerFormData = {
   dataRegistro: undefined,
 };
 
-export function CustomerDialog({ open, onOpenChange }: CustomerDialogProps) {
+export function CustomerForm() {
+  const router = useRouter();
   const [step, setStep] = useState<1 | 2>(1);
+  const [sidebarData, setSidebarData] = useState<{
+    found: boolean;
+    modelo?: string;
+    cidade?: string;
+  }>({ found: false });
 
   const form = useForm<CustomerFormData>({
     resolver: zodResolver(customerSchema),
     defaultValues,
   });
 
-  const handleNext = () => {
+  const handleSearchResult = (
+    found: boolean,
+    data?: { modelo: string; cidade: string },
+  ) => {
+    setSidebarData({
+      found,
+      modelo: data?.modelo,
+      cidade: data?.cidade,
+    });
     setStep(2);
-  };
-
-  const handleBack = () => {
-    setStep(1);
   };
 
   const handleSubmit = (data: CustomerFormData) => {
     console.log("Formulário enviado:", data);
-    onOpenChange(false);
-    form.reset(defaultValues);
-    setStep(1);
+    // Redireciona para a página do BDC após salvar
+    router.push("/bdc");
   };
 
-  const handleDialogClose = (open: boolean) => {
-    if (!open) {
-      form.reset(defaultValues);
-      setStep(1);
-    }
-    onOpenChange(open);
-  };
+  const watchedValues = form.watch();
 
   return (
-    <Dialog open={open} onOpenChange={handleDialogClose}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Cadastro de Cliente</DialogTitle>
-          <DialogDescription>
-            {step === 1
-              ? "Consulte o chassi da motocicleta na logística."
-              : "Preencha os dados do cliente."}
-          </DialogDescription>
-        </DialogHeader>
-
+    <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
+      <div className="flex-1">
         <div className="mb-6 flex items-center gap-2">
           <div
             className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${
@@ -110,12 +94,25 @@ export function CustomerDialog({ open, onOpenChange }: CustomerDialogProps) {
             onSubmit={form.handleSubmit(handleSubmit)}
             className="space-y-6"
           >
-            {step === 1 && <ChassisStep form={form} onNext={handleNext} />}
+            {step === 1 && (
+              <ChassisStep form={form} onSearchResult={handleSearchResult} />
+            )}
 
-            {step === 2 && <CustomerDataStep form={form} onBack={handleBack} />}
+            {step === 2 && <CustomerDataStep form={form} />}
           </form>
         </Form>
-      </DialogContent>
-    </Dialog>
+      </div>
+
+      <SidebarResumo
+        chassi={watchedValues.chassi}
+        found={sidebarData.found}
+        modelo={watchedValues.modelo || sidebarData.modelo}
+        cidade={watchedValues.cidade || sidebarData.cidade}
+        cliente={watchedValues.cliente}
+        vendedor={watchedValues.vendedor}
+        statusRegistro={watchedValues.statusRegistro}
+        motoChegou={watchedValues.motoChegou}
+      />
+    </div>
   );
 }

@@ -3,22 +3,15 @@
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CalendarIcon } from "lucide-react";
-import type { UseFormReturn } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -26,16 +19,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
+import {
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
 import { cn } from "@/lib/utils";
+import type { UseFormReturn } from "react-hook-form";
 import type { CustomerFormData } from "@/validators/customer-schema";
 
 interface CustomerDataStepProps {
   form: UseFormReturn<CustomerFormData>;
-  onBack: () => void;
 }
 
-export function CustomerDataStep({ form, onBack }: CustomerDataStepProps) {
+export function CustomerDataStep({ form }: CustomerDataStepProps) {
   const motoChegou = form.watch("motoChegou");
   const statusRegistro = form.watch("statusRegistro");
 
@@ -298,10 +297,7 @@ export function CustomerDataStep({ form, onBack }: CustomerDataStepProps) {
         )}
       </div>
 
-      <div className="flex justify-between pt-4">
-        <Button type="button" variant="outline" onClick={onBack}>
-          ← Voltar
-        </Button>
+      <div className="flex justify-end pt-4">
         <Button type="submit">Salvar</Button>
       </div>
     </div>
