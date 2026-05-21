@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { bdcItems } from "@/lib/bdc-data";
+import { bdcItems, getStatusChegada } from "@/lib/bdc-data";
 
 function getSituacaoColor(situacao: string) {
   switch (situacao) {
@@ -55,75 +55,82 @@ const BDCTable = () => {
               <TableHead>Cidade</TableHead>
               <TableHead>Modelo</TableHead>
               <TableHead>Chassi</TableHead>
-              <TableHead>Faturamento</TableHead>
-              <TableHead>Chegada</TableHead>
-              <TableHead>Data Chegada</TableHead>
+              <TableHead>Data Faturamento</TableHead>
+              <TableHead>Status Chegada</TableHead>
               <TableHead>Situação</TableHead>
               <TableHead className="w-0 pr-4 text-end">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {bdcItems.map((item) => (
-              <TableRow key={item.id}>
-                <TableCell className="font-medium">{item.cliente}</TableCell>
-                <TableCell>{item.vendedor}</TableCell>
-                <TableCell>{item.cidade}</TableCell>
-                <TableCell>{item.modelo}</TableCell>
-                <TableCell>
-                  <button
-                    type="button"
-                    onClick={() => handleCopy(item.chassi, item.id)}
-                    className="group inline-flex cursor-pointer items-center gap-1.5 font-mono text-xs transition-colors"
-                    title="Clique para copiar o chassi"
-                  >
-                    {copiedId === item.id ? (
-                      <>
-                        <CheckIcon className="size-3.5 text-green-600 dark:text-green-400" />
-                        <span className="text-green-600 dark:text-green-400">
-                          Copiado!
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <CopyIcon className="size-3.5 opacity-0 transition-opacity group-hover:opacity-100" />
-                        <span className="hover:underline">{item.chassi}</span>
-                      </>
-                    )}
-                  </button>
-                </TableCell>
-                <TableCell>{item.faturamento}</TableCell>
-                <TableCell>{item.chegada}</TableCell>
-                <TableCell>{item.dataChegada}</TableCell>
-                <TableCell>
-                  <span
-                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getSituacaoColor(item.situacao)}`}
-                  >
-                    {item.situacao}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  <div className="flex h-full items-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="rounded-full"
-                      aria-label={`editar-${item.id}`}
-                      onClick={() => handleEdit(item.id)}
+            {bdcItems.map((item) => {
+              const statusChegada = getStatusChegada(item.dataChegada);
+              return (
+                <TableRow key={item.id}>
+                  <TableCell className="font-medium">{item.cliente}</TableCell>
+                  <TableCell>{item.vendedor}</TableCell>
+                  <TableCell>{item.cidade}</TableCell>
+                  <TableCell>{item.modelo}</TableCell>
+                  <TableCell>
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(item.chassi, item.id)}
+                      className="group inline-flex cursor-pointer items-center gap-1.5 font-mono text-xs transition-colors"
+                      title="Clique para copiar o chassi"
                     >
-                      <PencilIcon />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="rounded-full"
-                      aria-label={`deletar-${item.id}`}
+                      {copiedId === item.id ? (
+                        <>
+                          <CheckIcon className="size-3.5 text-green-600 dark:text-green-400" />
+                          <span className="text-green-600 dark:text-green-400">
+                            Copiado!
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <CopyIcon className="size-3.5 opacity-0 transition-opacity group-hover:opacity-100" />
+                          <span className="hover:underline">{item.chassi}</span>
+                        </>
+                      )}
+                    </button>
+                  </TableCell>
+                  <TableCell>{item.dataFaturamento}</TableCell>
+                  <TableCell>
+                    <span
+                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusChegada.color}`}
                     >
-                      <Trash2Icon />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
+                      {statusChegada.label}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <span
+                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getSituacaoColor(item.situacao)}`}
+                    >
+                      {item.situacao}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex h-full items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="rounded-full"
+                        aria-label={`editar-${item.id}`}
+                        onClick={() => handleEdit(item.id)}
+                      >
+                        <PencilIcon />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="rounded-full"
+                        aria-label={`deletar-${item.id}`}
+                      >
+                        <Trash2Icon />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>

@@ -32,6 +32,9 @@ importers:
       date-fns:
         specifier: ^4.2.1
         version: 4.2.1
+      dayjs:
+        specifier: ^1.11.20
+        version: 1.11.20
       dotenv:
         specifier: ^17.4.2
         version: 17.4.2
@@ -1940,6 +1943,9 @@ packages:
 
   date-fns@4.2.1:
     resolution: {integrity: sha512-37RhSdxaG1suen6VDCza6rNrQfooyQh57HFVPwQGEq2QWliVLzPQZ8Oa017weOu+HZCnzI7N3Pf/wyoBKfEqrA==}
+
+  dayjs@1.11.20:
+    resolution: {integrity: sha512-YbwwqR/uYpeoP4pu043q+LTDLFBLApUP6VxRihdfNTqu4ubqMlGDLd6ErXhEgsyvY0K6nCs7nggYumAN+9uEuQ==}
 
   debug@4.4.3:
     resolution: {integrity: sha512-RGwwWnwQvkVfavKVt22FGLw+xYSdzARwm0ru6DhTVA3umU5hZc28V3kO4stgYryrTlLpuvgI9GiijltAjNbcqA==}
@@ -5137,6 +5143,8 @@ snapshots:
   data-uri-to-buffer@4.0.1: {}
 
   date-fns@4.2.1: {}
+
+  dayjs@1.11.20: {}
 
   debug@4.4.3:
     dependencies:

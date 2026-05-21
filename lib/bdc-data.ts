@@ -1,3 +1,8 @@
+import dayjs from "dayjs";
+import customParseFormat from "dayjs/plugin/customParseFormat";
+
+dayjs.extend(customParseFormat);
+
 export interface BDCItem {
   id: string;
   cliente: string;
@@ -5,8 +10,7 @@ export interface BDCItem {
   cidade: string;
   modelo: string;
   chassi: string;
-  faturamento: string;
-  chegada: string;
+  dataFaturamento: string;
   dataChegada: string;
   situacao: string;
 }
@@ -19,8 +23,7 @@ export const bdcItems: BDCItem[] = [
     cidade: "São Paulo",
     modelo: "Honda Civic EXL",
     chassi: "9BWHE21JX24060961",
-    faturamento: "R$ 142.900,00",
-    chegada: "Transportadora Sul",
+    dataFaturamento: "10/03/2025",
     dataChegada: "15/03/2025",
     situacao: "Disponível",
   },
@@ -31,8 +34,7 @@ export const bdcItems: BDCItem[] = [
     cidade: "Rio de Janeiro",
     modelo: "Toyota Corolla XEI",
     chassi: "3VWFE21C4YM543210",
-    faturamento: "R$ 138.500,00",
-    chegada: "Transportadora Norte",
+    dataFaturamento: "05/03/2025",
     dataChegada: "18/03/2025",
     situacao: "Reservado",
   },
@@ -43,8 +45,7 @@ export const bdcItems: BDCItem[] = [
     cidade: "Belo Horizonte",
     modelo: "Jeep Compass Limited",
     chassi: "1FTFW1EF7EKG12345",
-    faturamento: "R$ 185.000,00",
-    chegada: "Transportadora Sul",
+    dataFaturamento: "01/03/2025",
     dataChegada: "20/03/2025",
     situacao: "Vendido",
   },
@@ -55,8 +56,7 @@ export const bdcItems: BDCItem[] = [
     cidade: "Curitiba",
     modelo: "Hyundai Creta Platinum",
     chassi: "5NPEB4AC8BH123456",
-    faturamento: "R$ 128.700,00",
-    chegada: "Transportadora Centro",
+    dataFaturamento: "08/03/2025",
     dataChegada: "22/03/2025",
     situacao: "Disponível",
   },
@@ -67,8 +67,7 @@ export const bdcItems: BDCItem[] = [
     cidade: "Porto Alegre",
     modelo: "Volkswagen T-Cross Highline",
     chassi: "WVGZZZ5NZAW123456",
-    faturamento: "R$ 152.300,00",
-    chegada: "Transportadora Sul",
+    dataFaturamento: "02/03/2025",
     dataChegada: "25/03/2025",
     situacao: "Em Trânsito",
   },
@@ -79,8 +78,7 @@ export const bdcItems: BDCItem[] = [
     cidade: "Salvador",
     modelo: "Chevrolet Tracker Premier",
     chassi: "3GNDA13D76S123456",
-    faturamento: "R$ 119.900,00",
-    chegada: "Transportadora Nordeste",
+    dataFaturamento: "12/03/2025",
     dataChegada: "28/03/2025",
     situacao: "Disponível",
   },
@@ -91,8 +89,7 @@ export const bdcItems: BDCItem[] = [
     cidade: "São Paulo",
     modelo: "BMW 320i Sport",
     chassi: "WBA3B1C51DF123456",
-    faturamento: "R$ 245.000,00",
-    chegada: "Transportadora Premium",
+    dataFaturamento: "15/03/2025",
     dataChegada: "01/04/2025",
     situacao: "Reservado",
   },
@@ -103,8 +100,7 @@ export const bdcItems: BDCItem[] = [
     cidade: "Campinas",
     modelo: "Mercedes-Benz A200",
     chassi: "WDD1770431J123456",
-    faturamento: "R$ 198.500,00",
-    chegada: "Transportadora Premium",
+    dataFaturamento: "18/03/2025",
     dataChegada: "05/04/2025",
     situacao: "Disponível",
   },
@@ -115,8 +111,7 @@ export const bdcItems: BDCItem[] = [
     cidade: "Brasília",
     modelo: "Ford Bronco Wildtrak",
     chassi: "1FMCU0F60LUA12345",
-    faturamento: "R$ 320.000,00",
-    chegada: "Transportadora Centro",
+    dataFaturamento: "20/03/2025",
     dataChegada: "08/04/2025",
     situacao: "Vendido",
   },
@@ -127,9 +122,26 @@ export const bdcItems: BDCItem[] = [
     cidade: "Florianópolis",
     modelo: "BYD Dolphin Plus",
     chassi: "LGXCG4DG9N1234567",
-    faturamento: "R$ 168.900,00",
-    chegada: "Transportadora Sul",
+    dataFaturamento: "22/03/2025",
     dataChegada: "10/04/2025",
     situacao: "Em Trânsito",
   },
 ];
+
+export function getStatusChegada(dataChegada: string) {
+  const hoje = dayjs().startOf("day");
+  const chegada = dayjs(dataChegada, "DD/MM/YYYY").startOf("day");
+
+  if (chegada.isBefore(hoje) || chegada.isSame(hoje, "day")) {
+    return {
+      label: "Chegou",
+      color:
+        "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+    };
+  }
+
+  return {
+    label: "Não Chegou",
+    color: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
+  };
+}
