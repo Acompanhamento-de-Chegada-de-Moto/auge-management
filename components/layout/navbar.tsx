@@ -149,7 +149,7 @@ const Navbar = () => {
                   </div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
-                    onClick={() => router.push("/settings")}
+                    onClick={() => router.push("/configuracoes")}
                     className="cursor-pointer"
                   >
                     <Settings className="mr-2 size-4" />
