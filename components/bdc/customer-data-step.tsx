@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CalendarIcon, ArrowLeftIcon } from "lucide-react";
@@ -37,7 +38,16 @@ interface CustomerDataStepProps {
 
 export function CustomerDataStep({ form, onBack }: CustomerDataStepProps) {
   const motoChegou = form.watch("motoChegou");
-  const statusRegistro = form.watch("statusRegistro");
+  const [statusRegistro, setStatusRegistro] = useState(
+    form.getValues("statusRegistro"),
+  );
+
+  // Monitora mudanças no status via react-hook-form
+  form.watch((value, { name }) => {
+    if (name === "statusRegistro" && value.statusRegistro) {
+      setStatusRegistro(value.statusRegistro);
+    }
+  });
 
   return (
     <div className="space-y-6">
@@ -233,7 +243,11 @@ export function CustomerDataStep({ form, onBack }: CustomerDataStepProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Status de Emplacamento</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select
+                onValueChange={field.onChange}
+                defaultValue={field.value}
+                key={`select-${field.value}`}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o status" />
@@ -301,6 +315,10 @@ export function CustomerDataStep({ form, onBack }: CustomerDataStepProps) {
       </div>
 
       <div className="flex justify-between pt-4">
+        <Button type="button" variant="outline" onClick={onBack}>
+          <ArrowLeftIcon className="mr-2 size-4" />
+          Voltar
+        </Button>
         <Button type="submit">Salvar</Button>
       </div>
     </div>
