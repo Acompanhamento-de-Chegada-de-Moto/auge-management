@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { requireUser } from "@/app/data/require-user";
 import { prisma } from "@/lib/db";
 import { CreateUserForm } from "./_components/create-user-form";
@@ -18,6 +19,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+
+export const metadata: Metadata = {
+  title: "Configurações",
+};
 
 export default async function ConfiguracoesPage() {
   await requireUser();

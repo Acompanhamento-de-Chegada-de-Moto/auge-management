@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { CustomerForm } from "@/components/bdc/customer-form";
 import {
   Breadcrumb,
@@ -7,6 +8,10 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+
+export const metadata: Metadata = {
+  title: "Novo Cliente",
+};
 
 export default function NovoClientePage() {
   return (

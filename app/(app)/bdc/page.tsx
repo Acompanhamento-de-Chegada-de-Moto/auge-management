@@ -1,7 +1,12 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import BDCTable from "@/components/shadcn-studio/table/bdc-table";
 import { Button } from "@/components/ui/button";
 import { PlusIcon } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "BDC",
+};
 
 export default function BDCPage() {
   return (
