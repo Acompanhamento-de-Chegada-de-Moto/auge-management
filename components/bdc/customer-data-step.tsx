@@ -32,8 +32,8 @@ import type { UseFormReturn } from "react-hook-form";
 import type { CustomerFormData } from "@/validators/customer-schema";
 
 interface CustomerDataStepProps {
-  onBack: () => void;
   form: UseFormReturn<CustomerFormData>;
+  onBack?: () => void;
 }
 
 export function CustomerDataStep({ form, onBack }: CustomerDataStepProps) {
@@ -314,11 +314,13 @@ export function CustomerDataStep({ form, onBack }: CustomerDataStepProps) {
         )}
       </div>
 
-      <div className="flex justify-between pt-4">
-        <Button type="button" variant="outline" onClick={onBack}>
-          <ArrowLeftIcon className="mr-2 size-4" />
-          Voltar
-        </Button>
+      <div className="flex justify-end gap-2 pt-4">
+        {onBack && (
+          <Button type="button" variant="outline" onClick={onBack}>
+            <ArrowLeftIcon className="mr-2 size-4" />
+            Voltar
+          </Button>
+        )}
         <Button type="submit">Salvar</Button>
       </div>
     </div>

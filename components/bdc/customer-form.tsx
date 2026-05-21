@@ -99,51 +99,60 @@ export function CustomerForm({
   };
 
   const watchedValues = form.watch();
+  const isEditMode = mode === "edit";
+  const showSidebar = isEditMode || step === 2;
 
   return (
     <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
       <div className="flex-1">
-        <div className="mb-6 flex items-center gap-2">
-          <div
-            className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${
-              step === 1
-                ? "bg-primary text-primary-foreground"
-                : "bg-primary/20 text-primary"
-            }`}
-          >
-            1
+        {!isEditMode && (
+          <div className="mb-6 flex items-center gap-2">
+            <div
+              className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${
+                step === 1
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-primary/20 text-primary"
+              }`}
+            >
+              1
+            </div>
+            <div
+              className={`h-0.5 w-8 ${
+                step === 2 ? "bg-primary" : "bg-muted-foreground/30"
+              }`}
+            />
+            <div
+              className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${
+                step === 2
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground"
+              }`}
+            >
+              2
+            </div>
           </div>
-          <div
-            className={`h-0.5 w-8 ${
-              step === 2 ? "bg-primary" : "bg-muted-foreground/30"
-            }`}
-          />
-          <div
-            className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${
-              step === 2
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground"
-            }`}
-          >
-            2
-          </div>
-        </div>
+        )}
 
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(handleSubmit)}
             className="space-y-6"
           >
-            {step === 1 && (
+            {!isEditMode && step === 1 && (
               <ChassisStep form={form} onSearchResult={handleSearchResult} />
             )}
 
-            {step === 2 && <CustomerDataStep form={form} onBack={handleBack} />}
+            {(isEditMode || step === 2) && (
+              <CustomerDataStep
+                form={form}
+                onBack={!isEditMode ? handleBack : undefined}
+              />
+            )}
           </form>
         </Form>
       </div>
 
-      {step === 2 && (
+      {showSidebar && (
         <SidebarResumo
           chassi={watchedValues.chassi}
           found={sidebarData.found}
