@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
 import { Form } from "@/components/ui/form";
 import {
   customerSchema,
@@ -29,18 +28,21 @@ const defaultValues: CustomerFormData = {
 interface CustomerFormProps {
   initialData?: Partial<CustomerFormData>;
   mode?: "create" | "edit";
+  action: (data: unknown) => Promise<unknown>;
 }
 
 export function CustomerForm({
   initialData,
   mode = "create",
+  action,
 }: CustomerFormProps) {
-  const router = useRouter();
   const [step, setStep] = useState<1 | 2>(mode === "edit" ? 2 : 1);
+  const [isPending, startTransition] = useTransition();
   const [sidebarData, setSidebarData] = useState<{
     found: boolean;
     modelo?: string;
     cidade?: string;
+    arrivalDate?: Date | null;
   }>({ found: false });
 
   const form = useForm<CustomerFormData>({
@@ -58,18 +60,20 @@ export function CustomerForm({
         found: true,
         modelo: initialData.modelo || undefined,
         cidade: initialData.cidade || undefined,
+        arrivalDate: initialData.dataChegada,
       });
     }
   }, [mode, initialData]);
 
   const handleSearchResult = (
     found: boolean,
-    data?: { modelo: string; cidade: string },
+    data?: { modelo: string; cidade: string; arrivalDate?: Date | null },
   ) => {
     setSidebarData({
       found,
       modelo: data?.modelo,
       cidade: data?.cidade,
+      arrivalDate: data?.arrivalDate,
     });
     setStep(2);
   };
@@ -90,12 +94,9 @@ export function CustomerForm({
   };
 
   const handleSubmit = (data: CustomerFormData) => {
-    if (mode === "edit") {
-      console.log("Cliente atualizado:", data);
-    } else {
-      console.log("Formulário enviado:", data);
-    }
-    router.push("/bdc");
+    startTransition(async () => {
+      await action(data);
+    });
   };
 
   const watchedValues = form.watch();
@@ -162,6 +163,7 @@ export function CustomerForm({
           vendedor={watchedValues.vendedor}
           statusRegistro={watchedValues.statusRegistro}
           motoChegou={watchedValues.motoChegou}
+          arrivalDate={sidebarData.arrivalDate}
         />
       )}
     </div>

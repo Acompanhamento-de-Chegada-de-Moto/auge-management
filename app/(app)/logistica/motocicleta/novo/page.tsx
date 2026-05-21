@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { CustomerForm } from "@/components/bdc/customer-form";
+import { MotorcycleForm } from "@/components/logistica/motorcycle-form";
+import { createMotorcycleAction } from "./actions";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -8,13 +9,12 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { createClientAction } from "./actions";
 
 export const metadata: Metadata = {
-  title: "Novo Cliente",
+  title: "Nova Motocicleta",
 };
 
-export default function NovoClientePage() {
+export default function NovaMotocicletaPage() {
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <Breadcrumb className="mb-6">
@@ -24,23 +24,23 @@ export default function NovoClientePage() {
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbLink href="/bdc">BDC</BreadcrumbLink>
+            <BreadcrumbLink href="/logistica">Logística</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbPage>Novo Cliente</BreadcrumbPage>
+            <BreadcrumbPage>Nova Motocicleta</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
 
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">Cadastro de Cliente</h1>
+        <h1 className="text-2xl font-bold">Cadastro de Motocicleta</h1>
         <p className="text-muted-foreground">
-          Consulte o chassi e preencha os dados do cliente.
+          Cadastre uma nova motocicleta no estoque.
         </p>
       </div>
 
-      <CustomerForm action={createClientAction} />
+      <MotorcycleForm action={createMotorcycleAction} />
     </div>
   );
 }

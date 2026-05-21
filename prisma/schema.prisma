@@ -82,3 +82,45 @@ model Verification {
   @@index([identifier])
   @@map("verification")
 }
+
+enum RegistrationStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+}
+
+model Client {
+  id          String    @id @default(uuid())
+  name        String
+  sellerName  String
+  city        String
+  billingDate DateTime?
+
+  motorcycles Motorcycle[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("client")
+}
+
+model Motorcycle {
+  id     String @id @default(uuid())
+  chassis String @unique
+  model   String
+
+  arrivalDate DateTime?
+
+  registrationStatus     RegistrationStatus @default(PENDING)
+  registrationStatusDate DateTime?
+
+  clientId String?
+  client   Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([createdAt])
+  @@index([updatedAt])
+  @@map("motorcycle")
+}

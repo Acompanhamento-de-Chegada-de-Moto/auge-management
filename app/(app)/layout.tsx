@@ -1,10 +1,13 @@
+import { requireAuth } from "@/app/data/require-user";
 import Navbar from "@/components/layout/navbar";
 
-export default function AppLayout({
+export default async function AppLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  await requireAuth();
+
   return (
     <div className="flex flex-col min-h-full">
       <Navbar />

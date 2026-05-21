@@ -12,12 +12,12 @@ export type User = {
   role: string;
 };
 
-export const requireUser = cache(async (): Promise<User> => {
+export const requireAuth = cache(async (): Promise<User> => {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
 
-  if (!session || session.user.role !== "ADMIN") {
+  if (!session) {
     redirect("/sign-in");
   }
 
@@ -27,4 +27,14 @@ export const requireUser = cache(async (): Promise<User> => {
     email: session.user.email,
     role: session.user.role,
   };
+});
+
+export const requireUser = cache(async (): Promise<User> => {
+  const user = await requireAuth();
+
+  if (user.role !== "ADMIN") {
+    redirect("/bdc");
+  }
+
+  return user;
 });

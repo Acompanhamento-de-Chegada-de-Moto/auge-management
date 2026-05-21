@@ -6,7 +6,11 @@
 
 ## Visão Geral
 
-Sistema de gerenciamento de concessionária de motocicletas. Módulo principal atual: **BDC** (Business Development Center) — cadastro e acompanhamento de clientes e status de emplacamento de veículos.
+Sistema de gerenciamento de concessionária de motocicletas. Módulos atuais:
+
+- **BDC** (Business Development Center) — cadastro e acompanhamento de clientes e status de emplacamento de veículos.
+- **Logística** — controle de motocicletas em estoque e em trânsito.
+- **Configurações** — gerenciamento de usuários (apenas ADMIN).
 
 ---
 
@@ -34,44 +38,69 @@ Sistema de gerenciamento de concessionária de motocicletas. Módulo principal a
 
 ```
 app/
-  (app)/                    # Rotas autenticadas (com Navbar)
+  (app)/                    # Rotas autenticadas (protegidas por requireAuth)
     bdc/
-      page.tsx              # Dashboard com tabela BDC
+      page.tsx              # Dashboard com tabela BDC (dados reais)
+      actions.ts            # Server Actions: getClients, deleteClient, searchChassis
       cliente/
         novo/
           page.tsx          # Cadastro de cliente (2 steps)
+          actions.ts        # Server Action: createClient
         editar/
           page.tsx          # Edição de cliente (form direto, sem stepper)
-    logistics/
-      page.tsx              # Placeholder
-  (auth)/                   # Rotas públicas (login/registro)
+          actions.ts        # Server Action: updateClient
+          _components/
+            editar-cliente-content.tsx
+    logistica/
+      page.tsx              # Controle de motocicletas (tabela real)
+      actions.ts            # Server Actions: getMotorcycles, deleteMotorcycle
+      motocicleta/
+        novo/
+          page.tsx          # Cadastro de motocicleta
+          actions.ts        # Server Action: createMotorcycle
+        editar/
+          page.tsx          # Edição de motocicleta
+          actions.ts        # Server Action: updateMotorcycle
+    configuracoes/
+      page.tsx              # Gerenciar usuários
+      actions.ts            # Server Action: createUser
+  (auth)/                   # Rotas públicas (sem proteção)
     sign-in/
     sign-up/
   api/auth/[...all]/        # Better Auth API routes
-  data/require-user.ts      # Guard server-side (requer ADMIN)
+  data/require-user.ts      # Guards: requireAuth (qualquer logado) + requireUser (ADMIN)
 
 components/
   bdc/                      # Componentes de domínio BDC
-    chassis-step.tsx
-    customer-data-step.tsx
-    customer-form.tsx
-    sidebar-resumo.tsx
+    chassis-step.tsx        # Step 1: consulta chassi no banco
+    customer-data-step.tsx  # Step 2: dados do cliente
+    customer-form.tsx       # Wrapper com stepper (create) ou direto (edit)
+    sidebar-resumo.tsx      # Sidebar colapsável com status da moto
+  logistica/                # Componentes de domínio Logística
+    motorcycle-table.tsx    # Tabela de motos
+    motorcycle-form.tsx     # Form de cadastro de moto
+    motorcycle-edit-form.tsx # Form de edição de moto (chassi editável)
   layout/                   # Navbar, Header
   shadcn-studio/table/      # Tabela customizada
   ui/                       # shadcn/ui components (NEVER edit directly)
 
 lib/
-  bdc-data.ts               # Mock data + helper getStatusChegada()
+  data/                     # DAL — Data Access Layer
+    client.ts               # CRUD Client (Prisma)
+    motorcycle.ts          # CRUD Motorcycle (Prisma)
+  bdc-data.ts               # Helpers: getStatusChegada(), mapRegistrationStatusLabel(), getSituacaoColor()
   db.ts                     # Prisma client
   auth.ts                   # Better Auth server config
   auth-client.ts            # Better Auth client
 
 validators/
   customer-schema.ts        # Zod schema do formulário BDC
+  motorcycle-schema.ts      # Zod schema do formulário Logística
   login-schema.ts
+  create-user-schema.ts
 
 prisma/
-  schema.prisma             # Schema do banco
+  schema.prisma             # Schema do banco (User, Session, Account, Verification, Client, Motorcycle)
 
 ```
 
@@ -104,23 +133,101 @@ prisma/
 
 ---
 
+## Arquitetura — Server Actions + DAL
+
+O projeto segue a arquitetura recomendada pelo Next.js: **Server Actions** na camada de UI + **DAL** (Data Access Layer) isolada.
+
+```
+Página (Server Component)
+  ↓ chama
+Server Action (app/**/actions.ts)
+  → valida auth (requireAuth/requireUser)
+  → valida input (Zod)
+  ↓ chama
+DAL (lib/data/*.ts)
+  → executa queries Prisma
+```
+
+**Regra**: `lib/data/*.ts` nunca faz auth. As Server Actions fazem auth + validação + chamam o DAL.
+
+---
+
+## Proteção de Rotas
+
+| Rota | Acesso | Guard |
+|------|--------|-------|
+| `/` | Público | — |
+| `/sign-in`, `/sign-up` | Público | — |
+| `/bdc`, `/bdc/**`, `/logistica`, `/logistica/**` | Login | `requireAuth` via `app/(app)/layout.tsx` |
+| `/configuracoes` | ADMIN | `requireAuth` (layout) + `requireUser` (página) |
+
+### Guards (`app/data/require-user.ts`)
+
+- **`requireAuth()`** — cache, verifica sessão ativa (qualquer role). Se não logado → `redirect("/sign-in")`.
+- **`requireUser()`** — chama `requireAuth()` internamente e depois exige `role === "ADMIN"`. Se não for admin → `redirect("/bdc")`.
+
+---
+
+## Schema Prisma
+
+```prisma
+enum UserRole { USER, ADMIN }
+enum RegistrationStatus { PENDING, IN_PROGRESS, COMPLETED }
+
+model User { ... }           // better-auth
+model Session { ... }        // better-auth
+model Account { ... }        // better-auth
+model Verification { ... }   // better-auth
+
+model Client {
+  id          String    @id @default(uuid())
+  name        String
+  sellerName  String
+  city        String
+  billingDate DateTime?
+  motorcycles Motorcycle[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Motorcycle {
+  id                     String @id @default(uuid())
+  chassis                String @unique
+  model                  String
+  arrivalDate            DateTime?
+  registrationStatus     RegistrationStatus @default(PENDING)
+  registrationStatusDate DateTime?
+  clientId               String?
+  client                 Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+}
+```
+
+**Regras importantes:**
+- Um `Client` pode ter 0 ou N `motorcycles`.
+- Uma `Motorcycle` pode existir sem `clientId` (estoque/logística).
+- `arrivalDate` é opcional — moto cadastrada sem data = "Em Trânsito".
+
+---
+
 ## Regras de Negócio — BDC
 
 ### Cadastro de Cliente (`/bdc/cliente/novo`)
 **Fluxo em 2 steps:**
-1. **Step 1 — Consulta de Chassi**: Digita chassi, clica "Consultar". Sistema verifica em mock de logística (`lib/bdc-data.ts`).
-   - **Encontrado**: preenche Modelo e Cidade automaticamente, seta `motoChegou = true`, avança para Step 2.
-   - **Não encontrado**: avança para Step 2 com chassi preenchido (readonly), resto manual.
+1. **Step 1 — Consulta de Chassi**: Digita chassi, clica "Consultar". Sistema busca no banco (`lib/data/motorcycle.ts`).
+   - **Encontrada**: preenche Modelo, marca `motoChegou` se tiver `arrivalDate`, avança Step 2.
+   - **Não encontrada**: avança Step 2 com chassi preenchido, resto manual.
 2. **Step 2 — Dados do Cliente**: Campos disponíveis:
    - Cliente, Vendedor, Cidade, Modelo, Chassi (readonly)
    - **Data de Faturamento** (DatePicker shadcn)
    - **Chegada na Loja**: Switch "Moto chegou?" + DatePicker (desabilitado se switch = OFF)
    - **Status de Emplacamento**: Select (Pendente / Em Emplacamento / Emplacado)
      - Se diferente de "Pendente": aparece DatePicker para data do emplacamento
-   - Ações: "Voltar" (limpa tudo, volta Step 1) ou "Salvar" (console.log + redirect `/bdc`)
+   - Ações: "Voltar" (limpa tudo, volta Step 1) ou "Salvar" (cria Client + Motorcycle no banco)
 
 ### Edição de Cliente (`/bdc/cliente/editar?id={id}`)
-- **Sem stepper**. Formulário do Step 2 é exibido direto com dados preenchidos.
+- **Sem stepper**. Formulário do Step 2 é exibido direto com dados preenchidos do banco.
 - Sidebar de resumo sempre visível.
 - Apenas botão "Salvar" (sem "Voltar").
 - Breadcrumb: Home > BDC > Editar Cliente
@@ -128,22 +235,59 @@ prisma/
 ### Tabela BDC (`/bdc`)
 Colunas: Cliente | Vendedor | Cidade | Modelo | Chassi | Data Faturamento | Status Chegada | Situação | Ações
 
-- **Data Faturamento**: data em que o veículo foi faturado na concessionária.
-- **Status Chegada**: calculado via Day.js comparando `dataChegada` com hoje:
+- **Uma linha por moto** (cliente pode ter várias motos).
+- **Data Faturamento**: vinda do `Client.billingDate`.
+- **Status Chegada**: calculado via `dayjs` comparando `motorcycle.arrivalDate` com hoje:
   - `<= hoje` → badge verde "Chegou"
-  - `> hoje` → badge vermelho "Não Chegou"
-- **Situação**: status de emplacamento (Pendente / Em Emplacamento / Emplacado)
-  - Pendente: 🟡 amarelo
-  - Em Emplacamento: 🔵 azul
-  - Emplacado: 🟢 verde
-- Botão editar (lápis) redireciona para `/bdc/cliente/editar?id={id}`
+  - `> hoje` ou `null` → badge vermelho "Não Chegou"
+- **Situação**: `motorcycle.registrationStatus` mapeado para labels:
+  - `PENDING` → "Pendente" (amarelo)
+  - `IN_PROGRESS` → "Em Emplacamento" (azul)
+  - `COMPLETED` → "Emplacado" (verde)
+- Botão editar redireciona para `/bdc/cliente/editar?id={clientId}`
 
 ---
 
-## Schema do Formulário (Zod)
+## Regras de Negócio — Logística
 
-Arquivo: `validators/customer-schema.ts`
+### Listagem (`/logistica`)
+Tabela: Modelo | Chassi | Data Chegada | Status | Ações
 
+- **Data Chegada**: exibe `—` se `arrivalDate` é `null` (moto em trânsito, sem previsão).
+- **Status**:
+  - `arrivalDate <= hoje` → badge verde "Chegou"
+  - `arrivalDate > hoje` → badge âmbar "Em Trânsito"
+  - `arrivalDate = null` → badge âmbar "Em Trânsito"
+- Ações: editar (`/logistica/motocicleta/editar?id={id}`), excluir.
+
+### Cadastro (`/logistica/motocicleta/novo`)
+- Form simples (sem stepper): Chassi, Modelo, Data de Chegada (opcional).
+- Data de chegada vazia = moto cadastrada "Em Trânsito".
+- Salva no banco via DAL + redirect `/logistica`.
+
+### Edição (`/logistica/motocicleta/editar?id={id}`)
+- Form: Chassi (editável!), Modelo, Data de Chegada.
+- **Chassi editável**: verifica duplicata no banco antes de salvar (não pode repetir em outra moto).
+- Atualiza via DAL + redirect `/logistica`.
+
+---
+
+## SidebarResumo — Status do Chassi
+
+Regra do badge no sidebar (cadastro/edição de cliente):
+
+| Condição | Badge | Texto |
+|----------|-------|-------|
+| Moto não encontrada no banco | 🔴 vermelho | **Não Encontrado** |
+| Moto encontrada + `arrivalDate = null` | 🟡 âmbar | **Sem Previsão** |
+| Moto encontrada + `arrivalDate > hoje` | 🟢 verde | **Na Logística** |
+| Moto encontrada + `arrivalDate <= hoje` | 🔵 azul | **Chegou** |
+
+---
+
+## Schema dos Formulários (Zod)
+
+### BDC — `validators/customer-schema.ts`
 ```typescript
 chassi: string (min 1)
 cliente: string (min 1)
@@ -156,45 +300,44 @@ dataChegada: Date (optional)
 statusRegistro: enum ["Pendente", "Em Emplacamento", "Emplacado"]
 dataEmplacamento: Date (optional)
 ```
-
 **Refinement**: se `statusRegistro !== "Pendente"`, `dataEmplacamento` é obrigatória.
+
+### Logística — `validators/motorcycle-schema.ts`
+```typescript
+chassis: string (min 1)
+model: string (min 1)
+arrivalDate: Date (optional)
+```
 
 ---
 
 ## Componentes Customizados Principais
 
 ### `CustomerForm`
-- Props: `initialData?: Partial<CustomerFormData>`, `mode?: "create" | "edit"`
-- Modo create: mostra stepper 1→2, Step 1 = ChassisStep, Step 2 = CustomerDataStep
+- Props: `initialData?: Partial<CustomerFormData>`, `mode?: "create" | "edit"`, `action: (data) => Promise<unknown>`
+- Modo create: stepper 1→2, Step 1 = ChassisStep (busca no banco), Step 2 = CustomerDataStep
 - Modo edit: oculta stepper, mostra Step 2 direto com `initialData` preenchido
 - Gerencia estado do sidebar via `form.watch()`
 
 ### `ChassisStep`
-- Consulta chassi em mock (`motosMock` array local)
-- Simula delay de 800ms
-- Chama `onSearchResult(found, data)` que avança para Step 2
-
-### `CustomerDataStep`
-- Props: `form`, `onBack?` (opcional — omitido em modo edição)
-- DatePickers via shadcn Calendar + Popover
-- Select de status com renderização condicional do date picker de emplacamento
-- Switch "moto chegou" com disabled no date picker de chegada
+- Busca chassi no banco via `searchChassisAction()` (DAL `getMotorcycleByChassis`)
+- Preenche modelo e data de chegada automaticamente se encontrada
+- Passa `arrivalDate` para o sidebar via `onSearchResult`
 
 ### `SidebarResumo`
 - Sidebar colapsável (desktop) / acima do form (mobile)
-- Mostra: status do chassi (Na Logística / Não Encontrado), Chassi, Modelo, Cidade, Cliente, Vendedor, Chegou na Loja, Status Emplacamento
+- Mostra status do chassi com base em `arrivalDate` (ver regra acima)
 - Dados reativos via `form.watch()`
 
----
+### `MotorcycleTable`
+- Tabela de motos do módulo Logística
+- Dados vindos do banco via Server Action
+- Status de chegada calculado com `dayjs`
 
-## Mock Data
-
-Arquivo: `lib/bdc-data.ts`
-- Array `bdcItems` com 10 registros
-- Campos: `id`, `cliente`, `vendedor`, `cidade`, `modelo`, `chassi`, `dataFaturamento`, `dataChegada`, `situacao`
-- Helper `getStatusChegada(dataChegada)` usa dayjs
-
-**Nota**: O projeto ainda não tem backend real para BDC. O formulário faz `console.log()` e redireciona. O mock serve para UI/UX e testes.
+### `MotorcycleForm` / `MotorcycleEditForm`
+- Formulários de cadastro/edição de motocicleta
+- Campos: Chassi, Modelo, Data de Chegada (DatePicker shadcn)
+- Edit form permite alterar o chassi (com validação de duplicata)
 
 ---
 
@@ -203,20 +346,43 @@ Arquivo: `lib/bdc-data.ts`
 - Usa **better-auth** com Prisma adapter
 - Login: email + senha
 - Campo extra no User: `role` (enum USER / ADMIN)
-- Guard server-side: `requireUser()` em `app/data/require-user.ts` — exige `ADMIN`
+- Guards server-side:
+  - `requireAuth()` — exige login (qualquer role)
+  - `requireUser()` — exige ADMIN
 - Rota API: `app/api/auth/[...all]/route.ts`
+
+---
+
+## Títulos de Páginas (Metadata)
+
+Todas as páginas exportam `metadata` com título dinâmico:
+- Template no layout raiz: `%s | Acompanhamento Chegada de Moto`
+- Páginas definem apenas o `%s` (ex: `"BDC"`, `"Novo Cliente"`, `"Logística"`)
+
+| Página | Título na aba |
+|--------|--------------|
+| `/` | `Acompanhamento Chegada de Moto` (default) |
+| `/bdc` | `BDC \| Acompanhamento Chegada de Moto` |
+| `/bdc/cliente/novo` | `Novo Cliente \| ...` |
+| `/bdc/cliente/editar` | `Editar Cliente \| ...` |
+| `/logistica` | `Logística \| ...` |
+| `/logistica/motocicleta/novo` | `Nova Motocicleta \| ...` |
+| `/logistica/motocicleta/editar` | `Editar Motocicleta \| ...` |
+| `/configuracoes` | `Configurações \| ...` |
+| `/sign-in` | `Entrar \| ...` |
 
 ---
 
 ## Estilo de Commits
 
 Use prefixos convencionais:
-- `feat(bdc):` — nova funcionalidade
+- `feat(bdc):` — nova funcionalidade no BDC
+- `feat(logistica):` — nova funcionalidade na Logística
 - `fix(bdc):` — correção de bug
 - `refactor:` — refatoração sem mudança de comportamento
 - `chore:` — tarefas de build/dependências
 
-Exemplo: `feat(bdc): add customer registration dialog with 2-step form`
+Exemplo: `feat(bdc): connect customer form to backend via server actions`
 
 ---
 
@@ -233,10 +399,13 @@ Exemplo: `feat(bdc): add customer registration dialog with 2-step form`
 pnpm install
 
 # Iniciar DB
-pnpm docker:up    # ou docker-compose up -d
+docker-compose up -d
 
 # Rodar migrations
-pnpm db:migrate
+pnpm exec prisma migrate dev --name <nome>
+
+# Gerar Prisma client
+pnpm exec prisma generate
 
 # Dev server
 pnpm dev          # localhost:3000
@@ -263,26 +432,28 @@ pnpm format       # biome format --write
 1. **Sempre use shadcn/ui** para novos componentes de UI. Não crie do zero.
 2. **Sempre valide formulários com Zod** + react-hook-form. Não use estado local descontrolado.
 3. **Datas**: use `date-fns` para formatação e `dayjs` para cálculos/comparações.
-4. **Tabela BDC**: antes de adicionar colunas, verifique se o mock data (`lib/bdc-data.ts`) tem o campo.
+4. **DAL**: nunca coloque lógica de auth em `lib/data/*.ts`. Auth fica nas Server Actions.
 5. **Modo edição**: nunca adicione stepper. O formulário deve ser direto.
 6. **Sidebar**: em modo edição, sempre visível. Em criação, aparece apenas no Step 2.
 7. **Não commite** sem pedir confirmação do usuário (exceto se ele pedir explicitamente).
 8. **Teste o build** (`pnpm build`) após alterações significativas.
 9. **Formate com Biome** antes de commits.
+10. **Chassi editável**: na Logística, o chassi pode ser alterado na edição. Sempre verificar duplicata no banco.
 
 ---
 
 ## Roadmap / Tarefas Pendentes (conhecidas)
 
-- [ ] Conectar formulário BDC ao backend (Prisma model + API routes)
-- [ ] Adicionar tabela/modelo de Logística (motos em trânsito)
-- [ ] Implementar busca real de chassi no banco
+- [x] Conectar formulário BDC ao backend (Prisma model + Server Actions)
+- [x] Adicionar tabela/modelo de Logística (motos em trânsito)
+- [x] Implementar busca real de chassi no banco
 - [ ] Upload de documentos no formulário
 - [ ] Filtros e paginação na tabela BDC
-- [ ] Toast/notificação após salvar (em vez de console.log)
+- [ ] Filtros e paginação na tabela Logística
+- [ ] Toast/notificação após salvar (em vez de redirect silencioso)
 - [ ] Responsividade mobile da sidebar (drawer)
 - [ ] Testes E2E com Playwright
 
 ---
 
-*Última atualização: 2026-05-20*
+*Última atualização: 2026-05-21*

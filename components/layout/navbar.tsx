@@ -28,7 +28,7 @@ import { cn } from "@/lib/utils";
 const navigationData = [
   { title: "Home", href: "/" },
   { title: "BDC", href: "/bdc" },
-  { title: "Logistics", href: "/logistics" },
+  { title: "Logística", href: "/logistica" },
 ];
 
 const filterPlaceholders = [

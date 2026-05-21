@@ -12,6 +12,8 @@ import {
   Tag,
   Truck,
   FileText,
+  Package,
+  Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +27,48 @@ interface SidebarResumoProps {
   vendedor?: string;
   statusRegistro?: string;
   motoChegou?: boolean;
+  arrivalDate?: Date | null;
+}
+
+function getStatusBadge(found: boolean, arrivalDate?: Date | null) {
+  if (!found) {
+    return {
+      label: "Não Encontrado",
+      color:
+        "bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400",
+      icon: AlertTriangleIcon,
+    };
+  }
+
+  if (!arrivalDate) {
+    return {
+      label: "Sem Previsão",
+      color:
+        "bg-amber-100 text-amber-800 hover:bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400",
+      icon: Clock,
+    };
+  }
+
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+  const chegada = new Date(arrivalDate);
+  chegada.setHours(0, 0, 0, 0);
+
+  if (chegada > hoje) {
+    return {
+      label: "Na Logística",
+      color:
+        "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400",
+      icon: Package,
+    };
+  }
+
+  return {
+    label: "Chegou",
+    color:
+      "bg-blue-100 text-blue-800 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400",
+    icon: CheckCircle2Icon,
+  };
 }
 
 export function SidebarResumo({
@@ -36,10 +80,13 @@ export function SidebarResumo({
   vendedor,
   statusRegistro,
   motoChegou,
+  arrivalDate,
 }: SidebarResumoProps) {
   const [collapsed, setCollapsed] = useState(false);
 
   const hasData = chassi || cliente || modelo;
+  const status = getStatusBadge(found, arrivalDate);
+  const StatusIcon = status.icon;
 
   return (
     <aside
@@ -74,23 +121,10 @@ export function SidebarResumo({
             ) : (
               <>
                 <div className="flex items-center gap-2">
-                  {found ? (
-                    <Badge
-                      variant="default"
-                      className="bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400"
-                    >
-                      <CheckCircle2Icon className="mr-1 size-3" />
-                      Na Logística
-                    </Badge>
-                  ) : (
-                    <Badge
-                      variant="default"
-                      className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100 dark:bg-yellow-900/30 dark:text-yellow-400"
-                    >
-                      <AlertTriangleIcon className="mr-1 size-3" />
-                      Não Encontrado
-                    </Badge>
-                  )}
+                  <Badge variant="default" className={status.color}>
+                    <StatusIcon className="mr-1 size-3" />
+                    {status.label}
+                  </Badge>
                 </div>
 
                 {chassi && (

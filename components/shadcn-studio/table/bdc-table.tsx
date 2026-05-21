@@ -12,22 +12,35 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { bdcItems, getStatusChegada } from "@/lib/bdc-data";
+import {
+  getStatusChegada,
+  mapRegistrationStatusLabel,
+  getSituacaoColor,
+} from "@/lib/bdc-data";
+import { deleteClientAction } from "@/app/(app)/bdc/actions";
 
-function getSituacaoColor(situacao: string) {
-  switch (situacao) {
-    case "Pendente":
-      return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400";
-    case "Em Emplacamento":
-      return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400";
-    case "Emplacado":
-      return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400";
-    default:
-      return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400";
-  }
+interface MotorcycleRow {
+  id: string;
+  model: string;
+  chassis: string;
+  arrivalDate: Date | null;
+  registrationStatus: "PENDING" | "IN_PROGRESS" | "COMPLETED";
 }
 
-const BDCTable = () => {
+interface ClientRow {
+  id: string;
+  name: string;
+  sellerName: string;
+  city: string;
+  billingDate: Date | null;
+  motorcycles: MotorcycleRow[];
+}
+
+interface BDCTableProps {
+  clients: ClientRow[];
+}
+
+const BDCTable = ({ clients }: BDCTableProps) => {
   const router = useRouter();
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
@@ -41,6 +54,56 @@ const BDCTable = () => {
   const handleEdit = (id: string) => {
     router.push(`/bdc/cliente/editar?id=${id}`);
   };
+
+  const handleDelete = async (id: string) => {
+    await deleteClientAction(id);
+  };
+
+  // Achatamos clients em linhas de moto (uma linha por moto)
+  const rows: Array<{
+    id: string;
+    clientId: string;
+    cliente: string;
+    vendedor: string;
+    cidade: string;
+    modelo: string;
+    chassi: string;
+    dataFaturamento: string;
+    dataChegada: Date | null;
+    situacao: "Pendente" | "Em Emplacamento" | "Emplacado";
+  }> = clients.flatMap((client) =>
+    client.motorcycles.length > 0
+      ? client.motorcycles.map((moto) => ({
+          id: `${client.id}-${moto.id}`,
+          clientId: client.id,
+          cliente: client.name,
+          vendedor: client.sellerName,
+          cidade: client.city,
+          modelo: moto.model,
+          chassi: moto.chassis,
+          dataFaturamento: client.billingDate
+            ? new Date(client.billingDate).toLocaleDateString("pt-BR")
+            : "—",
+          dataChegada: moto.arrivalDate,
+          situacao: mapRegistrationStatusLabel(moto.registrationStatus),
+        }))
+      : [
+          {
+            id: client.id,
+            clientId: client.id,
+            cliente: client.name,
+            vendedor: client.sellerName,
+            cidade: client.city,
+            modelo: "—",
+            chassi: "—",
+            dataFaturamento: client.billingDate
+              ? new Date(client.billingDate).toLocaleDateString("pt-BR")
+              : "—",
+            dataChegada: null,
+            situacao: "Pendente" as const,
+          },
+        ],
+  );
 
   return (
     <div className="w-full">
@@ -60,7 +123,7 @@ const BDCTable = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {bdcItems.map((item) => {
+            {rows.map((item) => {
               const statusChegada = getStatusChegada(item.dataChegada);
               return (
                 <TableRow key={item.id}>
@@ -69,26 +132,32 @@ const BDCTable = () => {
                   <TableCell>{item.cidade}</TableCell>
                   <TableCell>{item.modelo}</TableCell>
                   <TableCell>
-                    <button
-                      type="button"
-                      onClick={() => handleCopy(item.chassi, item.id)}
-                      className="group inline-flex cursor-pointer items-center gap-1.5 font-mono text-xs transition-colors"
-                      title="Clique para copiar o chassi"
-                    >
-                      {copiedId === item.id ? (
-                        <>
-                          <CheckIcon className="size-3.5 text-green-600 dark:text-green-400" />
-                          <span className="text-green-600 dark:text-green-400">
-                            Copiado!
-                          </span>
-                        </>
-                      ) : (
-                        <>
-                          <CopyIcon className="size-3.5 opacity-0 transition-opacity group-hover:opacity-100" />
-                          <span className="hover:underline">{item.chassi}</span>
-                        </>
-                      )}
-                    </button>
+                    {item.chassi !== "—" ? (
+                      <button
+                        type="button"
+                        onClick={() => handleCopy(item.chassi, item.id)}
+                        className="group inline-flex cursor-pointer items-center gap-1.5 font-mono text-xs transition-colors"
+                        title="Clique para copiar o chassi"
+                      >
+                        {copiedId === item.id ? (
+                          <>
+                            <CheckIcon className="size-3.5 text-green-600 dark:text-green-400" />
+                            <span className="text-green-600 dark:text-green-400">
+                              Copiado!
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <CopyIcon className="size-3.5 opacity-0 transition-opacity group-hover:opacity-100" />
+                            <span className="hover:underline">
+                              {item.chassi}
+                            </span>
+                          </>
+                        )}
+                      </button>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
                   </TableCell>
                   <TableCell>{item.dataFaturamento}</TableCell>
                   <TableCell>
@@ -111,8 +180,8 @@ const BDCTable = () => {
                         variant="ghost"
                         size="icon"
                         className="rounded-full"
-                        aria-label={`editar-${item.id}`}
-                        onClick={() => handleEdit(item.id)}
+                        aria-label={`editar-${item.clientId}`}
+                        onClick={() => handleEdit(item.clientId)}
                       >
                         <PencilIcon />
                       </Button>
@@ -120,7 +189,8 @@ const BDCTable = () => {
                         variant="ghost"
                         size="icon"
                         className="rounded-full"
-                        aria-label={`deletar-${item.id}`}
+                        aria-label={`deletar-${item.clientId}`}
+                        onClick={() => handleDelete(item.clientId)}
                       >
                         <Trash2Icon />
                       </Button>
