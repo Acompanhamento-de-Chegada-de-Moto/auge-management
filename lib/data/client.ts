@@ -92,3 +92,21 @@ export async function searchClientsByName(name: string) {
     },
   });
 }
+
+export async function getClientByNameAndSeller(name: string, sellerName: string) {
+  return prisma.client.findFirst({
+    where: {
+      name: {
+        equals: name,
+        mode: "insensitive",
+      },
+      sellerName: {
+        equals: sellerName,
+        mode: "insensitive",
+      },
+    },
+    include: {
+      motorcycles: true,
+    },
+  });
+}
