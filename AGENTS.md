@@ -31,6 +31,7 @@ Sistema de gerenciamento de concessionária de motocicletas. Módulos atuais:
 | Icons | lucide-react |
 | Lint/Format | Biome 2.2.0 |
 | Package Manager | pnpm |
+| Excel | xlsx (SheetJS) — parse de planilhas |
 
 ---
 
@@ -76,6 +77,7 @@ components/
     customer-data-step.tsx  # Step 2: dados do cliente
     customer-form.tsx       # Wrapper com stepper (create) ou direto (edit)
     sidebar-resumo.tsx      # Sidebar colapsável com status da moto
+    spreadsheet-upload-dialog.tsx # Dialog de importação de planilha
   logistica/                # Componentes de domínio Logística
     motorcycle-table.tsx    # Tabela de motos
     motorcycle-form.tsx     # Form de cadastro de moto
@@ -245,6 +247,35 @@ Colunas: Cliente | Vendedor | Cidade | Modelo | Chassi | Data Faturamento | Stat
   - `IN_PROGRESS` → "Em Emplacamento" (azul)
   - `COMPLETED` → "Emplacado" (verde)
 - Botão editar redireciona para `/bdc/cliente/editar?id={clientId}`
+
+### Importação de Planilha (`/bdc` — botão "Importar Planilha")
+- **Componente**: `components/bdc/spreadsheet-upload-dialog.tsx`
+- **Server Action**: `importSpreadsheetAction(formData: FormData)` em `app/(app)/bdc/actions.ts`
+- **Formatos aceitos**: `.xlsx`, `.xls`, `.ods`, `.csv`
+- **Colunas da planilha**:
+  | Coluna | Mapeamento |
+  |--------|------------|
+  | `CLIENTE` | `Client.name` |
+  | `DATA DO FATURAMENTO` | `Client.billingDate` |
+  | `MODELO` | `Motorcycle.model` |
+  | `CHASSI` | `Motorcycle.chassis` |
+  | `VENDEDOR` | `Client.sellerName` |
+  | `CIDADE` | `Client.city` |
+  | `MOTO CHEGOU NA MATRIZ (SIM / NÃO)` | `Motorcycle.arrivalDate` ("SIM" = hoje, "NÃO" = null) |
+  | `STATUS ATUALIZADO` | Ignorado (não altera status) |
+
+- **Regras de importação**:
+  - **Chassi já existe**: atualiza `arrivalDate` apenas se campo = "SIM" e for null
+  - **Chassi não existe**: cria nova moto com `registrationStatus = PENDING`
+  - **Cliente já existe** (nome + vendedor): vincula moto ao cliente existente
+  - **Cliente não existe**: cria cliente + moto vinculada
+  - **Campos obrigatórios**: chassi, cliente, vendedor (linhas sem esses campos são puladas)
+  - **Permissão**: qualquer usuário logado pode importar
+  - **Retorno**: resumo com `{success, created, updated, skipped}`
+
+- **DAL functions**:
+  - `getClientByNameAndSeller(name, sellerName)` — busca cliente por nome + vendedor (case-insensitive)
+  - `linkMotorcycleToClient(chassis, clientId)` — vincula moto existente a cliente
 
 ---
 
@@ -439,6 +470,7 @@ pnpm format       # biome format --write
 8. **Teste o build** (`pnpm build`) após alterações significativas.
 9. **Formate com Biome** antes de commits.
 10. **Chassi editável**: na Logística, o chassi pode ser alterado na edição. Sempre verificar duplicata no banco.
+11. **Importação de planilha**: usar `xlsx` (SheetJS) para parse no client-side. Colunas obrigatórias: CLIENTE, CHASSI, VENDEDOR. Campo "MOTO CHEGOU" = "SIM" → `arrivalDate = hoje`.
 
 ---
 
@@ -447,6 +479,7 @@ pnpm format       # biome format --write
 - [x] Conectar formulário BDC ao backend (Prisma model + Server Actions)
 - [x] Adicionar tabela/modelo de Logística (motos em trânsito)
 - [x] Implementar busca real de chassi no banco
+- [x] Importação de planilha Excel no BDC
 - [ ] Upload de documentos no formulário
 - [ ] Filtros e paginação na tabela BDC
 - [ ] Filtros e paginação na tabela Logística
@@ -456,4 +489,4 @@ pnpm format       # biome format --write
 
 ---
 
-*Última atualização: 2026-05-21*
+*Última atualização: 2026-05-21 — adicionada importação de planilha Excel no BDC.*
