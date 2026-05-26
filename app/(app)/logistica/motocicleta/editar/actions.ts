@@ -8,8 +8,6 @@ import {
   getMotorcycleByChassis,
   updateMotorcycle as dalUpdateMotorcycle,
 } from "@/lib/data/motorcycle";
-import { createAuditLog } from "@/lib/data/audit-log";
-import { sanitizeForAudit } from "@/lib/utils";
 import { motorcycleSchema } from "@/validators/motorcycle-schema";
 
 export async function getMotorcycleByIdAction(id: string) {
@@ -18,7 +16,7 @@ export async function getMotorcycleByIdAction(id: string) {
 }
 
 export async function updateMotorcycleAction(id: string, data: unknown) {
-  const user = await requireAuth();
+  await requireAuth();
 
   const parsed = motorcycleSchema.safeParse(data);
   if (!parsed.success) {
@@ -40,22 +38,10 @@ export async function updateMotorcycleAction(id: string, data: unknown) {
       };
     }
 
-    const oldMoto = await dalGetMotorcycleById(id);
-    const updatedMoto = await dalUpdateMotorcycle(id, {
+    await dalUpdateMotorcycle(id, {
       chassis: formData.chassis,
       model: formData.model,
       arrivalDate: formData.arrivalDate ?? null,
-    });
-
-    await createAuditLog({
-      userId: user.id,
-      userName: user.name,
-      action: "UPDATE",
-      entityType: "MOTORCYCLE",
-      entityId: id,
-      entityName: updatedMoto.model,
-      oldValue: sanitizeForAudit(oldMoto),
-      newValue: sanitizeForAudit(updatedMoto),
     });
 
     revalidatePath("/logistica");

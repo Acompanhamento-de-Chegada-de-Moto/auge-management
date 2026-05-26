@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
-import { auditLoginAction } from "@/app/(auth)/sign-in/actions";
 import { type LoginInputType, loginSchema } from "@/validators/login-schema";
 
 export default function LoginForm() {
@@ -38,11 +37,7 @@ export default function LoginForm() {
       });
 
       if (!result.error) {
-        try {
-          await auditLoginAction();
-        } catch {
-          // Ignora erro de audit — login já foi bem-sucedido
-        }
+        // Login bem-sucedido
       }
     });
   };
