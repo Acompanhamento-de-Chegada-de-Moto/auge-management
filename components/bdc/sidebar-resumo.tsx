@@ -1,22 +1,22 @@
 "use client";
 
-import { useState } from "react";
 import {
-  CheckCircle2Icon,
   AlertTriangleIcon,
+  Car,
+  CheckCircle2Icon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  Car,
-  User,
+  Clock,
+  FileText,
   MapPin,
+  Package,
   Tag,
   Truck,
-  FileText,
-  Package,
-  Clock,
+  User,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 interface SidebarResumoProps {
   chassi: string;

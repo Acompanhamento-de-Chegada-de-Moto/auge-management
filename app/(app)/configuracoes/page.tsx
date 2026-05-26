@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { requireUser } from "@/app/data/require-user";
-import { prisma } from "@/lib/db";
-import { CreateUserForm } from "./_components/create-user-form";
+import { Badge } from "@/components/ui/badge";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -18,7 +17,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import { prisma } from "@/lib/db";
+import { CreateUserForm } from "./_components/create-user-form";
 
 export const metadata: Metadata = {
   title: "Configurações",
@@ -54,9 +54,7 @@ export default async function ConfiguracoesPage() {
 
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Configurações</h1>
-        <p className="text-muted-foreground">
-          Gerencie usuários do sistema.
-        </p>
+        <p className="text-muted-foreground">Gerencie usuários do sistema.</p>
       </div>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
@@ -88,9 +86,7 @@ export default async function ConfiguracoesPage() {
                 ) : (
                   users.map((user) => (
                     <TableRow key={user.id}>
-                      <TableCell className="font-medium">
-                        {user.name}
-                      </TableCell>
+                      <TableCell className="font-medium">{user.name}</TableCell>
                       <TableCell>{user.email}</TableCell>
                       <TableCell>
                         <Badge

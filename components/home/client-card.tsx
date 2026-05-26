@@ -7,12 +7,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
-  getStatusChegada,
   getSituacaoColor,
+  getStatusChegada,
   mapRegistrationStatusLabel,
 } from "@/lib/bdc-data";
-import { maskChassis } from "@/lib/utils";
 import type { searchClientsByName } from "@/lib/data/client";
+import { maskChassis } from "@/lib/utils";
 
 type ClientWithMotorcycles = Awaited<
   ReturnType<typeof searchClientsByName>

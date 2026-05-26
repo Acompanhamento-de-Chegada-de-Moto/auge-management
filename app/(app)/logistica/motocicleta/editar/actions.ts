@@ -5,8 +5,8 @@ import { redirect } from "next/navigation";
 import { requireAuth } from "@/app/data/require-user";
 import {
   getMotorcycleById as dalGetMotorcycleById,
-  getMotorcycleByChassis,
   updateMotorcycle as dalUpdateMotorcycle,
+  getMotorcycleByChassis,
 } from "@/lib/data/motorcycle";
 import { motorcycleSchema } from "@/validators/motorcycle-schema";
 

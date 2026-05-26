@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { MotorcycleEditForm } from "@/components/logistica/motorcycle-edit-form";
-import { getMotorcycleByIdAction, updateMotorcycleAction } from "./actions";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -11,6 +10,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { getMotorcycleByIdAction, updateMotorcycleAction } from "./actions";
 
 export const metadata: Metadata = {
   title: "Editar Motocicleta",

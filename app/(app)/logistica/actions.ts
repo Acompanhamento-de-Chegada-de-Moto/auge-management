@@ -8,7 +8,6 @@ import {
   getMotorcycleById as dalGetMotorcycleById,
 } from "@/lib/data/motorcycle";
 
-
 export async function getMotorcyclesAction() {
   await requireAuth();
   return dalGetAllMotorcycles();

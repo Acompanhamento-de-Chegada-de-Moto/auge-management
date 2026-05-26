@@ -13,38 +13,64 @@ export interface BDCItem {
 }
 
 export function parseExcelDate(value: unknown): Date | undefined {
-  if (!value) return undefined;
+  if (value == null || value === "") return undefined;
 
   if (value instanceof Date) {
-    return isNaN(value.getTime()) ? undefined : value;
+    return Number.isNaN(value.getTime()) ? undefined : value;
   }
 
-  if (typeof value === "number") {
+  if (typeof value === "number" && value > 0) {
     const excelEpoch = new Date(1899, 11, 30);
-    const excelDays = value * 24 * 60 * 60 * 1000;
-    return new Date(excelEpoch.getTime() + excelDays);
+    return new Date(excelEpoch.getTime() + value * 86400000);
   }
 
-  if (typeof value === "string") {
-    const trimmed = value.trim();
+  if (typeof value !== "string") return undefined;
 
-    const brMatch = trimmed.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-    if (brMatch) {
-      const [, day, month, year] = brMatch;
-      return new Date(Number(year), Number(month) - 1, Number(day));
-    }
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
 
-    const isoMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if (isoMatch) {
-      const [, year, month, day] = isoMatch;
-      return new Date(Number(year), Number(month) - 1, Number(day));
-    }
-
-    const date = new Date(trimmed);
-    return isNaN(date.getTime()) ? undefined : date;
+  // dd/mm/yyyy
+  const brMatch = trimmed.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (brMatch) {
+    const [, day, month, year] = brMatch;
+    return new Date(Number(year), Number(month) - 1, Number(day));
   }
 
-  return undefined;
+  // dd/mm/yy
+  const brShortMatch = trimmed.match(/^(\d{2})\/(\d{2})\/(\d{2})$/);
+  if (brShortMatch) {
+    const [, day, month, shortYear] = brShortMatch;
+    const year = 2000 + Number(shortYear);
+    return new Date(
+      year > 2050 ? year - 100 : year,
+      Number(month) - 1,
+      Number(day),
+    );
+  }
+
+  // dd/mm/yyyy hh:mm:ss
+  const brDateTimeMatch = trimmed.match(/^(\d{2})\/(\d{2})\/(\d{4})\s/);
+  if (brDateTimeMatch) {
+    const [, day, month, year] = brDateTimeMatch;
+    return new Date(Number(year), Number(month) - 1, Number(day));
+  }
+
+  // yyyy-mm-dd
+  const isoMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (isoMatch) {
+    const [, year, month, day] = isoMatch;
+    return new Date(Number(year), Number(month) - 1, Number(day));
+  }
+
+  // yyyy-mm-dd hh:mm:ss
+  const isoDateTimeMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})\s/);
+  if (isoDateTimeMatch) {
+    const [, year, month, day] = isoDateTimeMatch;
+    return new Date(Number(year), Number(month) - 1, Number(day));
+  }
+
+  const date = new Date(trimmed);
+  return Number.isNaN(date.getTime()) ? undefined : date;
 }
 
 export function getStatusChegada(dataChegada: Date | null | undefined) {

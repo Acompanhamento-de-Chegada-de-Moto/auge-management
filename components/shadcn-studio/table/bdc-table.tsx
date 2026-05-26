@@ -1,23 +1,10 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { CheckIcon, CopyIcon, PencilIcon, Trash2Icon } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
-import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  getStatusChegada,
-  mapRegistrationStatusLabel,
-  getSituacaoColor,
-} from "@/lib/bdc-data";
 import { deleteClientAction } from "@/app/(app)/bdc/actions";
+import { Button } from "@/components/ui/button";
 import {
   Pagination,
   PaginationContent,
@@ -27,7 +14,6 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { usePagination } from "@/hooks/use-pagination";
 import {
   Select,
   SelectContent,
@@ -35,6 +21,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { usePagination } from "@/hooks/use-pagination";
+import {
+  getSituacaoColor,
+  getStatusChegada,
+  mapRegistrationStatusLabel,
+} from "@/lib/bdc-data";
 
 interface MotorcycleRow {
   id: string;

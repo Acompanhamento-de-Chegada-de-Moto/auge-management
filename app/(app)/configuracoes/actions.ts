@@ -2,8 +2,8 @@
 
 import { headers } from "next/headers";
 import { requireUser } from "@/app/data/require-user";
-import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/db";
 
 export async function createUserAction(data: {
   name: string;

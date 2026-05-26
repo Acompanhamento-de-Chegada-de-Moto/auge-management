@@ -99,7 +99,10 @@ export async function deleteMotorcycle(id: string) {
   });
 }
 
-export async function linkMotorcycleToClient(chassis: string, clientId: string) {
+export async function linkMotorcycleToClient(
+  chassis: string,
+  clientId: string,
+) {
   return prisma.motorcycle.update({
     where: { chassis },
     data: { clientId },

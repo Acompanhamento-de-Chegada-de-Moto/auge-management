@@ -1,18 +1,25 @@
 "use client";
 
-import { useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarIcon, ArrowLeftIcon } from "lucide-react";
+import { ArrowLeftIcon, CalendarIcon } from "lucide-react";
+import { useState } from "react";
+import type { UseFormReturn } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -20,15 +27,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
+import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
-import type { UseFormReturn } from "react-hook-form";
 import type { CustomerFormData } from "@/validators/customer-schema";
 
 interface CustomerDataStepProps {

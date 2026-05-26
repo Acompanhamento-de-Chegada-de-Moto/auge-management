@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { CheckCircle2Icon, UserPlus } from "lucide-react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { UserPlus, CheckCircle2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Card,
   CardContent,
@@ -13,9 +12,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
-  createUserSchema,
   type CreateUserInput,
+  createUserSchema,
 } from "@/validators/create-user-schema";
 import { createUserAction } from "../actions";
 

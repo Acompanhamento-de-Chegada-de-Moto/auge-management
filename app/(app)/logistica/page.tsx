@@ -1,8 +1,8 @@
+import { PlusIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { PlusIcon } from "lucide-react";
 import MotorcycleTable from "@/components/logistica/motorcycle-table";
+import { Button } from "@/components/ui/button";
 import { getMotorcyclesAction } from "./actions";
 
 export const metadata: Metadata = {

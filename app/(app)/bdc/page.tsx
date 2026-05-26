@@ -1,10 +1,10 @@
+import { PlusIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { SpreadsheetUploadDialog } from "@/components/bdc/spreadsheet-upload-dialog";
 import BDCTable from "@/components/shadcn-studio/table/bdc-table";
 import { Button } from "@/components/ui/button";
-import { PlusIcon } from "lucide-react";
 import { getClientsAction } from "./actions";
-import { SpreadsheetUploadDialog } from "@/components/bdc/spreadsheet-upload-dialog";
 
 export const metadata: Metadata = {
   title: "BDC",

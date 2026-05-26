@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { EditarClienteContent } from "./_components/editar-cliente-content";
-import { getClientByIdAction, updateClientAction } from "./actions";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -11,6 +9,8 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { EditarClienteContent } from "./_components/editar-cliente-content";
+import { getClientByIdAction, updateClientAction } from "./actions";
 
 export const metadata: Metadata = {
   title: "Editar Cliente",

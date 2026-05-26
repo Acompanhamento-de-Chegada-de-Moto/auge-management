@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { MotorcycleForm } from "@/components/logistica/motorcycle-form";
-import { createMotorcycleAction } from "./actions";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -9,6 +8,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { createMotorcycleAction } from "./actions";
 
 export const metadata: Metadata = {
   title: "Nova Motocicleta",

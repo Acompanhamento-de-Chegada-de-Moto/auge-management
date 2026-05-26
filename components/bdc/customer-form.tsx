@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect, useState, useTransition } from "react";
+import { useForm } from "react-hook-form";
 import { Form } from "@/components/ui/form";
 import {
-  customerSchema,
   type CustomerFormData,
+  customerSchema,
 } from "@/validators/customer-schema";
 import { ChassisStep } from "./chassis-step";
 import { CustomerDataStep } from "./customer-data-step";
