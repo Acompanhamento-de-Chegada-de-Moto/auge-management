@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { CheckIcon, CopyIcon, PencilIcon, Trash2Icon } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -18,6 +18,23 @@ import {
   getSituacaoColor,
 } from "@/lib/bdc-data";
 import { deleteClientAction } from "@/app/(app)/bdc/actions";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { usePagination } from "@/hooks/use-pagination";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface MotorcycleRow {
   id: string;
@@ -44,22 +61,6 @@ const BDCTable = ({ clients }: BDCTableProps) => {
   const router = useRouter();
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  const handleCopy = useCallback((text: string, id: string) => {
-    navigator.clipboard.writeText(text).then(() => {
-      setCopiedId(id);
-      setTimeout(() => setCopiedId(null), 2000);
-    });
-  }, []);
-
-  const handleEdit = (id: string) => {
-    router.push(`/bdc/cliente/editar?id=${id}`);
-  };
-
-  const handleDelete = async (id: string) => {
-    await deleteClientAction(id);
-  };
-
-  // Achatamos clients em linhas de moto (uma linha por moto)
   const rows: Array<{
     id: string;
     clientId: string;
@@ -105,6 +106,44 @@ const BDCTable = ({ clients }: BDCTableProps) => {
         ],
   );
 
+  const {
+    currentPage,
+    totalPages,
+    canPreviousPage,
+    canNextPage,
+    gotoPage,
+    previousPage,
+    nextPage,
+    itemsPerPage,
+    setItemsPerPage,
+    itemsPerPageOptions,
+    paginatedRange,
+  } = usePagination({
+    totalItems: rows.length,
+    initialPage: 1,
+    itemsPerPage: 10,
+  });
+
+  const paginatedRows = useMemo(
+    () => rows.slice(paginatedRange.start, paginatedRange.end),
+    [rows, paginatedRange.start, paginatedRange.end],
+  );
+
+  const handleCopy = useCallback((text: string, id: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    });
+  }, []);
+
+  const handleEdit = (id: string) => {
+    router.push(`/bdc/cliente/editar?id=${id}`);
+  };
+
+  const handleDelete = async (id: string) => {
+    await deleteClientAction(id);
+  };
+
   return (
     <div className="w-full">
       <div className="rounded-sm border">
@@ -123,85 +162,225 @@ const BDCTable = ({ clients }: BDCTableProps) => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {rows.map((item) => {
-              const statusChegada = getStatusChegada(item.dataChegada);
-              return (
-                <TableRow key={item.id}>
-                  <TableCell className="font-medium">{item.cliente}</TableCell>
-                  <TableCell>{item.vendedor}</TableCell>
-                  <TableCell>{item.cidade}</TableCell>
-                  <TableCell>{item.modelo}</TableCell>
-                  <TableCell>
-                    {item.chassi !== "—" ? (
-                      <button
-                        type="button"
-                        onClick={() => handleCopy(item.chassi, item.id)}
-                        className="group inline-flex cursor-pointer items-center gap-1.5 font-mono text-xs transition-colors"
-                        title="Clique para copiar o chassi"
+            {paginatedRows.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={9}
+                  className="text-center text-muted-foreground py-8"
+                >
+                  Nenhum cliente cadastrado.
+                </TableCell>
+              </TableRow>
+            ) : (
+              paginatedRows.map((item) => {
+                const statusChegada = getStatusChegada(item.dataChegada);
+                return (
+                  <TableRow key={item.id}>
+                    <TableCell className="font-medium">
+                      {item.cliente}
+                    </TableCell>
+                    <TableCell>{item.vendedor}</TableCell>
+                    <TableCell>{item.cidade}</TableCell>
+                    <TableCell>{item.modelo}</TableCell>
+                    <TableCell>
+                      {item.chassi !== "—" ? (
+                        <button
+                          type="button"
+                          onClick={() => handleCopy(item.chassi, item.id)}
+                          className="group inline-flex cursor-pointer items-center gap-1.5 font-mono text-xs transition-colors"
+                          title="Clique para copiar o chassi"
+                        >
+                          {copiedId === item.id ? (
+                            <>
+                              <CheckIcon className="size-3.5 text-green-600 dark:text-green-400" />
+                              <span className="text-green-600 dark:text-green-400">
+                                Copiado!
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <CopyIcon className="size-3.5 opacity-0 transition-opacity group-hover:opacity-100" />
+                              <span className="hover:underline">
+                                {item.chassi}
+                              </span>
+                            </>
+                          )}
+                        </button>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell>{item.dataFaturamento}</TableCell>
+                    <TableCell>
+                      <span
+                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusChegada.color}`}
                       >
-                        {copiedId === item.id ? (
-                          <>
-                            <CheckIcon className="size-3.5 text-green-600 dark:text-green-400" />
-                            <span className="text-green-600 dark:text-green-400">
-                              Copiado!
-                            </span>
-                          </>
-                        ) : (
-                          <>
-                            <CopyIcon className="size-3.5 opacity-0 transition-opacity group-hover:opacity-100" />
-                            <span className="hover:underline">
-                              {item.chassi}
-                            </span>
-                          </>
-                        )}
-                      </button>
-                    ) : (
-                      <span className="text-muted-foreground">—</span>
-                    )}
-                  </TableCell>
-                  <TableCell>{item.dataFaturamento}</TableCell>
-                  <TableCell>
-                    <span
-                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusChegada.color}`}
-                    >
-                      {statusChegada.label}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <span
-                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getSituacaoColor(item.situacao)}`}
-                    >
-                      {item.situacao}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex h-full items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="rounded-full"
-                        aria-label={`editar-${item.clientId}`}
-                        onClick={() => handleEdit(item.clientId)}
+                        {statusChegada.label}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span
+                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getSituacaoColor(item.situacao)}`}
                       >
-                        <PencilIcon />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="rounded-full"
-                        aria-label={`deletar-${item.clientId}`}
-                        onClick={() => handleDelete(item.clientId)}
-                      >
-                        <Trash2Icon />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
+                        {item.situacao}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex h-full items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="rounded-full"
+                          aria-label={`editar-${item.clientId}`}
+                          onClick={() => handleEdit(item.clientId)}
+                        >
+                          <PencilIcon />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="rounded-full"
+                          aria-label={`deletar-${item.clientId}`}
+                          onClick={() => handleDelete(item.clientId)}
+                        >
+                          <Trash2Icon />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
           </TableBody>
         </Table>
       </div>
+
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <span>
+            Mostrando {paginatedRange.start + 1}-{paginatedRange.end} de{" "}
+            {rows.length} registros
+          </span>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">
+              Itens por página:
+            </span>
+            <Select
+              value={itemsPerPage.toString()}
+              onValueChange={(value) => setItemsPerPage(Number(value))}
+            >
+              <SelectTrigger className="w-[80px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {itemsPerPageOptions.map((option) => (
+                  <SelectItem key={option} value={option.toString()}>
+                    {option}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationLink
+                  onClick={() => gotoPage(1)}
+                  className={
+                    canPreviousPage
+                      ? "cursor-pointer"
+                      : "pointer-events-none opacity-50"
+                  }
+                >
+                  Primeiro
+                </PaginationLink>
+              </PaginationItem>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={previousPage}
+                  className={
+                    canPreviousPage
+                      ? "cursor-pointer"
+                      : "pointer-events-none opacity-50"
+                  }
+                />
+              </PaginationItem>
+
+              {totalPages <= 10 ? (
+                Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (page) => (
+                    <PaginationItem key={page}>
+                      <PaginationLink
+                        onClick={() => gotoPage(page)}
+                        isActive={currentPage === page}
+                        className="cursor-pointer"
+                      >
+                        {page}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ),
+                )
+              ) : (
+                <>
+                  {[1, 2, 3].map((page) => (
+                    <PaginationItem key={page}>
+                      <PaginationLink
+                        onClick={() => gotoPage(page)}
+                        isActive={currentPage === page}
+                        className="cursor-pointer"
+                      >
+                        {page}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
+                  <PaginationItem>
+                    <PaginationEllipsis />
+                  </PaginationItem>
+                  {[totalPages - 2, totalPages - 1, totalPages].map((page) => (
+                    <PaginationItem key={page}>
+                      <PaginationLink
+                        onClick={() => gotoPage(page)}
+                        isActive={currentPage === page}
+                        className="cursor-pointer"
+                      >
+                        {page}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
+                </>
+              )}
+
+              <PaginationItem>
+                <PaginationNext
+                  onClick={nextPage}
+                  className={
+                    canNextPage
+                      ? "cursor-pointer"
+                      : "pointer-events-none opacity-50"
+                  }
+                />
+              </PaginationItem>
+              <PaginationItem>
+                <PaginationLink
+                  onClick={() => gotoPage(totalPages)}
+                  className={
+                    canNextPage
+                      ? "cursor-pointer"
+                      : "pointer-events-none opacity-50"
+                  }
+                >
+                  Último
+                </PaginationLink>
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      </div>
+
       <p className="text-muted-foreground mt-4 text-center text-sm">
         Tabela BDC - Controle de Veículos
       </p>
