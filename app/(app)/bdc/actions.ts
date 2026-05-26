@@ -9,6 +9,7 @@ import {
   deleteClient as dalDeleteClient,
   getClients as dalGetClients,
   getClientByNameAndSeller,
+  searchClients as dalSearchClients,
 } from "@/lib/data/client";
 import {
   createMotorcycle,
@@ -41,24 +42,24 @@ function detectColumn(
   return undefined;
 }
 
-const CHASSI_KEYS = ["CHASSI", "CHASSIS", "Nº CHASSI", "CHASSI MOTO"];
-const CLIENTE_KEYS = ["CLIENTE", "NOME", "NOME CLIENTE"];
-const VENDEDOR_KEYS = ["VENDEDOR", "VENDEDOR RESPONSÁVEL"];
-const CIDADE_KEYS = ["CIDADE", "MUNICÍPIO", "CIDADE CLIENTE"];
-const MODELO_KEYS = ["MODELO", "MODELO MOTO", "MODELO MOTOCICLETA"];
-const DATA_FATURAMENTO_KEYS = [
+const CHASSIS_KEYS = ["CHASSI", "CHASSIS", "Nº CHASSI", "CHASSI MOTO"];
+const CLIENT_NAME_KEYS = ["CLIENTE", "NOME", "NOME CLIENTE"];
+const SELLER_KEYS = ["VENDEDOR", "VENDEDOR RESPONSÁVEL"];
+const CITY_KEYS = ["CIDADE", "MUNICÍPIO", "CIDADE CLIENTE"];
+const MODEL_KEYS = ["MODELO", "MODELO MOTO", "MODELO MOTOCICLETA"];
+const BILLING_DATE_KEYS = [
   "DATA DO FATURAMENTO",
   "DATA DE FATURAMENTO",
   "DATA FATURAMENTO",
   "DT FATURAMENTO",
 ];
-const MOTO_CHEGOU_KEYS = [
+const HAS_ARRIVED_KEYS = [
   "MOTO CHEGOU NA MATRIZ (SIM / NÃO)",
   "MOTO CHEGOU",
   "CHEGOU",
   "CHEGOU NA MATRIZ",
 ];
-const DATA_CHEGADA_KEYS = [
+const ARRIVAL_DATE_KEYS = [
   "DATA CHEGADA",
   "DATA DE CHEGADA",
   "DATA DA CHEGADA",
@@ -77,6 +78,11 @@ export async function searchChassisAction(chassis: string) {
   return getMotorcycleByChassis(chassis);
 }
 
+export async function searchClientsAction(query: string) {
+  await requireAuth();
+  return dalSearchClients(query);
+}
+
 export async function deleteClientAction(id: string) {
   await requireAuth();
 
@@ -90,14 +96,14 @@ export async function deleteClientAction(id: string) {
   }
 }
 
-function readPagina1(workbook: XLSX.WorkBook): Record<string, unknown>[] {
+function readMainSheet(workbook: XLSX.WorkBook): Record<string, unknown>[] {
   const sheetNames = ["Página1", "Plan1", "Planilha1"];
   const sheet =
     findSheet(workbook, sheetNames) ?? workbook.Sheets[workbook.SheetNames[0]];
   return XLSX.utils.sheet_to_json(sheet, { range: 1 });
 }
 
-function readPagina2(
+function readArrivalSheet(
   workbook: XLSX.WorkBook,
 ): Map<string, { arrivalDate: Date | null }> {
   const sheetNames = ["Página2", "Plan2", "Planilha2"];
@@ -111,16 +117,16 @@ function readPagina2(
   const map = new Map<string, { arrivalDate: Date | null }>();
 
   for (const row of rows) {
-    const chassisRaw = detectColumn(row, CHASSI_KEYS);
+    const chassisRaw = detectColumn(row, CHASSIS_KEYS);
     if (!chassisRaw) continue;
 
     const chassis = String(chassisRaw).trim().toUpperCase();
     if (!chassis) continue;
 
-    const dataChegadaRaw = detectColumn(row, DATA_CHEGADA_KEYS);
-    const dataChegada = parseExcelDate(dataChegadaRaw);
+    const arrivalDateRaw = detectColumn(row, ARRIVAL_DATE_KEYS);
+    const arrivalDate = parseExcelDate(arrivalDateRaw);
 
-    map.set(chassis, { arrivalDate: dataChegada ?? null });
+    map.set(chassis, { arrivalDate: arrivalDate ?? null });
   }
 
   return map;
@@ -145,8 +151,8 @@ export async function importSpreadsheetAction(formData: FormData) {
   try {
     const arrayBuffer = await file.arrayBuffer();
     const workbook = XLSX.read(arrayBuffer, { cellDates: true });
-    const json = readPagina1(workbook);
-    const chegadaMap = readPagina2(workbook);
+    const json = readMainSheet(workbook);
+    const arrivalMap = readArrivalSheet(workbook);
 
     let success = 0;
     let created = 0;
@@ -154,59 +160,59 @@ export async function importSpreadsheetAction(formData: FormData) {
     let skipped = 0;
 
     for (const row of json as Record<string, unknown>[]) {
-      const cliente = detectColumn(row, CLIENTE_KEYS);
-      const chassi = detectColumn(row, CHASSI_KEYS);
-      const vendedor = detectColumn(row, VENDEDOR_KEYS);
+      const clientName = detectColumn(row, CLIENT_NAME_KEYS);
+      const chassis = detectColumn(row, CHASSIS_KEYS);
+      const sellerName = detectColumn(row, SELLER_KEYS);
 
-      if (!chassi || !cliente || !vendedor) {
+      if (!chassis || !clientName || !sellerName) {
         skipped++;
         continue;
       }
 
-      const chassis = String(chassi).trim().toUpperCase();
-      const clientName = String(cliente);
-      const sellerName = String(vendedor);
-      const city = String(detectColumn(row, CIDADE_KEYS) ?? "");
-      const model = String(detectColumn(row, MODELO_KEYS) ?? "");
+      const chassisStr = String(chassis).trim().toUpperCase();
+      const nameStr = String(clientName);
+      const sellerStr = String(sellerName);
+      const city = String(detectColumn(row, CITY_KEYS) ?? "");
+      const model = String(detectColumn(row, MODEL_KEYS) ?? "");
 
-      const dataFaturamentoRaw = detectColumn(row, DATA_FATURAMENTO_KEYS);
-      const billingDate = parseExcelDate(dataFaturamentoRaw);
+      const billingDateRaw = detectColumn(row, BILLING_DATE_KEYS);
+      const billingDate = parseExcelDate(billingDateRaw);
 
       // Arrival: Página2 has priority, fallback to Página1 "MOTO CHEGOU" column
-      const chegadaInfo = chegadaMap.get(chassis);
-      const motoChegouRaw = detectColumn(row, MOTO_CHEGOU_KEYS);
-      const motoChegouPagina1 =
-        typeof motoChegouRaw === "string"
-          ? motoChegouRaw.trim().toUpperCase() === "SIM"
+      const arrivalInfo = arrivalMap.get(chassisStr);
+      const hasArrivedRaw = detectColumn(row, HAS_ARRIVED_KEYS);
+      const hasArrivedFromMainSheet =
+        typeof hasArrivedRaw === "string"
+          ? hasArrivedRaw.trim().toUpperCase() === "SIM"
           : false;
 
       let arrivalDate: Date | null = null;
 
-      if (chegadaInfo?.arrivalDate) {
-        arrivalDate = chegadaInfo.arrivalDate;
-      } else if (motoChegouPagina1) {
+      if (arrivalInfo?.arrivalDate) {
+        arrivalDate = arrivalInfo.arrivalDate;
+      } else if (hasArrivedFromMainSheet) {
         arrivalDate = new Date();
       }
 
       let existingClient = await getClientByNameAndSeller(
-        clientName,
-        sellerName,
+        nameStr,
+        sellerStr,
       );
 
       if (!existingClient) {
         existingClient = await createClient({
-          name: clientName,
-          sellerName: sellerName,
+          name: nameStr,
+          sellerName: sellerStr,
           city: city,
           billingDate,
         });
       }
 
-      const existingMoto = await getMotorcycleByChassis(chassis);
+      const existingMoto = await getMotorcycleByChassis(chassisStr);
 
       if (existingMoto) {
         if (arrivalDate && !existingMoto.arrivalDate) {
-          await updateMotorcycleByChassis(chassis, {
+          await updateMotorcycleByChassis(chassisStr, {
             arrivalDate,
           });
           updated++;
@@ -216,11 +222,11 @@ export async function importSpreadsheetAction(formData: FormData) {
           !existingMoto.clientId ||
           existingMoto.clientId !== existingClient.id
         ) {
-          await linkMotorcycleToClient(chassis, existingClient.id);
+          await linkMotorcycleToClient(chassisStr, existingClient.id);
         }
       } else {
         await createMotorcycle({
-          chassis,
+          chassis: chassisStr,
           model,
           arrivalDate,
           registrationStatus: "PENDING",

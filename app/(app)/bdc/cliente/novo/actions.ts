@@ -11,7 +11,7 @@ import {
 } from "@/lib/data/motorcycle";
 import { customerSchema } from "@/validators/customer-schema";
 
-function mapStatusRegistro(
+function mapRegistrationStatus(
   status: "Pendente" | "Em Emplacamento" | "Emplacado",
 ): "PENDING" | "IN_PROGRESS" | "COMPLETED" {
   const map = {
@@ -38,30 +38,30 @@ export async function createClientAction(formData: unknown) {
 
   try {
     const client = await dalCreateClient({
-      name: data.cliente,
-      sellerName: data.vendedor,
-      city: data.cidade,
-      billingDate: data.dataFaturamento,
+      name: data.customerName,
+      sellerName: data.sellerName,
+      city: data.city,
+      billingDate: data.billingDate,
     });
 
-    if (data.chassi) {
-      const existingMoto = await getMotorcycleByChassis(data.chassi);
+    if (data.chassis) {
+      const existingMoto = await getMotorcycleByChassis(data.chassis);
 
       if (existingMoto) {
-        await updateMotorcycleByChassis(data.chassi, {
-          model: data.modelo,
-          arrivalDate: data.motoChegou ? data.dataChegada : null,
-          registrationStatus: mapStatusRegistro(data.statusRegistro),
-          registrationStatusDate: data.dataEmplacamento,
+        await updateMotorcycleByChassis(data.chassis, {
+          model: data.model,
+          arrivalDate: data.hasArrived ? data.arrivalDate : null,
+          registrationStatus: mapRegistrationStatus(data.registrationStatus),
+          registrationStatusDate: data.plateDate,
           clientId: client.id,
         });
       } else {
         await createMotorcycle({
-          chassis: data.chassi,
-          model: data.modelo,
-          arrivalDate: data.motoChegou ? data.dataChegada : null,
-          registrationStatus: mapStatusRegistro(data.statusRegistro),
-          registrationStatusDate: data.dataEmplacamento,
+          chassis: data.chassis,
+          model: data.model,
+          arrivalDate: data.hasArrived ? data.arrivalDate : null,
+          registrationStatus: mapRegistrationStatus(data.registrationStatus),
+          registrationStatusDate: data.plateDate,
           clientId: client.id,
         });
       }

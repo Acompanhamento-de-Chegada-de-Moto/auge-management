@@ -2,20 +2,20 @@ import * as z from "zod";
 
 export const customerSchema = z
   .object({
-    chassi: z.string().min(1, "Chassi é obrigatório"),
-    cliente: z.string().min(1, "Cliente é obrigatório"),
-    vendedor: z.string().min(1, "Vendedor é obrigatório"),
-    cidade: z.string().min(1, "Cidade é obrigatória"),
-    modelo: z.string().min(1, "Modelo é obrigatório"),
-    dataFaturamento: z.date().optional(),
-    motoChegou: z.boolean(),
-    dataChegada: z.date().optional(),
-    statusRegistro: z.enum(["Pendente", "Em Emplacamento", "Emplacado"]),
-    dataEmplacamento: z.date().optional(),
+    chassis: z.string().min(1, "Chassi é obrigatório"),
+    customerName: z.string().min(1, "Cliente é obrigatório"),
+    sellerName: z.string().min(1, "Vendedor é obrigatório"),
+    city: z.string().min(1, "Cidade é obrigatória"),
+    model: z.string().min(1, "Modelo é obrigatório"),
+    billingDate: z.date().optional(),
+    hasArrived: z.boolean(),
+    arrivalDate: z.date().optional(),
+    registrationStatus: z.enum(["Pendente", "Em Emplacamento", "Emplacado"]),
+    plateDate: z.date().optional(),
   })
   .refine(
     (data) => {
-      if (data.statusRegistro !== "Pendente" && !data.dataEmplacamento) {
+      if (data.registrationStatus !== "Pendente" && !data.plateDate) {
         return false;
       }
       return true;
@@ -23,7 +23,7 @@ export const customerSchema = z
     {
       message:
         "Data do emplacamento é obrigatória quando o status não é Pendente",
-      path: ["dataEmplacamento"],
+      path: ["plateDate"],
     },
   );
 

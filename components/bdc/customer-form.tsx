@@ -10,19 +10,19 @@ import {
 } from "@/validators/customer-schema";
 import { ChassisStep } from "./chassis-step";
 import { CustomerDataStep } from "./customer-data-step";
-import { SidebarResumo } from "./sidebar-resumo";
+import { SidebarSummary } from "./sidebar-summary";
 
 const defaultValues: CustomerFormData = {
-  chassi: "",
-  cliente: "",
-  vendedor: "",
-  cidade: "",
-  modelo: "",
-  dataFaturamento: undefined,
-  motoChegou: false,
-  dataChegada: undefined,
-  statusRegistro: "Pendente",
-  dataEmplacamento: undefined,
+  chassis: "",
+  customerName: "",
+  sellerName: "",
+  city: "",
+  model: "",
+  billingDate: undefined,
+  hasArrived: false,
+  arrivalDate: undefined,
+  registrationStatus: "Pendente",
+  plateDate: undefined,
 };
 
 interface CustomerFormProps {
@@ -40,8 +40,8 @@ export function CustomerForm({
   const [isPending, startTransition] = useTransition();
   const [sidebarData, setSidebarData] = useState<{
     found: boolean;
-    modelo?: string;
-    cidade?: string;
+    model?: string;
+    city?: string;
     arrivalDate?: Date | null;
   }>({ found: false });
 
@@ -53,26 +53,25 @@ export function CustomerForm({
     },
   });
 
-  // Set sidebar data when editing
   useEffect(() => {
-    if (mode === "edit" && initialData?.chassi) {
+    if (mode === "edit" && initialData?.chassis) {
       setSidebarData({
         found: true,
-        modelo: initialData.modelo || undefined,
-        cidade: initialData.cidade || undefined,
-        arrivalDate: initialData.dataChegada,
+        model: initialData.model || undefined,
+        city: initialData.city || undefined,
+        arrivalDate: initialData.arrivalDate,
       });
     }
   }, [mode, initialData]);
 
   const handleSearchResult = (
     found: boolean,
-    data?: { modelo: string; cidade: string; arrivalDate?: Date | null },
+    data?: { model: string; city: string; arrivalDate?: Date | null },
   ) => {
     setSidebarData({
       found,
-      modelo: data?.modelo,
-      cidade: data?.cidade,
+      model: data?.model,
+      city: data?.city,
       arrivalDate: data?.arrivalDate,
     });
     setStep(2);
@@ -80,16 +79,16 @@ export function CustomerForm({
 
   const handleBack = () => {
     setStep(1);
-    form.setValue("chassi", "");
-    form.setValue("modelo", "");
-    form.setValue("cidade", "");
-    form.setValue("motoChegou", false);
-    form.setValue("cliente", "");
-    form.setValue("vendedor", "");
-    form.setValue("dataFaturamento", undefined);
-    form.setValue("dataChegada", undefined);
-    form.setValue("statusRegistro", "Pendente");
-    form.setValue("dataEmplacamento", undefined);
+    form.setValue("chassis", "");
+    form.setValue("model", "");
+    form.setValue("city", "");
+    form.setValue("hasArrived", false);
+    form.setValue("customerName", "");
+    form.setValue("sellerName", "");
+    form.setValue("billingDate", undefined);
+    form.setValue("arrivalDate", undefined);
+    form.setValue("registrationStatus", "Pendente");
+    form.setValue("plateDate", undefined);
     setSidebarData({ found: false });
   };
 
@@ -154,15 +153,15 @@ export function CustomerForm({
       </div>
 
       {showSidebar && (
-        <SidebarResumo
-          chassi={watchedValues.chassi}
+        <SidebarSummary
+          chassis={watchedValues.chassis}
           found={sidebarData.found}
-          modelo={watchedValues.modelo || sidebarData.modelo}
-          cidade={watchedValues.cidade || sidebarData.cidade}
-          cliente={watchedValues.cliente}
-          vendedor={watchedValues.vendedor}
-          statusRegistro={watchedValues.statusRegistro}
-          motoChegou={watchedValues.motoChegou}
+          model={watchedValues.model || sidebarData.model}
+          city={watchedValues.city || sidebarData.city}
+          customerName={watchedValues.customerName}
+          sellerName={watchedValues.sellerName}
+          registrationStatus={watchedValues.registrationStatus}
+          hasArrived={watchedValues.hasArrived}
           arrivalDate={sidebarData.arrivalDate}
         />
       )}

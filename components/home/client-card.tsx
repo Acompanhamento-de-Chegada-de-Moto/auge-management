@@ -7,8 +7,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
-  getSituacaoColor,
-  getStatusChegada,
+  getStatusColor,
+  getArrivalStatus,
   mapRegistrationStatusLabel,
 } from "@/lib/bdc-data";
 import type { searchClientsByName } from "@/lib/data/client";
@@ -35,41 +35,41 @@ export function ClientCard({ client }: ClientCardProps) {
             Nenhuma motocicleta associada.
           </p>
         )}
-        {client.motorcycles.map((moto) => {
-          const statusChegada = getStatusChegada(moto.arrivalDate);
+        {client.motorcycles.map((motorcycle) => {
+          const arrivalStatus = getArrivalStatus(motorcycle.arrivalDate);
           const statusLabel = mapRegistrationStatusLabel(
-            moto.registrationStatus,
+            motorcycle.registrationStatus,
           );
-          const situacaoColor = getSituacaoColor(statusLabel);
+          const statusColor = getStatusColor(statusLabel);
 
           return (
             <div
-              key={moto.id}
+              key={motorcycle.id}
               className="flex flex-col gap-2 rounded-lg border bg-muted/30 p-3"
             >
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Modelo</span>
-                <span className="text-sm font-medium">{moto.model}</span>
+                <span className="text-sm font-medium">{motorcycle.model}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Chassi</span>
                 <span className="font-mono text-sm tracking-wide">
-                  {maskChassis(moto.chassis)}
+                  {maskChassis(motorcycle.chassis)}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">
                   Status Chegada
                 </span>
-                <Badge className={statusChegada.color}>
-                  {statusChegada.label}
+                <Badge className={arrivalStatus.color}>
+                  {arrivalStatus.label}
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">
                   Emplacamento
                 </span>
-                <Badge className={situacaoColor}>{statusLabel}</Badge>
+                <Badge className={statusColor}>{statusLabel}</Badge>
               </div>
             </div>
           );

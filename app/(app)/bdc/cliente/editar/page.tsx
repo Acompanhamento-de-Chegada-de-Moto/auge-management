@@ -9,7 +9,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { EditarClienteContent } from "./_components/editar-cliente-content";
+import { EditClientContent } from "./_components/edit-client-content";
 import { getClientByIdAction, updateClientAction } from "./actions";
 
 export const metadata: Metadata = {
@@ -37,20 +37,20 @@ export default async function EditarClientePage({
   const motorcycle = client.motorcycles[0];
 
   const initialData = {
-    chassi: motorcycle?.chassis ?? "",
-    cliente: client.name,
-    vendedor: client.sellerName,
-    cidade: client.city,
-    modelo: motorcycle?.model ?? "",
-    dataFaturamento: client.billingDate ?? undefined,
-    motoChegou: !!motorcycle?.arrivalDate,
-    dataChegada: motorcycle?.arrivalDate ?? undefined,
-    statusRegistro: (motorcycle?.registrationStatus === "PENDING"
+    chassis: motorcycle?.chassis ?? "",
+    customerName: client.name,
+    sellerName: client.sellerName,
+    city: client.city,
+    model: motorcycle?.model ?? "",
+    billingDate: client.billingDate ?? undefined,
+    hasArrived: !!motorcycle?.arrivalDate,
+    arrivalDate: motorcycle?.arrivalDate ?? undefined,
+    registrationStatus: (motorcycle?.registrationStatus === "PENDING"
       ? "Pendente"
       : motorcycle?.registrationStatus === "IN_PROGRESS"
         ? "Em Emplacamento"
         : "Emplacado") as "Pendente" | "Em Emplacamento" | "Emplacado",
-    dataEmplacamento: motorcycle?.registrationStatusDate ?? undefined,
+    plateDate: motorcycle?.registrationStatusDate ?? undefined,
   };
 
   const boundAction = updateClientAction.bind(null, id);
@@ -76,7 +76,7 @@ export default async function EditarClientePage({
       <Suspense
         fallback={<p className="text-muted-foreground">Carregando...</p>}
       >
-        <EditarClienteContent
+        <EditClientContent
           initialData={initialData}
           clientName={client.name}
           action={boundAction}

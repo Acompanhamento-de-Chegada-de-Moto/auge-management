@@ -3,7 +3,6 @@
 import {
   Bike,
   LogOut,
-  Search,
   Settings,
   TextAlignJustify,
   User,
@@ -21,7 +20,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 
@@ -195,27 +193,14 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* ─── Bottom Row (Breadcrumb + Search) ─── */}
-        <div className="flex items-center justify-between h-11 gap-4 border-t border-border/40">
-          {/* Breadcrumb — left */}
-          <div className="hidden sm:flex items-center overflow-x-auto">
-            <BreadcrumbNav />
-          </div>
-
-          {/* Search — right */}
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
-              <Input
-                type="text"
-                placeholder="Buscar..."
-                className="h-8 w-40 sm:w-56 pl-8 pr-2 text-sm rounded-lg bg-muted/40 border-border/60 focus-visible:bg-background"
-              />
+        {/* ─── Bottom Row (Breadcrumb) ─── */}
+        <div className="flex items-center h-11 gap-4 border-t border-border/40">
+          {/* Breadcrumb — left (hidden on BDC page) */}
+          {pathname !== "/bdc" && (
+            <div className="hidden sm:flex items-center overflow-x-auto">
+              <BreadcrumbNav />
             </div>
-            <Button size="icon" className="size-8 rounded-lg shrink-0">
-              <Search className="size-4" />
-            </Button>
-          </div>
+          )}
         </div>
       </div>
     </header>

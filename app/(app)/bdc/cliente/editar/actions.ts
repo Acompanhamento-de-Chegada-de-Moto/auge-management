@@ -13,7 +13,7 @@ import {
 } from "@/lib/data/motorcycle";
 import { customerSchema } from "@/validators/customer-schema";
 
-function mapStatusRegistro(
+function mapRegistrationStatus(
   status: "Pendente" | "Em Emplacamento" | "Emplacado",
 ): "PENDING" | "IN_PROGRESS" | "COMPLETED" {
   const map = {
@@ -45,18 +45,18 @@ export async function updateClientAction(clientId: string, formData: unknown) {
 
   try {
     await dalUpdateClient(clientId, {
-      name: data.cliente,
-      sellerName: data.vendedor,
-      city: data.cidade,
-      billingDate: data.dataFaturamento ?? null,
+      name: data.customerName,
+      sellerName: data.sellerName,
+      city: data.city,
+      billingDate: data.billingDate ?? null,
     });
 
-    if (data.chassi) {
-      await updateMotorcycleByChassis(data.chassi, {
-        model: data.modelo,
-        arrivalDate: data.motoChegou ? data.dataChegada : null,
-        registrationStatus: mapStatusRegistro(data.statusRegistro),
-        registrationStatusDate: data.dataEmplacamento,
+    if (data.chassis) {
+      await updateMotorcycleByChassis(data.chassis, {
+        model: data.model,
+        arrivalDate: data.hasArrived ? data.arrivalDate : null,
+        registrationStatus: mapRegistrationStatus(data.registrationStatus),
+        registrationStatusDate: data.plateDate,
       });
     }
 

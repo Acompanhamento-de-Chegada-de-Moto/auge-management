@@ -93,6 +93,27 @@ export async function searchClientsByName(name: string) {
   });
 }
 
+export async function searchClients(query: string) {
+  return prisma.client.findMany({
+    where: {
+      OR: [
+        { name: { contains: query, mode: "insensitive" } },
+        {
+          motorcycles: {
+            some: { chassis: { contains: query, mode: "insensitive" } },
+          },
+        },
+      ],
+    },
+    include: {
+      motorcycles: true,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+}
+
 export async function getClientByNameAndSeller(
   name: string,
   sellerName: string,

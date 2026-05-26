@@ -3,17 +3,17 @@
 import { CustomerForm } from "@/components/bdc/customer-form";
 import type { CustomerFormData } from "@/validators/customer-schema";
 
-interface EditarClienteContentProps {
+interface EditClientContentProps {
   initialData: Partial<CustomerFormData>;
   clientName: string;
   action: (data: unknown) => Promise<unknown>;
 }
 
-export function EditarClienteContent({
+export function EditClientContent({
   initialData,
   clientName,
   action,
-}: EditarClienteContentProps) {
+}: EditClientContentProps) {
   return (
     <>
       <div className="mb-6">

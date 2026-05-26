@@ -42,7 +42,7 @@ interface MotorcycleTableProps {
   motorcycles: MotorcycleRow[];
 }
 
-function getStatusChegada(arrivalDate: Date | null) {
+function getArrivalStatus(arrivalDate: Date | null) {
   if (!arrivalDate) {
     return {
       label: "Em Trânsito",
@@ -51,12 +51,12 @@ function getStatusChegada(arrivalDate: Date | null) {
     };
   }
 
-  const hoje = new Date();
-  hoje.setHours(0, 0, 0, 0);
-  const chegada = new Date(arrivalDate);
-  chegada.setHours(0, 0, 0, 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const arrival = new Date(arrivalDate);
+  arrival.setHours(0, 0, 0, 0);
 
-  if (chegada <= hoje) {
+  if (arrival <= today) {
     return {
       label: "Chegou",
       color:
@@ -133,19 +133,19 @@ export default function MotorcycleTable({ motorcycles }: MotorcycleTableProps) {
                 </TableCell>
               </TableRow>
             ) : (
-              paginatedMotorcycles.map((moto) => {
-                const status = getStatusChegada(moto.arrivalDate);
+              paginatedMotorcycles.map((motorcycle) => {
+                const status = getArrivalStatus(motorcycle.arrivalDate);
                 return (
-                  <TableRow key={moto.id}>
-                    <TableCell className="font-medium">{moto.model}</TableCell>
+                  <TableRow key={motorcycle.id}>
+                    <TableCell className="font-medium">{motorcycle.model}</TableCell>
                     <TableCell>
                       <button
                         type="button"
-                        onClick={() => handleCopy(moto.chassis, moto.id)}
+                        onClick={() => handleCopy(motorcycle.chassis, motorcycle.id)}
                         className="group inline-flex cursor-pointer items-center gap-1.5 font-mono text-xs transition-colors"
                         title="Clique para copiar o chassi"
                       >
-                        {copiedId === moto.id ? (
+                        {copiedId === motorcycle.id ? (
                           <>
                             <CheckIcon className="size-3.5 text-green-600 dark:text-green-400" />
                             <span className="text-green-600 dark:text-green-400">
@@ -156,15 +156,15 @@ export default function MotorcycleTable({ motorcycles }: MotorcycleTableProps) {
                           <>
                             <CopyIcon className="size-3.5 opacity-0 transition-opacity group-hover:opacity-100" />
                             <span className="hover:underline">
-                              {moto.chassis}
+                              {motorcycle.chassis}
                             </span>
                           </>
                         )}
                       </button>
                     </TableCell>
                     <TableCell>
-                      {moto.arrivalDate
-                        ? new Date(moto.arrivalDate).toLocaleDateString("pt-BR")
+                      {motorcycle.arrivalDate
+                        ? new Date(motorcycle.arrivalDate).toLocaleDateString("pt-BR")
                         : "—"}
                     </TableCell>
                     <TableCell>
@@ -180,10 +180,10 @@ export default function MotorcycleTable({ motorcycles }: MotorcycleTableProps) {
                           variant="ghost"
                           size="icon"
                           className="rounded-full"
-                          aria-label={`editar-${moto.id}`}
+                          aria-label={`editar-${motorcycle.id}`}
                           onClick={() =>
                             router.push(
-                              `/logistica/motocicleta/editar?id=${moto.id}`,
+                              `/logistica/motocicleta/editar?id=${motorcycle.id}`,
                             )
                           }
                         >
@@ -193,8 +193,8 @@ export default function MotorcycleTable({ motorcycles }: MotorcycleTableProps) {
                           variant="ghost"
                           size="icon"
                           className="rounded-full"
-                          aria-label={`deletar-${moto.id}`}
-                          onClick={() => handleDelete(moto.id)}
+                          aria-label={`deletar-${motorcycle.id}`}
+                          onClick={() => handleDelete(motorcycle.id)}
                         >
                           <Trash2Icon />
                         </Button>

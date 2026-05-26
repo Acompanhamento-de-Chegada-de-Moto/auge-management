@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckIcon, CopyIcon, PencilIcon, Trash2Icon } from "lucide-react";
+import { CheckIcon, CopyIcon, PencilIcon, Search, Trash2Icon, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
 import { deleteClientAction } from "@/app/(app)/bdc/actions";
@@ -31,8 +31,8 @@ import {
 } from "@/components/ui/table";
 import { usePagination } from "@/hooks/use-pagination";
 import {
-  getSituacaoColor,
-  getStatusChegada,
+  getArrivalStatus,
+  getStatusColor,
   mapRegistrationStatusLabel,
 } from "@/lib/bdc-data";
 
@@ -55,56 +55,117 @@ interface ClientRow {
 
 interface BDCTableProps {
   clients: ClientRow[];
+  query?: string;
 }
 
-const BDCTable = ({ clients }: BDCTableProps) => {
+interface Filters {
+  sellerName: string;
+  city: string;
+  model: string;
+  arrivalStatus: string;
+}
+
+const BDCTable = ({ clients, query }: BDCTableProps) => {
   const router = useRouter();
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [filters, setFilters] = useState<Filters>({
+    sellerName: "",
+    city: "",
+    model: "",
+    arrivalStatus: "",
+  });
 
   const rows: Array<{
     id: string;
     clientId: string;
-    cliente: string;
-    vendedor: string;
-    cidade: string;
-    modelo: string;
-    chassi: string;
-    dataFaturamento: string;
-    dataChegada: Date | null;
-    situacao: "Pendente" | "Em Emplacamento" | "Emplacado";
+    customerName: string;
+    sellerName: string;
+    city: string;
+    model: string;
+    chassis: string;
+    billingDate: string;
+    arrivalDate: Date | null;
+    registrationStatus: "Pendente" | "Em Emplacamento" | "Emplacado";
+    hasArrived: boolean;
   }> = clients.flatMap((client) =>
     client.motorcycles.length > 0
-      ? client.motorcycles.map((moto) => ({
-          id: `${client.id}-${moto.id}`,
+      ? client.motorcycles.map((motorcycle) => ({
+          id: `${client.id}-${motorcycle.id}`,
           clientId: client.id,
-          cliente: client.name,
-          vendedor: client.sellerName,
-          cidade: client.city,
-          modelo: moto.model,
-          chassi: moto.chassis,
-          dataFaturamento: client.billingDate
+          customerName: client.name,
+          sellerName: client.sellerName,
+          city: client.city,
+          model: motorcycle.model,
+          chassis: motorcycle.chassis,
+          billingDate: client.billingDate
             ? new Date(client.billingDate).toLocaleDateString("pt-BR")
             : "—",
-          dataChegada: moto.arrivalDate,
-          situacao: mapRegistrationStatusLabel(moto.registrationStatus),
+          arrivalDate: motorcycle.arrivalDate,
+          registrationStatus: mapRegistrationStatusLabel(
+            motorcycle.registrationStatus,
+          ) as "Pendente" | "Em Emplacamento" | "Emplacado",
+          hasArrived:
+            getArrivalStatus(motorcycle.arrivalDate).label === "Chegou",
         }))
       : [
           {
             id: client.id,
             clientId: client.id,
-            cliente: client.name,
-            vendedor: client.sellerName,
-            cidade: client.city,
-            modelo: "—",
-            chassi: "—",
-            dataFaturamento: client.billingDate
+            customerName: client.name,
+            sellerName: client.sellerName,
+            city: client.city,
+            model: "—",
+            chassis: "—",
+            billingDate: client.billingDate
               ? new Date(client.billingDate).toLocaleDateString("pt-BR")
               : "—",
-            dataChegada: null,
-            situacao: "Pendente" as const,
+            arrivalDate: null,
+            registrationStatus: "Pendente" as const,
+            hasArrived: false,
           },
         ],
   );
+
+  const uniqueSellers = useMemo(
+    () => [...new Set(rows.map((r) => r.sellerName).filter(Boolean))].sort(),
+    [rows],
+  );
+  const uniqueCities = useMemo(
+    () => [...new Set(rows.map((r) => r.city).filter(Boolean))].sort(),
+    [rows],
+  );
+  const uniqueModels = useMemo(
+    () =>
+      [...new Set(rows.map((r) => r.model).filter((m) => m !== "—"))].sort(),
+    [rows],
+  );
+
+  const activeFilter = (v: string) => v && v !== " ";
+
+  const filteredRows = useMemo(
+    () =>
+      rows.filter((row) => {
+        if (
+          activeFilter(filters.sellerName) &&
+          row.sellerName !== filters.sellerName
+        )
+          return false;
+        if (activeFilter(filters.city) && row.city !== filters.city)
+          return false;
+        if (activeFilter(filters.model) && row.model !== filters.model)
+          return false;
+        if (filters.arrivalStatus === "Chegou" && !row.hasArrived) return false;
+        if (filters.arrivalStatus === "Não Chegou" && row.hasArrived)
+          return false;
+        return true;
+      }),
+    [rows, filters],
+  );
+
+  const handleFilterChange = (key: keyof Filters, value: string) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+    gotoPage(1);
+  };
 
   const {
     currentPage,
@@ -119,14 +180,14 @@ const BDCTable = ({ clients }: BDCTableProps) => {
     itemsPerPageOptions,
     paginatedRange,
   } = usePagination({
-    totalItems: rows.length,
+    totalItems: filteredRows.length,
     initialPage: 1,
     itemsPerPage: 10,
   });
 
   const paginatedRows = useMemo(
-    () => rows.slice(paginatedRange.start, paginatedRange.end),
-    [rows, paginatedRange.start, paginatedRange.end],
+    () => filteredRows.slice(paginatedRange.start, paginatedRange.end),
+    [filteredRows, paginatedRange.start, paginatedRange.end],
   );
 
   const handleCopy = useCallback((text: string, id: string) => {
@@ -146,6 +207,115 @@ const BDCTable = ({ clients }: BDCTableProps) => {
 
   return (
     <div className="w-full">
+      {/* Filters */}
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        <span className="text-sm font-medium text-muted-foreground mr-1">
+          Filtros:
+        </span>
+
+        <Select
+          value={filters.sellerName}
+          onValueChange={(v) => handleFilterChange("sellerName", v)}
+        >
+          <SelectTrigger className="w-[160px] h-8 text-sm">
+            <SelectValue placeholder="Vendedor" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value=" ">Todos</SelectItem>
+            {uniqueSellers.map((v) => (
+              <SelectItem key={v} value={v}>
+                {v}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={filters.city}
+          onValueChange={(v) => handleFilterChange("city", v)}
+        >
+          <SelectTrigger className="w-[160px] h-8 text-sm">
+            <SelectValue placeholder="Cidade" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value=" ">Todos</SelectItem>
+            {uniqueCities.map((c) => (
+              <SelectItem key={c} value={c}>
+                {c}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={filters.model}
+          onValueChange={(v) => handleFilterChange("model", v)}
+        >
+          <SelectTrigger className="w-[160px] h-8 text-sm">
+            <SelectValue placeholder="Modelo" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value=" ">Todos</SelectItem>
+            {uniqueModels.map((m) => (
+              <SelectItem key={m} value={m}>
+                {m}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={filters.arrivalStatus}
+          onValueChange={(v) => handleFilterChange("arrivalStatus", v)}
+        >
+          <SelectTrigger className="w-[160px] h-8 text-sm">
+            <SelectValue placeholder="Status Chegada" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value=" ">Todos</SelectItem>
+            <SelectItem value="Chegou">Chegou</SelectItem>
+            <SelectItem value="Não Chegou">Não Chegou</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <form
+          key={query ?? ""}
+          onSubmit={(e) => {
+            e.preventDefault();
+            const formData = new FormData(e.currentTarget);
+            const value = (formData.get("search") as string).trim();
+            if (value) {
+              router.push(`/bdc?q=${encodeURIComponent(value)}`);
+            }
+          }}
+          className="flex items-center gap-1 ml-auto"
+        >
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+            <input
+              name="search"
+              type="text"
+              placeholder="Buscar..."
+              defaultValue={query}
+              className="h-8 w-40 sm:w-56 pl-8 pr-8 text-sm rounded-lg border border-border/60 bg-muted/40 focus-visible:bg-background"
+            />
+            {query && (
+              <button
+                type="button"
+                onClick={() => router.push("/bdc")}
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 flex size-5 items-center justify-center rounded-full text-muted-foreground hover:text-foreground transition-colors"
+                aria-label="Limpar busca"
+              >
+                <X className="size-3.5" />
+              </button>
+            )}
+          </div>
+          <Button type="submit" size="icon" className="size-8 rounded-lg shrink-0">
+            <Search className="size-4" />
+          </Button>
+        </form>
+      </div>
+
       <div className="rounded-sm border">
         <Table>
           <TableHeader>
@@ -168,25 +338,27 @@ const BDCTable = ({ clients }: BDCTableProps) => {
                   colSpan={9}
                   className="text-center text-muted-foreground py-8"
                 >
-                  Nenhum cliente cadastrado.
+                  {rows.length === 0
+                    ? "Nenhum cliente cadastrado."
+                    : "Nenhum resultado encontrado para os filtros aplicados."}
                 </TableCell>
               </TableRow>
             ) : (
               paginatedRows.map((item) => {
-                const statusChegada = getStatusChegada(item.dataChegada);
+                const statusChegada = getArrivalStatus(item.arrivalDate);
                 return (
                   <TableRow key={item.id}>
                     <TableCell className="font-medium">
-                      {item.cliente}
+                      {item.customerName}
                     </TableCell>
-                    <TableCell>{item.vendedor}</TableCell>
-                    <TableCell>{item.cidade}</TableCell>
-                    <TableCell>{item.modelo}</TableCell>
+                    <TableCell>{item.sellerName}</TableCell>
+                    <TableCell>{item.city}</TableCell>
+                    <TableCell>{item.model}</TableCell>
                     <TableCell>
-                      {item.chassi !== "—" ? (
+                      {item.chassis !== "—" ? (
                         <button
                           type="button"
-                          onClick={() => handleCopy(item.chassi, item.id)}
+                          onClick={() => handleCopy(item.chassis, item.id)}
                           className="group inline-flex cursor-pointer items-center gap-1.5 font-mono text-xs transition-colors"
                           title="Clique para copiar o chassi"
                         >
@@ -201,7 +373,7 @@ const BDCTable = ({ clients }: BDCTableProps) => {
                             <>
                               <CopyIcon className="size-3.5 opacity-0 transition-opacity group-hover:opacity-100" />
                               <span className="hover:underline">
-                                {item.chassi}
+                                {item.chassis}
                               </span>
                             </>
                           )}
@@ -210,7 +382,7 @@ const BDCTable = ({ clients }: BDCTableProps) => {
                         <span className="text-muted-foreground">—</span>
                       )}
                     </TableCell>
-                    <TableCell>{item.dataFaturamento}</TableCell>
+                    <TableCell>{item.billingDate}</TableCell>
                     <TableCell>
                       <span
                         className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusChegada.color}`}
@@ -220,9 +392,9 @@ const BDCTable = ({ clients }: BDCTableProps) => {
                     </TableCell>
                     <TableCell>
                       <span
-                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getSituacaoColor(item.situacao)}`}
+                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(item.registrationStatus)}`}
                       >
-                        {item.situacao}
+                        {item.registrationStatus}
                       </span>
                     </TableCell>
                     <TableCell>
@@ -259,7 +431,7 @@ const BDCTable = ({ clients }: BDCTableProps) => {
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <span>
             Mostrando {paginatedRange.start + 1}-{paginatedRange.end} de{" "}
-            {rows.length} registros
+            {filteredRows.length} registro{filteredRows.length !== 1 ? "s" : ""}
           </span>
         </div>
 

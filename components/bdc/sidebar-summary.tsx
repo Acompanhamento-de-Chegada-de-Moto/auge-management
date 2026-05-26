@@ -18,15 +18,15 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
-interface SidebarResumoProps {
-  chassi: string;
+interface SidebarSummaryProps {
+  chassis: string;
   found: boolean;
-  modelo?: string;
-  cidade?: string;
-  cliente?: string;
-  vendedor?: string;
-  statusRegistro?: string;
-  motoChegou?: boolean;
+  model?: string;
+  city?: string;
+  customerName?: string;
+  sellerName?: string;
+  registrationStatus?: string;
+  hasArrived?: boolean;
   arrivalDate?: Date | null;
 }
 
@@ -49,12 +49,12 @@ function getStatusBadge(found: boolean, arrivalDate?: Date | null) {
     };
   }
 
-  const hoje = new Date();
-  hoje.setHours(0, 0, 0, 0);
-  const chegada = new Date(arrivalDate);
-  chegada.setHours(0, 0, 0, 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const arrival = new Date(arrivalDate);
+  arrival.setHours(0, 0, 0, 0);
 
-  if (chegada > hoje) {
+  if (arrival > today) {
     return {
       label: "Na Logística",
       color:
@@ -71,20 +71,20 @@ function getStatusBadge(found: boolean, arrivalDate?: Date | null) {
   };
 }
 
-export function SidebarResumo({
-  chassi,
+export function SidebarSummary({
+  chassis,
   found,
-  modelo,
-  cidade,
-  cliente,
-  vendedor,
-  statusRegistro,
-  motoChegou,
+  model,
+  city,
+  customerName,
+  sellerName,
+  registrationStatus,
+  hasArrived,
   arrivalDate,
-}: SidebarResumoProps) {
+}: SidebarSummaryProps) {
   const [collapsed, setCollapsed] = useState(false);
 
-  const hasData = chassi || cliente || modelo;
+  const hasData = chassis || customerName || model;
   const status = getStatusBadge(found, arrivalDate);
   const StatusIcon = status.icon;
 
@@ -127,76 +127,76 @@ export function SidebarResumo({
                   </Badge>
                 </div>
 
-                {chassi && (
+                {chassis && (
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Tag className="size-3" />
                       <span>Chassi</span>
                     </div>
-                    <p className="text-sm font-medium">{chassi}</p>
+                    <p className="text-sm font-medium">{chassis}</p>
                   </div>
                 )}
 
-                {modelo && (
+                {model && (
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Car className="size-3" />
                       <span>Modelo</span>
                     </div>
-                    <p className="text-sm font-medium">{modelo}</p>
+                    <p className="text-sm font-medium">{model}</p>
                   </div>
                 )}
 
-                {cidade && (
+                {city && (
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <MapPin className="size-3" />
                       <span>Cidade</span>
                     </div>
-                    <p className="text-sm font-medium">{cidade}</p>
+                    <p className="text-sm font-medium">{city}</p>
                   </div>
                 )}
 
-                {cliente && (
+                {customerName && (
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <User className="size-3" />
                       <span>Cliente</span>
                     </div>
-                    <p className="text-sm font-medium">{cliente}</p>
+                    <p className="text-sm font-medium">{customerName}</p>
                   </div>
                 )}
 
-                {vendedor && (
+                {sellerName && (
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <User className="size-3" />
                       <span>Vendedor</span>
                     </div>
-                    <p className="text-sm font-medium">{vendedor}</p>
+                    <p className="text-sm font-medium">{sellerName}</p>
                   </div>
                 )}
 
-                {motoChegou !== undefined && (
+                {hasArrived !== undefined && (
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Truck className="size-3" />
                       <span>Chegou na Loja</span>
                     </div>
                     <p className="text-sm font-medium">
-                      {motoChegou ? "Sim" : "Não"}
+                      {hasArrived ? "Sim" : "Não"}
                     </p>
                   </div>
                 )}
 
-                {statusRegistro && (
+                {registrationStatus && (
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <FileText className="size-3" />
                       <span>Status Emplacamento</span>
                     </div>
                     <Badge variant="outline" className="text-xs">
-                      {statusRegistro}
+                      {registrationStatus}
                     </Badge>
                   </div>
                 )}

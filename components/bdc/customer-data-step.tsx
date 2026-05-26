@@ -1,8 +1,6 @@
 "use client";
 
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { ArrowLeftIcon, CalendarIcon } from "lucide-react";
+import { CalendarIcon } from "lucide-react";
 import { useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -29,6 +27,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 import type { CustomerFormData } from "@/validators/customer-schema";
 
 interface CustomerDataStepProps {
@@ -37,287 +36,257 @@ interface CustomerDataStepProps {
 }
 
 export function CustomerDataStep({ form, onBack }: CustomerDataStepProps) {
-  const motoChegou = form.watch("motoChegou");
-  const [statusRegistro, setStatusRegistro] = useState(
-    form.getValues("statusRegistro"),
+  const hasArrived = form.watch("hasArrived");
+  const [registrationStatus, setRegistrationStatus] = useState(
+    form.getValues("registrationStatus") || "Pendente",
   );
 
-  // Monitora mudanças no status via react-hook-form
-  form.watch((value, { name }) => {
-    if (name === "statusRegistro" && value.statusRegistro) {
-      setStatusRegistro(value.statusRegistro);
-    }
-  });
-
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <FormField
-          control={form.control}
-          name="cliente"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Cliente</FormLabel>
-              <FormControl>
-                <Input placeholder="Nome do cliente" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="vendedor"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Vendedor</FormLabel>
-              <FormControl>
-                <Input placeholder="Nome do vendedor" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="cidade"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Cidade</FormLabel>
-              <FormControl>
-                <Input placeholder="Cidade" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="modelo"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Modelo</FormLabel>
-              <FormControl>
-                <Input placeholder="Modelo da motocicleta" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="chassi"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Chassi</FormLabel>
-              <FormControl>
-                <Input readOnly className="bg-muted" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="dataFaturamento"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Data de Faturamento</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !field.value && "text-muted-foreground",
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 size-4" />
-                      {field.value ? (
-                        format(field.value, "dd/MM/yyyy", {
-                          locale: ptBR,
-                        })
-                      ) : (
-                        <span>Selecione a data</span>
-                      )}
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={field.value}
-                    onSelect={field.onChange}
-                    locale={ptBR}
-                  />
-                </PopoverContent>
-              </Popover>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
-
-      <div className="space-y-4 rounded-lg border p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h4 className="text-sm font-medium">Chegada na Loja</h4>
-            <p className="text-sm text-muted-foreground">
-              A motocicleta já chegou na loja?
-            </p>
-          </div>
-          <FormField
-            control={form.control}
-            name="motoChegou"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-center space-y-0">
-                <FormControl>
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <FormField
-          control={form.control}
-          name="dataChegada"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Data de Chegada</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant="outline"
-                      disabled={!motoChegou}
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !field.value && "text-muted-foreground",
-                        !motoChegou && "opacity-50",
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 size-4" />
-                      {field.value ? (
-                        format(field.value, "dd/MM/yyyy", {
-                          locale: ptBR,
-                        })
-                      ) : (
-                        <span>
-                          {motoChegou
-                            ? "Selecione a data"
-                            : "Moto ainda não chegou"}
-                        </span>
-                      )}
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={field.value}
-                    onSelect={field.onChange}
-                    locale={ptBR}
-                  />
-                </PopoverContent>
-              </Popover>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
-
-      <div className="space-y-4">
-        <FormField
-          control={form.control}
-          name="statusRegistro"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Status de Emplacamento</FormLabel>
-              <Select
-                onValueChange={field.onChange}
-                defaultValue={field.value}
-                key={`select-${field.value}`}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o status" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="Pendente">Pendente</SelectItem>
-                  <SelectItem value="Em Emplacamento">
-                    Em Emplacamento
-                  </SelectItem>
-                  <SelectItem value="Emplacado">Emplacado</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {statusRegistro !== "Pendente" && (
-          <FormField
-            control={form.control}
-            name="dataEmplacamento"
-            render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel>
-                  {statusRegistro === "Em Emplacamento"
-                    ? "Data Agendada para Emplacamento"
-                    : "Data do Emplacamento"}
-                </FormLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !field.value && "text-muted-foreground",
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 size-4" />
-                        {field.value ? (
-                          format(field.value, "dd/MM/yyyy", {
-                            locale: ptBR,
-                          })
-                        ) : (
-                          <span>Selecione a data</span>
-                        )}
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={field.value}
-                      onSelect={field.onChange}
-                      locale={ptBR}
-                    />
-                  </PopoverContent>
-                </Popover>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+    <div className="space-y-4">
+      <FormField
+        control={form.control}
+        name="customerName"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Cliente</FormLabel>
+            <FormControl>
+              <Input placeholder="Nome do cliente" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
         )}
-      </div>
+      />
 
-      <div className="flex justify-end gap-2 pt-4">
+      <FormField
+        control={form.control}
+        name="sellerName"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Vendedor</FormLabel>
+            <FormControl>
+              <Input placeholder="Nome do vendedor" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="city"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Cidade</FormLabel>
+            <FormControl>
+              <Input placeholder="Cidade do cliente" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="model"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Modelo</FormLabel>
+            <FormControl>
+              <Input placeholder="Modelo da motocicleta" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="chassis"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Chassi</FormLabel>
+            <FormControl>
+              <Input placeholder="Número do chassi" {...field} readOnly />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="billingDate"
+        render={({ field }) => (
+          <FormItem className="flex flex-col">
+            <FormLabel>Data de Faturamento</FormLabel>
+            <Popover>
+              <PopoverTrigger asChild>
+                <FormControl>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full pl-3 text-left font-normal",
+                      !field.value && "text-muted-foreground",
+                    )}
+                  >
+                    {field.value ? (
+                      format(field.value, "dd/MM/yyyy")
+                    ) : (
+                      <span>Selecionar data</span>
+                    )}
+                    <CalendarIcon className="ml-auto size-4 opacity-50" />
+                  </Button>
+                </FormControl>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={field.value}
+                  onSelect={field.onChange}
+                  autoFocus
+                />
+              </PopoverContent>
+            </Popover>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="hasArrived"
+        render={({ field }) => (
+          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+            <div className="space-y-0.5">
+              <FormLabel>Moto chegou na loja?</FormLabel>
+            </div>
+            <FormControl>
+              <Switch
+                checked={field.value}
+                onCheckedChange={field.onChange}
+              />
+            </FormControl>
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="arrivalDate"
+        render={({ field }) => (
+          <FormItem className="flex flex-col">
+            <FormLabel>Data de Chegada</FormLabel>
+            <Popover>
+              <PopoverTrigger asChild>
+                <FormControl>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full pl-3 text-left font-normal",
+                      !field.value && "text-muted-foreground",
+                    )}
+                    disabled={!hasArrived}
+                  >
+                    {field.value ? (
+                      format(field.value, "dd/MM/yyyy")
+                    ) : (
+                      <span>Selecionar data</span>
+                    )}
+                    <CalendarIcon className="ml-auto size-4 opacity-50" />
+                  </Button>
+                </FormControl>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={field.value}
+                  onSelect={field.onChange}
+                  disabled={!hasArrived}
+                  autoFocus
+                />
+              </PopoverContent>
+            </Popover>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="registrationStatus"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Status de Emplacamento</FormLabel>
+            <Select
+              onValueChange={(value) => {
+                const status = value as "Pendente" | "Em Emplacamento" | "Emplacado";
+                field.onChange(status);
+                setRegistrationStatus(status);
+              }}
+              defaultValue={field.value}
+            >
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o status" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value="Pendente">Pendente</SelectItem>
+                <SelectItem value="Em Emplacamento">
+                  Em Emplacamento
+                </SelectItem>
+                <SelectItem value="Emplacado">Emplacado</SelectItem>
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      {registrationStatus !== "Pendente" && (
+        <FormField
+          control={form.control}
+          name="plateDate"
+          render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel>Data de Emplacamento</FormLabel>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full pl-3 text-left font-normal",
+                        !field.value && "text-muted-foreground",
+                      )}
+                    >
+                      {field.value ? (
+                        format(field.value, "dd/MM/yyyy")
+                      ) : (
+                        <span>Selecionar data</span>
+                      )}
+                      <CalendarIcon className="ml-auto size-4 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={field.value}
+                    onSelect={field.onChange}
+                    autoFocus
+                  />
+                </PopoverContent>
+              </Popover>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
+
+      <div className="flex gap-2">
         {onBack && (
           <Button type="button" variant="outline" onClick={onBack}>
-            <ArrowLeftIcon className="mr-2 size-4" />
             Voltar
           </Button>
         )}

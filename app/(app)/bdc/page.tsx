@@ -4,14 +4,19 @@ import Link from "next/link";
 import { SpreadsheetUploadDialog } from "@/components/bdc/spreadsheet-upload-dialog";
 import BDCTable from "@/components/shadcn-studio/table/bdc-table";
 import { Button } from "@/components/ui/button";
-import { getClientsAction } from "./actions";
+import { getClientsAction, searchClientsAction } from "./actions";
 
 export const metadata: Metadata = {
   title: "BDC",
 };
 
-export default async function BDCPage() {
-  const clients = await getClientsAction();
+export default async function BDCPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  const { q } = await searchParams;
+  const clients = q ? await searchClientsAction(q) : await getClientsAction();
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
@@ -29,7 +34,7 @@ export default async function BDCPage() {
           </Button>
         </div>
       </div>
-      <BDCTable clients={clients} />
+      <BDCTable clients={clients} query={q} />
     </div>
   );
 }

@@ -1,17 +1,5 @@
 import dayjs from "dayjs";
 
-export interface BDCItem {
-  id: string;
-  cliente: string;
-  vendedor: string;
-  cidade: string;
-  modelo: string;
-  chassi: string;
-  dataFaturamento: string;
-  dataChegada: string;
-  situacao: string;
-}
-
 export function parseExcelDate(value: unknown): Date | undefined {
   if (value == null || value === "") return undefined;
 
@@ -73,8 +61,8 @@ export function parseExcelDate(value: unknown): Date | undefined {
   return Number.isNaN(date.getTime()) ? undefined : date;
 }
 
-export function getStatusChegada(dataChegada: Date | null | undefined) {
-  if (!dataChegada) {
+export function getArrivalStatus(arrivalDate: Date | null | undefined) {
+  if (!arrivalDate) {
     return {
       label: "Não Chegou",
       color: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
@@ -82,9 +70,9 @@ export function getStatusChegada(dataChegada: Date | null | undefined) {
   }
 
   const hoje = dayjs().startOf("day");
-  const chegada = dayjs(dataChegada).startOf("day");
+  const arrival = dayjs(arrivalDate).startOf("day");
 
-  if (chegada.isBefore(hoje) || chegada.isSame(hoje, "day")) {
+  if (arrival.isBefore(hoje) || arrival.isSame(hoje, "day")) {
     return {
       label: "Chegou",
       color:
@@ -109,8 +97,8 @@ export function mapRegistrationStatusLabel(
   return map[status];
 }
 
-export function getSituacaoColor(situacao: string) {
-  switch (situacao) {
+export function getStatusColor(status: string) {
+  switch (status) {
     case "Pendente":
       return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400";
     case "Em Emplacamento":
