@@ -4,11 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "dev": "NODE_OPTIONS='--max-old-space-size=4096' next dev",
     "postinstall": "prisma generate",
-    "dev": "next dev",
-    "build": "prisma migrate deploy && next build",
+    "build": "prisma migrate deploy && NODE_OPTIONS='--max-old-space-size=4096' next build",
+    "build:ci": "NODE_OPTIONS='--max-old-space-size=4096' next build",
     "start": "next start",
     "lint": "biome check",
+    "typecheck": "tsc --noEmit",
     "format": "biome format --write"
   },
   "dependencies": {
