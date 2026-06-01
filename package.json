@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "NODE_OPTIONS='--max-old-space-size=4096' next dev",
     "postinstall": "prisma generate",
-    "build": "prisma migrate deploy && NODE_OPTIONS='--max-old-space-size=4096' next build",
+    "build": "prisma generate && prisma migrate deploy && NODE_OPTIONS='--max-old-space-size=4096' next build",
     "build:ci": "NODE_OPTIONS='--max-old-space-size=4096' next build",
     "start": "next start",
     "lint": "biome check",
