@@ -4,7 +4,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   CheckIcon,
   CopyIcon,
-  Loader2,
   PencilIcon,
   Search,
   Trash2Icon,
@@ -30,6 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -70,17 +70,86 @@ interface Filters {
   arrivalStatus: string;
 }
 
-interface BDCTableProps {
-  initialData?: ClientRow[];
+function BDCTableSkeleton() {
+  return (
+    <div className="w-full">
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        <Skeleton className="h-5 w-16" />
+        <Skeleton className="h-8 w-[160px]" />
+        <Skeleton className="h-8 w-[160px]" />
+        <Skeleton className="h-8 w-[160px]" />
+        <Skeleton className="h-8 w-[160px]" />
+        <div className="flex items-center gap-1 ml-auto">
+          <Skeleton className="h-8 w-56" />
+          <Skeleton className="h-8 w-8" />
+        </div>
+      </div>
+
+      <div className="rounded-sm border">
+        <Table>
+          <TableHeader>
+            <TableRow className="hover:bg-transparent">
+              <TableHead>Cliente</TableHead>
+              <TableHead>Vendedor</TableHead>
+              <TableHead>Cidade</TableHead>
+              <TableHead>Modelo</TableHead>
+              <TableHead>Chassi</TableHead>
+              <TableHead>Data Faturamento</TableHead>
+              <TableHead>Status Chegada</TableHead>
+              <TableHead>Situação</TableHead>
+              <TableHead className="w-0 pr-4 text-end">Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {Array.from({ length: 10 }).map((_, i) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton rows
+              <TableRow key={`skeleton-${i}`}>
+                <TableCell>
+                  <Skeleton className="h-4 w-32" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-4 w-24" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-4 w-20" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-4 w-24" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-4 w-40" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-4 w-24" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-5 w-20 rounded-full" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-5 w-24 rounded-full" />
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-1 justify-end">
+                    <Skeleton className="h-8 w-8 rounded-full" />
+                    <Skeleton className="h-8 w-8 rounded-full" />
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
 }
 
-const BDCTable = ({ initialData }: BDCTableProps) => {
+const BDCTable = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const query = searchParams.get("q") ?? undefined;
   const queryClient = useQueryClient();
 
-  const { data: clients, isLoading, error } = useClients(query, initialData);
+  const { data: clients, isLoading, error } = useClients(query);
 
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [filters, setFilters] = useState<Filters>({
@@ -222,11 +291,7 @@ const BDCTable = ({ initialData }: BDCTableProps) => {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="size-6 animate-spin text-muted-foreground" />
-      </div>
-    );
+    return <BDCTableSkeleton />;
   }
 
   if (error) {

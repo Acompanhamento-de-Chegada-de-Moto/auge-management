@@ -1,13 +1,7 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  CheckIcon,
-  CopyIcon,
-  Loader2,
-  PencilIcon,
-  Trash2Icon,
-} from "lucide-react";
+import { CheckIcon, CopyIcon, PencilIcon, Trash2Icon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
 import { deleteMotorcycleAction } from "@/app/(app)/logistica/actions";
@@ -28,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -68,22 +63,55 @@ function getArrivalStatus(arrivalDate: Date | null) {
   };
 }
 
-interface MotorcycleRow {
-  id: string;
-  model: string;
-  chassis: string;
-  arrivalDate: Date | null;
-  client?: { name: string } | null;
+function MotorcycleTableSkeleton() {
+  return (
+    <div className="w-full">
+      <div className="rounded-sm border">
+        <Table>
+          <TableHeader>
+            <TableRow className="hover:bg-transparent">
+              <TableHead>Modelo</TableHead>
+              <TableHead>Chassi</TableHead>
+              <TableHead>Data Chegada</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="w-0 pr-4 text-end">Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {Array.from({ length: 10 }).map((_, i) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton rows
+              <TableRow key={`skeleton-${i}`}>
+                <TableCell>
+                  <Skeleton className="h-4 w-28" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-4 w-40" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-4 w-24" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-5 w-20 rounded-full" />
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-1 justify-end">
+                    <Skeleton className="h-8 w-8 rounded-full" />
+                    <Skeleton className="h-8 w-8 rounded-full" />
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
 }
 
-interface MotorcycleTableProps {
-  initialData?: MotorcycleRow[];
-}
-
-export default function MotorcycleTable({ initialData }: MotorcycleTableProps) {
+export default function MotorcycleTable() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { data: motorcycles, isLoading, error } = useMotorcycles(initialData);
+  const { data: motorcycles, isLoading, error } = useMotorcycles();
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const {
@@ -122,11 +150,7 @@ export default function MotorcycleTable({ initialData }: MotorcycleTableProps) {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="size-6 animate-spin text-muted-foreground" />
-      </div>
-    );
+    return <MotorcycleTableSkeleton />;
   }
 
   if (error) {
