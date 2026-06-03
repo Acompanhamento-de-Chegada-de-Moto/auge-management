@@ -68,10 +68,22 @@ function getArrivalStatus(arrivalDate: Date | null) {
   };
 }
 
-export default function MotorcycleTable() {
+interface MotorcycleRow {
+  id: string;
+  model: string;
+  chassis: string;
+  arrivalDate: Date | null;
+  client?: { name: string } | null;
+}
+
+interface MotorcycleTableProps {
+  initialData?: MotorcycleRow[];
+}
+
+export default function MotorcycleTable({ initialData }: MotorcycleTableProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { data: motorcycles, isLoading, error } = useMotorcycles();
+  const { data: motorcycles, isLoading, error } = useMotorcycles(initialData);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const {

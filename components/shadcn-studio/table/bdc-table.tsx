@@ -70,13 +70,17 @@ interface Filters {
   arrivalStatus: string;
 }
 
-const BDCTable = () => {
+interface BDCTableProps {
+  initialData?: ClientRow[];
+}
+
+const BDCTable = ({ initialData }: BDCTableProps) => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const query = searchParams.get("q") ?? undefined;
   const queryClient = useQueryClient();
 
-  const { data: clients, isLoading, error } = useClients(query);
+  const { data: clients, isLoading, error } = useClients(query, initialData);
 
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [filters, setFilters] = useState<Filters>({

@@ -4,12 +4,15 @@ import Link from "next/link";
 import { SpreadsheetUploadDialog } from "@/components/bdc/spreadsheet-upload-dialog";
 import BDCTable from "@/components/shadcn-studio/table/bdc-table";
 import { Button } from "@/components/ui/button";
+import { getClientsAction } from "./actions";
 
 export const metadata: Metadata = {
   title: "BDC",
 };
 
-export default function BDCPage() {
+export default async function BDCPage() {
+  const clients = await getClientsAction();
+
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="flex justify-between items-center mb-4">
@@ -26,7 +29,7 @@ export default function BDCPage() {
           </Button>
         </div>
       </div>
-      <BDCTable />
+      <BDCTable initialData={clients} />
     </div>
   );
 }
