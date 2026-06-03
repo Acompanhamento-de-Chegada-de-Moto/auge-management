@@ -161,10 +161,7 @@ export function CustomerDataStep({ form, onBack }: CustomerDataStepProps) {
               <FormLabel>Moto chegou na loja?</FormLabel>
             </div>
             <FormControl>
-              <Switch
-                checked={field.value}
-                onCheckedChange={field.onChange}
-              />
+              <Switch checked={field.value} onCheckedChange={field.onChange} />
             </FormControl>
           </FormItem>
         )}
@@ -219,7 +216,10 @@ export function CustomerDataStep({ form, onBack }: CustomerDataStepProps) {
             <FormLabel>Status de Emplacamento</FormLabel>
             <Select
               onValueChange={(value) => {
-                const status = value as "Pendente" | "Em Emplacamento" | "Emplacado";
+                const status = value as
+                  | "Pendente"
+                  | "Em Emplacamento"
+                  | "Emplacado";
                 field.onChange(status);
                 setRegistrationStatus(status);
               }}
@@ -232,9 +232,7 @@ export function CustomerDataStep({ form, onBack }: CustomerDataStepProps) {
               </FormControl>
               <SelectContent>
                 <SelectItem value="Pendente">Pendente</SelectItem>
-                <SelectItem value="Em Emplacamento">
-                  Em Emplacamento
-                </SelectItem>
+                <SelectItem value="Em Emplacamento">Em Emplacamento</SelectItem>
                 <SelectItem value="Emplacado">Emplacado</SelectItem>
               </SelectContent>
             </Select>

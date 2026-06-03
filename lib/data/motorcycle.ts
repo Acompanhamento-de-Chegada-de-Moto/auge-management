@@ -15,6 +15,67 @@ export async function getAllMotorcycles() {
   });
 }
 
+export async function getAllMotorcyclesForImport() {
+  return prisma.motorcycle.findMany({
+    select: {
+      id: true,
+      chassis: true,
+      arrivalDate: true,
+      clientId: true,
+    },
+  });
+}
+
+export async function createMotorcyclesBatch(
+  motorcycles: Array<{
+    chassis: string;
+    model: string;
+    arrivalDate?: Date | null;
+    registrationStatus?: RegistrationStatus;
+    clientId?: string;
+  }>,
+) {
+  if (motorcycles.length === 0) return;
+  return prisma.motorcycle.createMany({
+    data: motorcycles.map((m) => ({
+      chassis: m.chassis,
+      model: m.model,
+      arrivalDate: m.arrivalDate ?? null,
+      registrationStatus: m.registrationStatus ?? "PENDING",
+      clientId: m.clientId,
+    })),
+  });
+}
+
+export async function updateMotorcyclesBatch(
+  updates: Array<{
+    chassis: string;
+    arrivalDate: Date;
+  }>,
+) {
+  if (updates.length === 0) return;
+  const operations = updates.map((u) =>
+    prisma.motorcycle.update({
+      where: { chassis: u.chassis },
+      data: { arrivalDate: u.arrivalDate },
+    }),
+  );
+  return prisma.$transaction(operations);
+}
+
+export async function linkMotorcyclesBatch(
+  links: Array<{ chassis: string; clientId: string }>,
+) {
+  if (links.length === 0) return;
+  const operations = links.map((l) =>
+    prisma.motorcycle.update({
+      where: { chassis: l.chassis },
+      data: { clientId: l.clientId },
+    }),
+  );
+  return prisma.$transaction(operations);
+}
+
 export async function createMotorcycle(data: {
   chassis: string;
   model: string;

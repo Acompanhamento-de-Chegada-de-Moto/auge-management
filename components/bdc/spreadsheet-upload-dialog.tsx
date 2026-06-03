@@ -1,6 +1,7 @@
 "use client";
 
-import { FileSpreadsheet, Upload, X } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { FileSpreadsheet, Loader2, Upload, X } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { toast } from "sonner";
@@ -26,6 +27,7 @@ const ACCEPTED_TYPES = {
 };
 
 export function SpreadsheetUploadDialog() {
+  const queryClient = useQueryClient();
   const [file, setFile] = useState<File | null>(null);
   const [open, setOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -71,6 +73,7 @@ export function SpreadsheetUploadDialog() {
         });
         setFile(null);
         setOpen(false);
+        queryClient.invalidateQueries({ queryKey: ["clients"] });
       } else {
         toast.error("Erro na importação", {
           description: result.error,
@@ -166,9 +169,16 @@ export function SpreadsheetUploadDialog() {
           <Button
             onClick={handleUpload}
             disabled={!file || isUploading}
-            className="min-w-[100px]"
+            className="min-w-[120px]"
           >
-            {isUploading ? "Importando..." : "Importar"}
+            {isUploading ? (
+              <>
+                <Loader2 className="mr-2 size-4 animate-spin" />
+                Importando...
+              </>
+            ) : (
+              "Importar"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

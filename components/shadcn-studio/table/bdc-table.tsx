@@ -1,7 +1,16 @@
 "use client";
 
-import { CheckIcon, CopyIcon, PencilIcon, Search, Trash2Icon, X } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  CheckIcon,
+  CopyIcon,
+  Loader2,
+  PencilIcon,
+  Search,
+  Trash2Icon,
+  X,
+} from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
 import { deleteClientAction } from "@/app/(app)/bdc/actions";
 import { Button } from "@/components/ui/button";
@@ -29,6 +38,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useClients } from "@/hooks/use-clients";
 import { usePagination } from "@/hooks/use-pagination";
 import {
   getArrivalStatus,
@@ -53,11 +63,6 @@ interface ClientRow {
   motorcycles: MotorcycleRow[];
 }
 
-interface BDCTableProps {
-  clients: ClientRow[];
-  query?: string;
-}
-
 interface Filters {
   sellerName: string;
   city: string;
@@ -65,8 +70,14 @@ interface Filters {
   arrivalStatus: string;
 }
 
-const BDCTable = ({ clients, query }: BDCTableProps) => {
+const BDCTable = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const query = searchParams.get("q") ?? undefined;
+  const queryClient = useQueryClient();
+
+  const { data: clients, isLoading, error } = useClients(query);
+
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [filters, setFilters] = useState<Filters>({
     sellerName: "",
@@ -87,7 +98,7 @@ const BDCTable = ({ clients, query }: BDCTableProps) => {
     arrivalDate: Date | null;
     registrationStatus: "Pendente" | "Em Emplacamento" | "Emplacado";
     hasArrived: boolean;
-  }> = clients.flatMap((client) =>
+  }> = (clients ?? []).flatMap((client: ClientRow) =>
     client.motorcycles.length > 0
       ? client.motorcycles.map((motorcycle) => ({
           id: `${client.id}-${motorcycle.id}`,
@@ -203,7 +214,24 @@ const BDCTable = ({ clients, query }: BDCTableProps) => {
 
   const handleDelete = async (id: string) => {
     await deleteClientAction(id);
+    queryClient.invalidateQueries({ queryKey: ["clients"] });
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="size-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12 text-destructive">
+        Erro ao carregar dados. Tente novamente.
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">
@@ -310,7 +338,11 @@ const BDCTable = ({ clients, query }: BDCTableProps) => {
               </button>
             )}
           </div>
-          <Button type="submit" size="icon" className="size-8 rounded-lg shrink-0">
+          <Button
+            type="submit"
+            size="icon"
+            className="size-8 rounded-lg shrink-0"
+          >
             <Search className="size-4" />
           </Button>
         </form>

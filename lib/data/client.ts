@@ -38,6 +38,40 @@ export async function getClients() {
   });
 }
 
+export async function getAllClientsForImport() {
+  return prisma.client.findMany({
+    select: {
+      id: true,
+      name: true,
+      sellerName: true,
+    },
+  });
+}
+
+export async function createClientsBatch(
+  clients: Array<{
+    name: string;
+    sellerName: string;
+    city: string;
+    billingDate?: Date | null;
+  }>,
+) {
+  if (clients.length === 0) return [];
+  return prisma.client.createManyAndReturn({
+    data: clients.map((c) => ({
+      name: c.name,
+      sellerName: c.sellerName,
+      city: c.city,
+      billingDate: c.billingDate ?? null,
+    })),
+    select: {
+      id: true,
+      name: true,
+      sellerName: true,
+    },
+  });
+}
+
 export async function getClientById(id: string) {
   return prisma.client.findUnique({
     where: { id },

@@ -5,17 +5,17 @@ import * as XLSX from "xlsx";
 import { requireAuth } from "@/app/data/require-user";
 import { parseExcelDate } from "@/lib/bdc-data";
 import {
-  createClient,
+  createClientsBatch,
   deleteClient as dalDeleteClient,
   getClients as dalGetClients,
-  getClientByNameAndSeller,
   searchClients as dalSearchClients,
+  getAllClientsForImport,
 } from "@/lib/data/client";
 import {
-  createMotorcycle,
+  createMotorcyclesBatch,
   getMotorcycleByChassis,
-  linkMotorcycleToClient,
-  updateMotorcycleByChassis,
+  linkMotorcyclesBatch,
+  updateMotorcyclesBatch,
 } from "@/lib/data/motorcycle";
 
 function findSheet(
@@ -154,10 +154,64 @@ export async function importSpreadsheetAction(formData: FormData) {
     const json = readMainSheet(workbook);
     const arrivalMap = readArrivalSheet(workbook);
 
-    let success = 0;
+    const existingClients = await getAllClientsForImport();
+    const existingMotorcycles = await (
+      await import("@/lib/data/motorcycle")
+    ).getAllMotorcyclesForImport();
+
+    const clientMap = new Map<
+      string,
+      { id: string; name: string; sellerName: string }
+    >();
+    for (const c of existingClients) {
+      const key = `${c.name.toLowerCase()}|${c.sellerName.toLowerCase()}`;
+      clientMap.set(key, c);
+    }
+
+    const motorcycleMap = new Map<
+      string,
+      {
+        id: string;
+        chassis: string;
+        arrivalDate: Date | null;
+        clientId: string | null;
+      }
+    >();
+    for (const m of existingMotorcycles) {
+      motorcycleMap.set(m.chassis, m);
+    }
+
+    const clientsToCreate: Array<{
+      name: string;
+      sellerName: string;
+      city: string;
+      billingDate?: Date | null;
+    }> = [];
+    const motorcyclesToCreate: Array<{
+      chassis: string;
+      model: string;
+      arrivalDate?: Date | null;
+      registrationStatus: "PENDING";
+      clientId?: string;
+    }> = [];
+    const motorcyclesToUpdate: Array<{ chassis: string; arrivalDate: Date }> =
+      [];
+    const motorcyclesToLink: Array<{ chassis: string; clientId: string }> = [];
+
     let created = 0;
     let updated = 0;
     let skipped = 0;
+
+    const processedRows: Array<{
+      clientKey: string;
+      clientName: string;
+      sellerName: string;
+      city: string;
+      billingDate?: Date | null;
+      chassis: string;
+      model: string;
+      arrivalDate: Date | null;
+    }> = [];
 
     for (const row of json as Record<string, unknown>[]) {
       const clientName = detectColumn(row, CLIENT_NAME_KEYS);
@@ -178,7 +232,6 @@ export async function importSpreadsheetAction(formData: FormData) {
       const billingDateRaw = detectColumn(row, BILLING_DATE_KEYS);
       const billingDate = parseExcelDate(billingDateRaw);
 
-      // Arrival: Página2 has priority, fallback to Página1 "MOTO CHEGOU" column
       const arrivalInfo = arrivalMap.get(chassisStr);
       const hasArrivedRaw = detectColumn(row, HAS_ARRIVED_KEYS);
       const hasArrivedFromMainSheet =
@@ -187,56 +240,90 @@ export async function importSpreadsheetAction(formData: FormData) {
           : false;
 
       let arrivalDate: Date | null = null;
-
       if (arrivalInfo?.arrivalDate) {
         arrivalDate = arrivalInfo.arrivalDate;
       } else if (hasArrivedFromMainSheet) {
         arrivalDate = new Date();
       }
 
-      let existingClient = await getClientByNameAndSeller(
-        nameStr,
-        sellerStr,
-      );
+      const clientKey = `${nameStr.toLowerCase()}|${sellerStr.toLowerCase()}`;
 
-      if (!existingClient) {
-        existingClient = await createClient({
-          name: nameStr,
-          sellerName: sellerStr,
-          city: city,
-          billingDate,
+      processedRows.push({
+        clientKey,
+        clientName: nameStr,
+        sellerName: sellerStr,
+        city,
+        billingDate,
+        chassis: chassisStr,
+        model,
+        arrivalDate,
+      });
+    }
+
+    const newClientKeys = new Set<string>();
+    for (const row of processedRows) {
+      if (!clientMap.has(row.clientKey) && !newClientKeys.has(row.clientKey)) {
+        newClientKeys.add(row.clientKey);
+        clientsToCreate.push({
+          name: row.clientName,
+          sellerName: row.sellerName,
+          city: row.city,
+          billingDate: row.billingDate,
         });
       }
+    }
 
-      const existingMoto = await getMotorcycleByChassis(chassisStr);
+    if (clientsToCreate.length > 0) {
+      const createdClients = await createClientsBatch(clientsToCreate);
+      for (const c of createdClients) {
+        const key = `${c.name.toLowerCase()}|${c.sellerName.toLowerCase()}`;
+        clientMap.set(key, c);
+      }
+    }
+
+    for (const row of processedRows) {
+      const client = clientMap.get(row.clientKey);
+      if (!client) continue;
+
+      const existingMoto = motorcycleMap.get(row.chassis);
 
       if (existingMoto) {
-        if (arrivalDate && !existingMoto.arrivalDate) {
-          await updateMotorcycleByChassis(chassisStr, {
-            arrivalDate,
+        if (row.arrivalDate && !existingMoto.arrivalDate) {
+          motorcyclesToUpdate.push({
+            chassis: row.chassis,
+            arrivalDate: row.arrivalDate,
           });
+          existingMoto.arrivalDate = row.arrivalDate;
           updated++;
         }
 
-        if (
-          !existingMoto.clientId ||
-          existingMoto.clientId !== existingClient.id
-        ) {
-          await linkMotorcycleToClient(chassisStr, existingClient.id);
+        if (!existingMoto.clientId || existingMoto.clientId !== client.id) {
+          motorcyclesToLink.push({ chassis: row.chassis, clientId: client.id });
+          existingMoto.clientId = client.id;
         }
       } else {
-        await createMotorcycle({
-          chassis: chassisStr,
-          model,
-          arrivalDate,
+        motorcyclesToCreate.push({
+          chassis: row.chassis,
+          model: row.model,
+          arrivalDate: row.arrivalDate,
           registrationStatus: "PENDING",
-          clientId: existingClient.id,
+          clientId: client.id,
+        });
+        motorcycleMap.set(row.chassis, {
+          id: "",
+          chassis: row.chassis,
+          arrivalDate: row.arrivalDate,
+          clientId: client.id,
         });
         created++;
       }
-
-      success++;
     }
+
+    await createMotorcyclesBatch(motorcyclesToCreate);
+    await updateMotorcyclesBatch(motorcyclesToUpdate);
+    await linkMotorcyclesBatch(motorcyclesToLink);
+
+    const success = processedRows.length;
 
     revalidatePath("/bdc");
 

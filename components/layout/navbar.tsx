@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  Bike,
-  LogOut,
-  Settings,
-  TextAlignJustify,
-  User,
-} from "lucide-react";
+import { Bike, LogOut, Settings, TextAlignJustify, User } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";

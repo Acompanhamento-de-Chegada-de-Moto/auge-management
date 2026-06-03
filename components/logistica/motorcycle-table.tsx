@@ -1,6 +1,13 @@
 "use client";
 
-import { CheckIcon, CopyIcon, PencilIcon, Trash2Icon } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  CheckIcon,
+  CopyIcon,
+  Loader2,
+  PencilIcon,
+  Trash2Icon,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
 import { deleteMotorcycleAction } from "@/app/(app)/logistica/actions";
@@ -29,18 +36,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useMotorcycles } from "@/hooks/use-motorcycles";
 import { usePagination } from "@/hooks/use-pagination";
-
-interface MotorcycleRow {
-  id: string;
-  model: string;
-  chassis: string;
-  arrivalDate: Date | null;
-}
-
-interface MotorcycleTableProps {
-  motorcycles: MotorcycleRow[];
-}
 
 function getArrivalStatus(arrivalDate: Date | null) {
   if (!arrivalDate) {
@@ -71,8 +68,10 @@ function getArrivalStatus(arrivalDate: Date | null) {
   };
 }
 
-export default function MotorcycleTable({ motorcycles }: MotorcycleTableProps) {
+export default function MotorcycleTable() {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const { data: motorcycles, isLoading, error } = useMotorcycles();
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const {
@@ -88,13 +87,13 @@ export default function MotorcycleTable({ motorcycles }: MotorcycleTableProps) {
     itemsPerPageOptions,
     paginatedRange,
   } = usePagination({
-    totalItems: motorcycles.length,
+    totalItems: motorcycles?.length ?? 0,
     initialPage: 1,
     itemsPerPage: 10,
   });
 
   const paginatedMotorcycles = useMemo(
-    () => motorcycles.slice(paginatedRange.start, paginatedRange.end),
+    () => (motorcycles ?? []).slice(paginatedRange.start, paginatedRange.end),
     [motorcycles, paginatedRange.start, paginatedRange.end],
   );
 
@@ -107,7 +106,24 @@ export default function MotorcycleTable({ motorcycles }: MotorcycleTableProps) {
 
   const handleDelete = async (id: string) => {
     await deleteMotorcycleAction(id);
+    queryClient.invalidateQueries({ queryKey: ["motorcycles"] });
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="size-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12 text-destructive">
+        Erro ao carregar dados. Tente novamente.
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">
@@ -137,11 +153,15 @@ export default function MotorcycleTable({ motorcycles }: MotorcycleTableProps) {
                 const status = getArrivalStatus(motorcycle.arrivalDate);
                 return (
                   <TableRow key={motorcycle.id}>
-                    <TableCell className="font-medium">{motorcycle.model}</TableCell>
+                    <TableCell className="font-medium">
+                      {motorcycle.model}
+                    </TableCell>
                     <TableCell>
                       <button
                         type="button"
-                        onClick={() => handleCopy(motorcycle.chassis, motorcycle.id)}
+                        onClick={() =>
+                          handleCopy(motorcycle.chassis, motorcycle.id)
+                        }
                         className="group inline-flex cursor-pointer items-center gap-1.5 font-mono text-xs transition-colors"
                         title="Clique para copiar o chassi"
                       >
@@ -164,7 +184,9 @@ export default function MotorcycleTable({ motorcycles }: MotorcycleTableProps) {
                     </TableCell>
                     <TableCell>
                       {motorcycle.arrivalDate
-                        ? new Date(motorcycle.arrivalDate).toLocaleDateString("pt-BR")
+                        ? new Date(motorcycle.arrivalDate).toLocaleDateString(
+                            "pt-BR",
+                          )
                         : "—"}
                     </TableCell>
                     <TableCell>
@@ -212,7 +234,7 @@ export default function MotorcycleTable({ motorcycles }: MotorcycleTableProps) {
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <span>
             Mostrando {paginatedRange.start + 1}-{paginatedRange.end} de{" "}
-            {motorcycles.length} registros
+            {motorcycles?.length ?? 0} registros
           </span>
         </div>
 
