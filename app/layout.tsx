@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
+import { CookieConsentBanner } from "@/components/cookie-consent-banner";
 import { Providers } from "@/components/providers";
 import { ThemeProvider } from "@/components/theme-provider";
 import { cn } from "@/lib/utils";
@@ -54,6 +55,7 @@ export default function RootLayout({
           <Providers>{children}</Providers>
           <Toaster />
         </ThemeProvider>
+        <CookieConsentBanner />
       </body>
     </html>
   );
