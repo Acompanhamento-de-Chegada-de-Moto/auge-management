@@ -6,7 +6,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { getClientsAction } from "@/app/(app)/bdc/actions";
-import { getMotorcyclesAction } from "@/app/(app)/logistica/actions";
+import { getMotorcyclesAction } from "@/app/(app)/estoque/actions";
 import { BreadcrumbNav } from "@/components/layout/breadcrumb-nav";
 import { ModeToggle } from "@/components/mode-toggle";
 import { Button } from "@/components/ui/button";
@@ -21,9 +21,9 @@ import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 
 const navigationData = [
-  { title: "Consultar", href: "/consultar" },
+  { title: "Acompanhamento", href: "/acompanhamento" },
   { title: "BDC", href: "/bdc" },
-  { title: "Logística", href: "/logistica" },
+  { title: "Estoque", href: "/estoque" },
 ];
 
 const Navbar = () => {
@@ -41,7 +41,7 @@ const Navbar = () => {
           queryKey: ["clients"],
           queryFn: getClientsAction,
         });
-      } else if (href === "/logistica") {
+      } else if (href === "/estoque") {
         queryClient.prefetchQuery({
           queryKey: ["motorcycles"],
           queryFn: getMotorcyclesAction,
@@ -88,7 +88,7 @@ const Navbar = () => {
         {/* ─── Top Row ─── */}
         <div className="flex items-center h-14 justify-between gap-4">
           {/* Logo */}
-          <Link href="/consultar" className="flex items-center gap-3 shrink-0">
+          <Link href="/acompanhamento" className="flex items-center gap-3 shrink-0">
             <div className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
               <Bike className="size-5" />
             </div>

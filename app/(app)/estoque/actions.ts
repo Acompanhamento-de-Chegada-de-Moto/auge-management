@@ -19,7 +19,7 @@ export async function deleteMotorcycleAction(id: string) {
   try {
     await dalDeleteMotorcycle(id);
 
-    revalidatePath("/logistica");
+    revalidatePath("/estoque");
     revalidatePath("/bdc");
     return { success: true };
   } catch {

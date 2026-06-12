@@ -108,6 +108,15 @@ export async function getMotorcycleById(id: string) {
   });
 }
 
+export async function getMotorcycleByIdWithClient(id: string) {
+  return prisma.motorcycle.findUnique({
+    where: { id },
+    include: {
+      client: true,
+    },
+  });
+}
+
 export async function updateMotorcycle(
   id: string,
   data: {

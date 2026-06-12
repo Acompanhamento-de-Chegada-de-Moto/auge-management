@@ -68,7 +68,7 @@ export async function createClientAction(formData: unknown) {
     }
 
     revalidatePath("/bdc");
-    revalidatePath("/logistica");
+    revalidatePath("/estoque");
 
     return { success: true };
   } catch {

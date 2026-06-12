@@ -1,11 +1,12 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { CheckIcon, CopyIcon, PencilIcon, Trash2Icon } from "lucide-react";
+import { CheckIcon, CopyIcon, PencilIcon, SearchIcon, Trash2Icon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
-import { deleteMotorcycleAction } from "@/app/(app)/logistica/actions";
+import { deleteMotorcycleAction } from "@/app/(app)/estoque/actions";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Pagination,
   PaginationContent,
@@ -32,6 +33,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useMotorcycles } from "@/hooks/use-motorcycles";
+import dayjs from "dayjs";
 import { usePagination } from "@/hooks/use-pagination";
 
 function getArrivalStatus(forecastDate: Date | null) {
@@ -43,12 +45,18 @@ function getArrivalStatus(forecastDate: Date | null) {
     };
   }
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const arrival = new Date(forecastDate);
-  arrival.setHours(0, 0, 0, 0);
+  const hoje = dayjs().startOf("day");
+  const arrival = dayjs(forecastDate).startOf("day");
 
-  if (arrival <= today) {
+  if (arrival.isAfter(hoje)) {
+    return {
+      label: "Em Trânsito",
+      color:
+        "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
+    };
+  }
+
+  if (arrival.isSame(hoje, "day")) {
     return {
       label: "Chegou",
       color:
@@ -57,9 +65,8 @@ function getArrivalStatus(forecastDate: Date | null) {
   }
 
   return {
-    label: "Em Trânsito",
-    color:
-      "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
+    label: "Atrasada",
+    color: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
   };
 }
 
@@ -72,7 +79,7 @@ function MotorcycleTableSkeleton() {
             <TableRow className="hover:bg-transparent">
               <TableHead>Modelo</TableHead>
               <TableHead>Chassi</TableHead>
-              <TableHead>Data Chegada</TableHead>
+              <TableHead>Previsão de Chegada</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="w-0 pr-4 text-end">Ações</TableHead>
             </TableRow>
@@ -108,11 +115,44 @@ function MotorcycleTableSkeleton() {
   );
 }
 
+interface Filters {
+  model: string;
+  status: string;
+}
+
 export default function MotorcycleTable() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { data: motorcycles, isLoading, error } = useMotorcycles();
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [filters, setFilters] = useState<Filters>({ model: "", status: "" });
+  const [chassisSearch, setChassisSearch] = useState("");
+
+  const activeFilter = (v: string) => v && v !== " ";
+
+  const uniqueModels = useMemo(
+    () =>
+      [...new Set((motorcycles ?? []).map((m) => m.model).filter(Boolean))].sort(),
+    [motorcycles],
+  );
+
+  const filteredMotorcycles = useMemo(
+    () =>
+      (motorcycles ?? []).filter((moto) => {
+        if (activeFilter(filters.model) && moto.model !== filters.model)
+          return false;
+        if (activeFilter(filters.status)) {
+          const status = getArrivalStatus(moto.forecastDate);
+          if (status.label !== filters.status) return false;
+        }
+        if (chassisSearch) {
+          const q = chassisSearch.toLowerCase();
+          if (!moto.chassis.toLowerCase().includes(q)) return false;
+        }
+        return true;
+      }),
+    [motorcycles, filters, chassisSearch],
+  );
 
   const {
     currentPage,
@@ -127,14 +167,19 @@ export default function MotorcycleTable() {
     itemsPerPageOptions,
     paginatedRange,
   } = usePagination({
-    totalItems: motorcycles?.length ?? 0,
+    totalItems: filteredMotorcycles.length,
     initialPage: 1,
     itemsPerPage: 10,
   });
 
+  const handleFilterChange = (key: keyof Filters, value: string) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+    gotoPage(1);
+  };
+
   const paginatedMotorcycles = useMemo(
-    () => (motorcycles ?? []).slice(paginatedRange.start, paginatedRange.end),
-    [motorcycles, paginatedRange.start, paginatedRange.end],
+    () => filteredMotorcycles.slice(paginatedRange.start, paginatedRange.end),
+    [filteredMotorcycles, paginatedRange.start, paginatedRange.end],
   );
 
   const handleCopy = useCallback((text: string, id: string) => {
@@ -161,15 +206,63 @@ export default function MotorcycleTable() {
     );
   }
 
+  const statusOptions = ["Em Trânsito", "Chegou", "Atrasada"];
+
   return (
     <div className="w-full">
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        <span className="text-sm font-medium text-muted-foreground mr-1">
+          Filtros:
+        </span>
+
+        <Select
+          value={filters.model}
+          onValueChange={(v) => handleFilterChange("model", v)}
+        >
+          <SelectTrigger className="w-[160px] h-8 text-sm">
+            <SelectValue placeholder="Modelo" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value=" ">Todos</SelectItem>
+            {uniqueModels.map((m) => (
+              <SelectItem key={m} value={m}>{m}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={filters.status}
+          onValueChange={(v) => handleFilterChange("status", v)}
+        >
+          <SelectTrigger className="w-[160px] h-8 text-sm">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value=" ">Todos</SelectItem>
+            {statusOptions.map((s) => (
+              <SelectItem key={s} value={s}>{s}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <div className="relative ml-auto">
+          <SearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+          <Input
+            placeholder="Buscar chassi..."
+            value={chassisSearch}
+            onChange={(e) => { setChassisSearch(e.target.value); gotoPage(1); }}
+            className="pl-8 h-8 w-[200px] text-sm"
+          />
+        </div>
+      </div>
+
       <div className="rounded-sm border">
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
               <TableHead>Modelo</TableHead>
               <TableHead>Chassi</TableHead>
-              <TableHead>Data Chegada</TableHead>
+              <TableHead>Previsão de Chegada</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="w-0 pr-4 text-end">Ações</TableHead>
             </TableRow>
@@ -181,7 +274,9 @@ export default function MotorcycleTable() {
                   colSpan={5}
                   className="text-center text-muted-foreground py-8"
                 >
-                  Nenhuma motocicleta cadastrada.
+                  {filteredMotorcycles.length === 0 && (motorcycles?.length ?? 0) > 0
+                    ? "Nenhum resultado para os filtros atuais."
+                    : "Nenhuma motocicleta cadastrada."}
                 </TableCell>
               </TableRow>
             ) : (
@@ -241,7 +336,7 @@ export default function MotorcycleTable() {
                           aria-label={`editar-${motorcycle.id}`}
                           onClick={() =>
                             router.push(
-                              `/logistica/motocicleta/editar?id=${motorcycle.id}`,
+                              `/estoque/motocicleta/editar?id=${motorcycle.id}`,
                             )
                           }
                         >
@@ -270,7 +365,7 @@ export default function MotorcycleTable() {
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <span>
             Mostrando {paginatedRange.start + 1}-{paginatedRange.end} de{" "}
-            {motorcycles?.length ?? 0} registros
+            {filteredMotorcycles.length} registros
           </span>
         </div>
 

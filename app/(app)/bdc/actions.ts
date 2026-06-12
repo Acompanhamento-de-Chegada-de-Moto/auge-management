@@ -90,7 +90,7 @@ export async function deleteClientAction(id: string) {
     await dalDeleteClient(id);
 
     revalidatePath("/bdc");
-    revalidatePath("/logistica");
+    revalidatePath("/estoque");
     return { success: true };
   } catch {
     return { success: false, error: "Erro ao remover cliente." };
@@ -327,7 +327,7 @@ export async function importSpreadsheetAction(formData: FormData) {
     const success = processedRows.length;
 
     revalidatePath("/bdc");
-    revalidatePath("/logistica");
+    revalidatePath("/estoque");
 
     return {
       success: true,

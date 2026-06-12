@@ -27,13 +27,13 @@ const routeMap: Record<string, BreadcrumbSegment[]> = {
     { label: "bdc", href: "/bdc" },
     { label: "editar cliente" },
   ],
-  "/logistica": [{ label: "logística", href: "/logistica" }],
-  "/logistica/motocicleta/novo": [
-    { label: "logística", href: "/logistica" },
+  "/estoque": [{ label: "estoque", href: "/estoque" }],
+  "/estoque/motocicleta/novo": [
+    { label: "estoque", href: "/estoque" },
     { label: "nova motocicleta" },
   ],
-  "/logistica/motocicleta/editar": [
-    { label: "logística", href: "/logistica" },
+  "/estoque/motocicleta/editar": [
+    { label: "estoque", href: "/estoque" },
     { label: "editar motocicleta" },
   ],
   "/configuracoes": [{ label: "configurações" }],

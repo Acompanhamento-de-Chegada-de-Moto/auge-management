@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { MotorcycleForm } from "@/components/logistica/motorcycle-form";
+import { MotorcycleForm } from "@/components/estoque/motorcycle-form";
 import { createMotorcycleAction } from "./actions";
 
 export const metadata: Metadata = {

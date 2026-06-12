@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { requireAuth } from "@/app/data/require-user";
 import {
   createMotorcycle as dalCreateMotorcycle,
@@ -35,11 +34,11 @@ export async function createMotorcycleAction(data: unknown) {
       forecastDate: formData.forecastDate ?? null,
     });
 
-    revalidatePath("/logistica");
+    revalidatePath("/estoque");
     revalidatePath("/bdc");
+
+    return { success: true };
   } catch {
     return { success: false, error: "Erro ao salvar motocicleta." };
   }
-
-  redirect("/logistica");
 }

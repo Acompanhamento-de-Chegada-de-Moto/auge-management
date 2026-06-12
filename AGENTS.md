@@ -9,7 +9,7 @@
 Sistema de gerenciamento de concessionária de motocicletas. Módulos atuais:
 
 - **BDC** (Business Development Center) — cadastro e acompanhamento de clientes e status de emplacamento de veículos.
-- **Logística** — controle de motocicletas em estoque e em trânsito.
+- **Estoque** — controle de motocicletas em estoque e em trânsito.
 - **Configurações** — gerenciamento de usuários (apenas ADMIN).
 
 ---
@@ -52,7 +52,7 @@ app/
           actions.ts        # Server Action: updateClient
           _components/
             editar-cliente-content.tsx
-    logistica/
+    estoque/
       page.tsx              # Controle de motocicletas (tabela real)
       actions.ts            # Server Actions: getMotorcycles, deleteMotorcycle
       motocicleta/
@@ -78,7 +78,7 @@ components/
     customer-form.tsx       # Wrapper com stepper (create) ou direto (edit)
     sidebar-resumo.tsx      # Sidebar colapsável com status da moto
     spreadsheet-upload-dialog.tsx # Dialog de importação de planilha
-  logistica/                # Componentes de domínio Logística
+  estoque/                # Componentes de domínio Estoque
     motorcycle-table.tsx    # Tabela de motos
     motorcycle-form.tsx     # Form de cadastro de moto
     motorcycle-edit-form.tsx # Form de edição de moto (chassi editável)
@@ -98,7 +98,7 @@ lib/
 
 validators/
   customer-schema.ts        # Zod schema do formulário BDC
-  motorcycle-schema.ts      # Zod schema do formulário Logística
+  motorcycle-schema.ts      # Zod schema do formulário Estoque
   login-schema.ts
   create-user-schema.ts
 
@@ -161,7 +161,7 @@ DAL (lib/data/*.ts)
 |------|--------|-------|
 | `/` | Público | — |
 | `/sign-in`, `/sign-up` | Público | — |
-| `/bdc`, `/bdc/**`, `/logistica`, `/logistica/**` | Login | `requireAuth` via `app/(app)/layout.tsx` |
+| `/bdc`, `/bdc/**`, `/estoque`, `/estoque/**` | Login | `requireAuth` via `app/(app)/layout.tsx` |
 | `/configuracoes` | ADMIN | `requireAuth` (layout) + `requireUser` (página) |
 
 ### Guards (`app/data/require-user.ts`)
@@ -211,7 +211,7 @@ model Motorcycle {
 
 **Regras importantes:**
 - Um `Client` pode ter 0 ou N `motorcycles`.
-- Uma `Motorcycle` pode existir sem `clientId` (estoque/logística).
+- Uma `Motorcycle` pode existir sem `clientId` (estoque).
 - `arrivalDate` é opcional — moto cadastrada sem data = "Em Trânsito".
 
 ---
@@ -288,9 +288,9 @@ Colunas: Cliente | CPF | Vendedor | Cidade | Modelo | Chassi | Data Faturamento 
 
 ---
 
-## Regras de Negócio — Logística
+## Regras de Negócio — Estoque
 
-### Listagem (`/logistica`)
+### Listagem (`/estoque`)
 Tabela: Modelo | Chassi | Data Chegada | Status | Ações
 
 - **Data Chegada**: exibe `—` se `arrivalDate` é `null` (moto em trânsito, sem previsão).
@@ -298,17 +298,17 @@ Tabela: Modelo | Chassi | Data Chegada | Status | Ações
   - `arrivalDate <= hoje` → badge verde "Chegou"
   - `arrivalDate > hoje` → badge âmbar "Em Trânsito"
   - `arrivalDate = null` → badge âmbar "Em Trânsito"
-- Ações: editar (`/logistica/motocicleta/editar?id={id}`), excluir.
+- Ações: editar (`/estoque/motocicleta/editar?id={id}`), excluir.
 
-### Cadastro (`/logistica/motocicleta/novo`)
+### Cadastro (`/estoque/motocicleta/novo`)
 - Form simples (sem stepper): Chassi, Modelo, Data de Chegada (opcional).
 - Data de chegada vazia = moto cadastrada "Em Trânsito".
-- Salva no banco via DAL + redirect `/logistica`.
+- Salva no banco via DAL + redirect `/estoque`.
 
-### Edição (`/logistica/motocicleta/editar?id={id}`)
+### Edição (`/estoque/motocicleta/editar?id={id}`)
 - Form: Chassi (editável!), Modelo, Data de Chegada.
 - **Chassi editável**: verifica duplicata no banco antes de salvar (não pode repetir em outra moto).
-- Atualiza via DAL + redirect `/logistica`.
+- Atualiza via DAL + redirect `/estoque`.
 
 ---
 
@@ -320,7 +320,7 @@ Regra do badge no sidebar (cadastro/edição de cliente):
 |----------|-------|-------|
 | Moto não encontrada no banco | 🔴 vermelho | **Não Encontrado** |
 | Moto encontrada + `arrivalDate = null` | 🟡 âmbar | **Sem Previsão** |
-| Moto encontrada + `arrivalDate > hoje` | 🟢 verde | **Na Logística** |
+| Moto encontrada + `arrivalDate > hoje` | 🟢 verde | **No Estoque** |
 | Moto encontrada + `arrivalDate <= hoje` | 🔵 azul | **Chegou** |
 
 ---
@@ -343,7 +343,7 @@ dataEmplacamento: Date (optional)
 ```
 **Refinement**: se `statusRegistro !== "Pendente"`, `dataEmplacamento` é obrigatória.
 
-### Logística — `validators/motorcycle-schema.ts`
+### Estoque — `validators/motorcycle-schema.ts`
 ```typescript
 chassis: string (min 1)
 model: string (min 1)
@@ -371,7 +371,7 @@ arrivalDate: Date (optional)
 - Dados reativos via `form.watch()`
 
 ### `MotorcycleTable`
-- Tabela de motos do módulo Logística
+- Tabela de motos do módulo Estoque
 - Dados vindos do banco via Server Action
 - Status de chegada calculado com `dayjs`
 
@@ -398,7 +398,7 @@ arrivalDate: Date (optional)
 
 Todas as páginas exportam `metadata` com título dinâmico:
 - Template no layout raiz: `%s | Acompanhamento Chegada de Moto`
-- Páginas definem apenas o `%s` (ex: `"BDC"`, `"Novo Cliente"`, `"Logística"`)
+- Páginas definem apenas o `%s` (ex: `"BDC"`, `"Novo Cliente"`, `"Estoque"`)
 
 | Página | Título na aba |
 |--------|--------------|
@@ -406,9 +406,9 @@ Todas as páginas exportam `metadata` com título dinâmico:
 | `/bdc` | `BDC \| Acompanhamento Chegada de Moto` |
 | `/bdc/cliente/novo` | `Novo Cliente \| ...` |
 | `/bdc/cliente/editar` | `Editar Cliente \| ...` |
-| `/logistica` | `Logística \| ...` |
-| `/logistica/motocicleta/novo` | `Nova Motocicleta \| ...` |
-| `/logistica/motocicleta/editar` | `Editar Motocicleta \| ...` |
+| `/estoque` | `Estoque \| ...` |
+| `/estoque/motocicleta/novo` | `Nova Motocicleta \| ...` |
+| `/estoque/motocicleta/editar` | `Editar Motocicleta \| ...` |
 | `/configuracoes` | `Configurações \| ...` |
 | `/sign-in` | `Entrar \| ...` |
 
@@ -418,7 +418,7 @@ Todas as páginas exportam `metadata` com título dinâmico:
 
 Use prefixos convencionais:
 - `feat(bdc):` — nova funcionalidade no BDC
-- `feat(logistica):` — nova funcionalidade na Logística
+- `feat(estoque):` — nova funcionalidade no Estoque
 - `fix(bdc):` — correção de bug
 - `refactor:` — refatoração sem mudança de comportamento
 - `chore:` — tarefas de build/dependências
@@ -479,7 +479,7 @@ pnpm format       # biome format --write
 7. **Não commite** sem pedir confirmação do usuário (exceto se ele pedir explicitamente).
 8. **Teste o build** (`pnpm build`) após alterações significativas.
 9. **Formate com Biome** antes de commits.
-10. **Chassi editável**: na Logística, o chassi pode ser alterado na edição. Sempre verificar duplicata no banco.
+10. **Chassi editável**: no Estoque, o chassi pode ser alterado na edição. Sempre verificar duplicata no banco.
 11. **Importação de planilha**: usar `xlsx` (SheetJS) para parse no client-side. Colunas obrigatórias: CLIENTE, CHASSI, VENDEDOR. Campo "MOTO CHEGOU" = "SIM" → `arrivalDate = hoje`.
 
 ---
@@ -487,13 +487,13 @@ pnpm format       # biome format --write
 ## Roadmap / Tarefas Pendentes (conhecidas)
 
 - [x] Conectar formulário BDC ao backend (Prisma model + Server Actions)
-- [x] Adicionar tabela/modelo de Logística (motos em trânsito)
+- [x] Adicionar tabela/modelo de Estoque
 - [x] Implementar busca real de chassi no banco
 - [x] Importação de planilha Excel no BDC
 - [x] CPF como identificador único do cliente (com validação de dígitos)
 - [ ] Upload de documentos no formulário
 - [ ] Filtros e paginação na tabela BDC
-- [ ] Filtros e paginação na tabela Logística
+- [ ] Filtros e paginação na tabela Estoque
 - [ ] Toast/notificação após salvar (em vez de redirect silencioso)
 - [ ] Responsividade mobile da sidebar (drawer)
 - [ ] Testes E2E com Playwright

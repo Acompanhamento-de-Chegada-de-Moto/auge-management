@@ -6,10 +6,10 @@ import { SearchForm } from "@/components/home/search-form";
 import { searchClients } from "@/lib/data/client";
 
 export const metadata: Metadata = {
-  title: "Consulta de Status",
+  title: "Acompanhamento",
 };
 
-export default async function ConsultarPage({
+export default async function AcompanhamentoPage({
   searchParams,
 }: {
   searchParams: Promise<{ q?: string }>;
@@ -29,7 +29,7 @@ export default async function ConsultarPage({
             Acompanhamento de Motocicletas
           </h1>
           <p className="text-muted-foreground">
-            Consulte o status da sua motocicleta pelo CPF do cliente.
+            Consulte o status da motocicleta pelo CPF do cliente.
           </p>
         </div>
 

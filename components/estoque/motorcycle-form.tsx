@@ -4,8 +4,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CalendarIcon } from "lucide-react";
-import { useTransition } from "react";
+import { useCallback, useTransition } from "react";
 import { useForm } from "react-hook-form";
+import { useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Form } from "@/components/ui/form";
@@ -27,6 +29,8 @@ interface MotorcycleFormProps {
 }
 
 export function MotorcycleForm({ action }: MotorcycleFormProps) {
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<MotorcycleFormData>({
@@ -38,11 +42,18 @@ export function MotorcycleForm({ action }: MotorcycleFormProps) {
     },
   });
 
-  const handleSubmit = (data: MotorcycleFormData) => {
-    startTransition(async () => {
-      await action(data);
-    });
-  };
+  const handleSubmit = useCallback(
+    async (data: MotorcycleFormData) => {
+      startTransition(async () => {
+        const result = (await action(data)) as { success: boolean } | undefined;
+        if (result?.success) {
+          queryClient.invalidateQueries({ queryKey: ["motorcycles"] });
+          router.push("/estoque");
+        }
+      });
+    },
+    [action, queryClient, router],
+  );
 
   return (
     <Form {...form}>
@@ -79,7 +90,7 @@ export function MotorcycleForm({ action }: MotorcycleFormProps) {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="forecastDate">Data de Chegada</Label>
+          <Label htmlFor="forecastDate">Previsão de Chegada</Label>
           <Popover>
             <PopoverTrigger asChild>
               <Button
@@ -95,7 +106,7 @@ export function MotorcycleForm({ action }: MotorcycleFormProps) {
                     locale: ptBR,
                   })
                 ) : (
-                  <span>Selecione a data (opcional)</span>
+                  <span>Selecione a previsão (opcional)</span>
                 )}
               </Button>
             </PopoverTrigger>

@@ -3,7 +3,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -16,7 +15,7 @@ import type { searchClients } from "@/lib/data/client";
 import { maskChassis } from "@/lib/utils";
 import { CopyLinkButton } from "./copy-link-button";
 import Link from "next/link";
-import { Share2 } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type ClientWithMotorcycles = Awaited<
@@ -64,6 +63,16 @@ export function ClientCard({ client }: ClientCardProps) {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">
+                  Previsão de Chegada
+                </span>
+                <span className="text-sm font-medium">
+                  {motorcycle.forecastDate
+                    ? new Date(motorcycle.forecastDate).toLocaleDateString("pt-BR")
+                    : "—"}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">
                   Status Chegada
                 </span>
                 <Badge className={arrivalStatus.color}>
@@ -76,19 +85,20 @@ export function ClientCard({ client }: ClientCardProps) {
                 </span>
                 <Badge className={statusColor}>{statusLabel}</Badge>
               </div>
+              <div className="flex items-center gap-2 pt-1 border-t border-border/40 mt-1">
+                <Button variant="ghost" size="sm" asChild className="gap-1.5 text-xs h-7 px-2">
+                  <Link href={`/acompanhamento/motocicleta/${motorcycle.id}`}>
+                    <ExternalLink className="size-3.5" />
+                    Abrir
+                  </Link>
+                </Button>
+                <CopyLinkButton url={`/acompanhamento/motocicleta/${motorcycle.id}`} />
+              </div>
             </div>
           );
         })}
       </CardContent>
-      <CardFooter className="flex gap-2 border-t pt-4">
-        <Button variant="outline" size="sm" asChild>
-          <Link href={`/consultar/cliente/${client.id}`}>
-            <Share2 className="mr-1.5 size-3.5" />
-            Compartilhar
-          </Link>
-        </Button>
-        <CopyLinkButton url={`/consultar/cliente/${client.id}`} />
-      </CardFooter>
+
     </Card>
   );
 }
