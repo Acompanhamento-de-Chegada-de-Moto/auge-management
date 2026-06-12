@@ -5,13 +5,6 @@ import { CheckCircle2Icon, UserPlus } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   type CreateUserInput,
@@ -44,73 +37,67 @@ export function CreateUserForm() {
   };
 
   return (
-    <Card className="border-none bg-secondary/50">
-      <CardHeader>
-        <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-primary/10">
-          <UserPlus className="size-5 text-primary" />
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      {success && (
+        <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800 dark:border-green-900/50 dark:bg-green-900/20 dark:text-green-300">
+          <CheckCircle2Icon className="size-4 shrink-0" />
+          Usuário criado com sucesso!
         </div>
-        <CardTitle className="text-center">Criar Novo Usuário</CardTitle>
-        <CardDescription className="text-center">
-          Registre um novo usuário para acessar o sistema.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {success && (
-          <div className="mb-4 flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800 dark:border-green-900/50 dark:bg-green-900/20 dark:text-green-300">
-            <CheckCircle2Icon className="size-4" />
-            Usuário criado com sucesso!
-          </div>
+      )}
+
+      {errors.root && (
+        <p className="text-sm font-medium text-red-600">
+          {errors.root.message}
+        </p>
+      )}
+
+      <div className="space-y-1.5">
+        <label className="text-sm font-medium">Nome</label>
+        <Input
+          {...register("name")}
+          type="text"
+          placeholder="Nome completo"
+          disabled={isSubmitting}
+          className="max-w-sm"
+        />
+        {errors.name && (
+          <p className="text-xs text-red-600">{errors.name.message}</p>
         )}
+      </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-          {errors.root && (
-            <p className="text-sm font-medium text-red-600 text-center">
-              {errors.root.message}
-            </p>
-          )}
+      <div className="space-y-1.5">
+        <label className="text-sm font-medium">E-mail</label>
+        <Input
+          {...register("email")}
+          type="email"
+          placeholder="E-mail"
+          disabled={isSubmitting}
+          className="max-w-sm"
+        />
+        {errors.email && (
+          <p className="text-xs text-red-600">{errors.email.message}</p>
+        )}
+      </div>
 
-          <div className="flex flex-col gap-1">
-            <Input
-              {...register("name")}
-              type="text"
-              placeholder="Nome completo"
-              disabled={isSubmitting}
-            />
-            {errors.name && (
-              <p className="text-xs text-red-600">{errors.name.message}</p>
-            )}
-          </div>
+      <div className="space-y-1.5">
+        <label className="text-sm font-medium">Senha</label>
+        <Input
+          {...register("password")}
+          type="password"
+          placeholder="Senha de acesso"
+          autoComplete="new-password"
+          disabled={isSubmitting}
+          className="max-w-sm"
+        />
+        {errors.password && (
+          <p className="text-xs text-red-600">{errors.password.message}</p>
+        )}
+      </div>
 
-          <div className="flex flex-col gap-1">
-            <Input
-              {...register("email")}
-              type="email"
-              placeholder="E-mail"
-              disabled={isSubmitting}
-            />
-            {errors.email && (
-              <p className="text-xs text-red-600">{errors.email.message}</p>
-            )}
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <Input
-              {...register("password")}
-              type="password"
-              placeholder="Senha de acesso"
-              autoComplete="new-password"
-              disabled={isSubmitting}
-            />
-            {errors.password && (
-              <p className="text-xs text-red-600">{errors.password.message}</p>
-            )}
-          </div>
-
-          <Button className="w-full" type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Criando usuário..." : "Criar Usuário"}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+      <Button type="submit" disabled={isSubmitting}>
+        <UserPlus className="mr-2 size-4" />
+        {isSubmitting ? "Criando usuário..." : "Criar Usuário"}
+      </Button>
+    </form>
   );
 }

@@ -1,9 +1,11 @@
 "use server";
 
 import { headers } from "next/headers";
+import { revalidatePath } from "next/cache";
 import { requireUser } from "@/app/data/require-user";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { upsertSetting } from "@/lib/data/settings";
 
 export async function createUserAction(data: {
   name: string;
@@ -11,10 +13,8 @@ export async function createUserAction(data: {
   password: string;
 }) {
   try {
-    // Verifica se quem chama é ADMIN
     await requireUser();
 
-    // Verifica se o email já existe
     const existingUser = await prisma.user.findUnique({
       where: { email: data.email },
     });
@@ -26,7 +26,6 @@ export async function createUserAction(data: {
       };
     }
 
-    // Usa a API nativa do better-auth para criar o usuário corretamente
     await auth.api.signUpEmail({
       body: {
         name: data.name,
@@ -43,6 +42,29 @@ export async function createUserAction(data: {
     return {
       success: false,
       error: "Erro ao criar usuário. Tente novamente.",
+    };
+  }
+}
+
+export async function updateContactSettingsAction(settings: {
+  contactPhone: string;
+  delayMessage: string;
+  whatsappMessage: string;
+}) {
+  try {
+    await requireUser();
+
+    await upsertSetting("contact_phone", settings.contactPhone);
+    await upsertSetting("delay_message", settings.delayMessage);
+    await upsertSetting("whatsapp_message", settings.whatsappMessage);
+
+    revalidatePath("/configuracoes");
+    return { success: true };
+  } catch (error) {
+    console.error("Erro ao salvar configurações:", error);
+    return {
+      success: false,
+      error: "Erro ao salvar configurações.",
     };
   }
 }
