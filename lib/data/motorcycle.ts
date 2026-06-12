@@ -17,6 +17,81 @@ export async function getAllMotorcycles() {
   });
 }
 
+export async function getEstoqueFilterOptions() {
+  const models = await prisma.motorcycle.findMany({
+    select: { model: true },
+    distinct: ["model"],
+    where: { model: { not: "" } },
+    orderBy: { model: "asc" },
+  });
+
+  return {
+    models: models.map((m) => m.model),
+  };
+}
+
+export async function getMotorcyclesPaginated(params: {
+  page: number;
+  pageSize: number;
+  model?: string;
+  status?: "Em Trânsito" | "Chegou" | "Atrasada";
+  chassisSearch?: string;
+}) {
+  const where: Record<string, unknown> = {};
+
+  if (params.model) {
+    where.model = params.model;
+  }
+
+  if (params.status) {
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    const amanha = new Date(hoje);
+    amanha.setDate(amanha.getDate() + 1);
+
+    switch (params.status) {
+      case "Em Trânsito":
+        where.OR = [{ forecastDate: null }, { forecastDate: { gte: amanha } }];
+        break;
+      case "Chegou":
+        where.forecastDate = { gte: hoje, lt: amanha };
+        break;
+      case "Atrasada":
+        where.forecastDate = { lt: hoje };
+        where.NOT = { forecastDate: null };
+        break;
+    }
+  }
+
+  if (params.chassisSearch) {
+    where.chassis = { contains: params.chassisSearch, mode: "insensitive" };
+  }
+
+  const [data, total] = await Promise.all([
+    prisma.motorcycle.findMany({
+      where,
+      skip: (params.page - 1) * params.pageSize,
+      take: params.pageSize,
+      select: {
+        id: true,
+        chassis: true,
+        model: true,
+        forecastDate: true,
+      },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.motorcycle.count({ where }),
+  ]);
+
+  return {
+    motorcycles: data,
+    total,
+    page: params.page,
+    pageSize: params.pageSize,
+    totalPages: Math.ceil(total / params.pageSize),
+  };
+}
+
 export async function getAllMotorcyclesForImport() {
   return prisma.motorcycle.findMany({
     select: {

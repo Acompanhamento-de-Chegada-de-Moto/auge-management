@@ -2,7 +2,7 @@
 
 import { CheckIcon, CopyIcon, PencilIcon, SearchIcon, Trash2Icon } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { deleteMotorcycleAction } from "@/app/(app)/estoque/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,7 +31,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import dayjs from "dayjs";
-import { usePagination } from "@/hooks/use-pagination";
 
 function getArrivalStatus(forecastDate: Date | null) {
   if (!forecastDate) {
@@ -67,79 +66,42 @@ function getArrivalStatus(forecastDate: Date | null) {
   };
 }
 
-interface Filters {
+interface MotorcycleItem {
+  id: string;
+  chassis: string;
   model: string;
-  status: string;
+  forecastDate: Date | null;
 }
 
 interface MotorcycleTableProps {
-  motorcycles: Array<{
-    id: string;
-    chassis: string;
-    model: string;
-    forecastDate: Date | null;
-  }>;
+  motorcycles: MotorcycleItem[];
+  totalRows: number;
+  page: number;
+  totalPages: number;
+  filterOptions: { models: string[] };
+  filters: { model: string; status: string };
+  chassisSearch: string;
+  onFilterChange: (key: string, value: string) => void;
+  onPageChange: (page: number) => void;
+  onChassisSearchChange: (value: string) => void;
 }
 
-export default function MotorcycleTable({ motorcycles }: MotorcycleTableProps) {
+export default function MotorcycleTable({
+  motorcycles,
+  totalRows,
+  page,
+  totalPages,
+  filterOptions,
+  filters,
+  chassisSearch,
+  onFilterChange,
+  onPageChange,
+  onChassisSearchChange,
+}: MotorcycleTableProps) {
   const router = useRouter();
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [filters, setFilters] = useState<Filters>({ model: "", status: "" });
-  const [chassisSearch, setChassisSearch] = useState("");
 
-  const activeFilter = (v: string) => v && v !== " ";
-
-  const uniqueModels = useMemo(
-    () =>
-      [...new Set((motorcycles ?? []).map((m) => m.model).filter(Boolean))].sort(),
-    [motorcycles],
-  );
-
-  const filteredMotorcycles = useMemo(
-    () =>
-      (motorcycles ?? []).filter((moto) => {
-        if (activeFilter(filters.model) && moto.model !== filters.model)
-          return false;
-        if (activeFilter(filters.status)) {
-          const status = getArrivalStatus(moto.forecastDate);
-          if (status.label !== filters.status) return false;
-        }
-        if (chassisSearch) {
-          const q = chassisSearch.toLowerCase();
-          if (!moto.chassis.toLowerCase().includes(q)) return false;
-        }
-        return true;
-      }),
-    [motorcycles, filters, chassisSearch],
-  );
-
-  const {
-    currentPage,
-    totalPages,
-    canPreviousPage,
-    canNextPage,
-    gotoPage,
-    previousPage,
-    nextPage,
-    itemsPerPage,
-    setItemsPerPage,
-    itemsPerPageOptions,
-    paginatedRange,
-  } = usePagination({
-    totalItems: filteredMotorcycles.length,
-    initialPage: 1,
-    itemsPerPage: 10,
-  });
-
-  const handleFilterChange = (key: keyof Filters, value: string) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
-    gotoPage(1);
-  };
-
-  const paginatedMotorcycles = useMemo(
-    () => filteredMotorcycles.slice(paginatedRange.start, paginatedRange.end),
-    [filteredMotorcycles, paginatedRange.start, paginatedRange.end],
-  );
+  const statusOptions = ["Em Trânsito", "Chegou", "Atrasada"];
 
   const handleCopy = (text: string, id: string) => {
     navigator.clipboard.writeText(text).then(() => {
@@ -153,7 +115,9 @@ export default function MotorcycleTable({ motorcycles }: MotorcycleTableProps) {
     router.refresh();
   };
 
-  const statusOptions = ["Em Trânsito", "Chegou", "Atrasada"];
+  const perPage = 50;
+  const start = (page - 1) * perPage + 1;
+  const end = Math.min(page * perPage, totalRows);
 
   return (
     <div className="w-full">
@@ -164,14 +128,14 @@ export default function MotorcycleTable({ motorcycles }: MotorcycleTableProps) {
 
         <Select
           value={filters.model}
-          onValueChange={(v) => handleFilterChange("model", v)}
+          onValueChange={(v) => onFilterChange("model", v === " " ? "" : v)}
         >
           <SelectTrigger className="w-[160px] h-8 text-sm">
             <SelectValue placeholder="Modelo" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value=" ">Todos</SelectItem>
-            {uniqueModels.map((m) => (
+            {filterOptions.models.map((m) => (
               <SelectItem key={m} value={m}>{m}</SelectItem>
             ))}
           </SelectContent>
@@ -179,7 +143,7 @@ export default function MotorcycleTable({ motorcycles }: MotorcycleTableProps) {
 
         <Select
           value={filters.status}
-          onValueChange={(v) => handleFilterChange("status", v)}
+          onValueChange={(v) => onFilterChange("status", v === " " ? "" : v)}
         >
           <SelectTrigger className="w-[160px] h-8 text-sm">
             <SelectValue placeholder="Status" />
@@ -197,7 +161,7 @@ export default function MotorcycleTable({ motorcycles }: MotorcycleTableProps) {
           <Input
             placeholder="Buscar chassi..."
             value={chassisSearch}
-            onChange={(e) => { setChassisSearch(e.target.value); gotoPage(1); }}
+            onChange={(e) => onChassisSearchChange(e.target.value)}
             className="pl-8 h-8 w-[200px] text-sm"
           />
         </div>
@@ -215,19 +179,19 @@ export default function MotorcycleTable({ motorcycles }: MotorcycleTableProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {paginatedMotorcycles.length === 0 ? (
+            {motorcycles.length === 0 ? (
               <TableRow>
                 <TableCell
                   colSpan={5}
                   className="text-center text-muted-foreground py-8"
                 >
-                  {filteredMotorcycles.length === 0 && (motorcycles?.length ?? 0) > 0
+                  {filters.model || filters.status || chassisSearch
                     ? "Nenhum resultado para os filtros atuais."
                     : "Nenhuma motocicleta cadastrada."}
                 </TableCell>
               </TableRow>
             ) : (
-              paginatedMotorcycles.map((motorcycle) => {
+              motorcycles.map((motorcycle) => {
                 const status = getArrivalStatus(motorcycle.forecastDate);
                 return (
                   <TableRow key={motorcycle.id}>
@@ -311,107 +275,98 @@ export default function MotorcycleTable({ motorcycles }: MotorcycleTableProps) {
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <span>
-            Mostrando {paginatedRange.start + 1}-{paginatedRange.end} de{" "}
-            {filteredMotorcycles.length} registros
+            Mostrando {totalRows > 0 ? `${start}-${end}` : "0"} de {totalRows}{" "}
+            registro{totalRows !== 1 ? "s" : ""}
           </span>
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">
-              Itens por página:
-            </span>
-            <Select
-              value={itemsPerPage.toString()}
-              onValueChange={(value) => setItemsPerPage(Number(value))}
-            >
-              <SelectTrigger className="w-[80px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {itemsPerPageOptions.map((option) => (
-                  <SelectItem key={option} value={option.toString()}>
-                    {option}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
+        {totalPages > 1 && (
           <Pagination>
             <PaginationContent>
               <PaginationItem>
                 <PaginationLink
-                  onClick={() => gotoPage(1)}
+                  onClick={() => onPageChange(1)}
                   className={
-                    canPreviousPage
+                    page > 1
                       ? "cursor-pointer"
                       : "pointer-events-none opacity-50"
                   }
+                  aria-label="Primeira página"
                 >
                   Primeiro
                 </PaginationLink>
               </PaginationItem>
               <PaginationItem>
                 <PaginationPrevious
-                  onClick={previousPage}
+                  onClick={() => onPageChange(page - 1)}
                   className={
-                    canPreviousPage
+                    page > 1
                       ? "cursor-pointer"
                       : "pointer-events-none opacity-50"
                   }
                 />
               </PaginationItem>
 
-              {totalPages <= 10 ? (
+              {totalPages <= 7 ? (
                 Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                  (page) => (
-                    <PaginationItem key={page}>
+                  (p) => (
+                    <PaginationItem key={p}>
                       <PaginationLink
-                        onClick={() => gotoPage(page)}
-                        isActive={currentPage === page}
+                        onClick={() => onPageChange(p)}
+                        isActive={page === p}
                         className="cursor-pointer"
                       >
-                        {page}
+                        {p}
                       </PaginationLink>
                     </PaginationItem>
                   ),
                 )
               ) : (
                 <>
-                  {[1, 2, 3].map((page) => (
-                    <PaginationItem key={page}>
-                      <PaginationLink
-                        onClick={() => gotoPage(page)}
-                        isActive={currentPage === page}
-                        className="cursor-pointer"
-                      >
-                        {page}
-                      </PaginationLink>
+                  {page > 3 && (
+                    <PaginationItem>
+                      <PaginationEllipsis />
                     </PaginationItem>
-                  ))}
-                  <PaginationItem>
-                    <PaginationEllipsis />
-                  </PaginationItem>
-                  {[totalPages - 2, totalPages - 1, totalPages].map((page) => (
-                    <PaginationItem key={page}>
-                      <PaginationLink
-                        onClick={() => gotoPage(page)}
-                        isActive={currentPage === page}
-                        className="cursor-pointer"
-                      >
-                        {page}
-                      </PaginationLink>
+                  )}
+                  {Array.from(
+                    { length: Math.min(5, totalPages) },
+                    (_, i) => {
+                      let p: number;
+                      if (page <= 3) {
+                        p = i + 1;
+                      } else if (page >= totalPages - 2) {
+                        p = totalPages - 4 + i;
+                      } else {
+                        p = page - 2 + i;
+                      }
+                      return p;
+                    },
+                  )
+                    .filter((p) => p >= 1 && p <= totalPages)
+                    .map((p) => (
+                      <PaginationItem key={p}>
+                        <PaginationLink
+                          onClick={() => onPageChange(p)}
+                          isActive={page === p}
+                          className="cursor-pointer"
+                        >
+                          {p}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+                  {page < totalPages - 2 && (
+                    <PaginationItem>
+                      <PaginationEllipsis />
                     </PaginationItem>
-                  ))}
+                  )}
                 </>
               )}
 
               <PaginationItem>
                 <PaginationNext
-                  onClick={nextPage}
+                  onClick={() => onPageChange(page + 1)}
                   className={
-                    canNextPage
+                    page < totalPages
                       ? "cursor-pointer"
                       : "pointer-events-none opacity-50"
                   }
@@ -419,19 +374,20 @@ export default function MotorcycleTable({ motorcycles }: MotorcycleTableProps) {
               </PaginationItem>
               <PaginationItem>
                 <PaginationLink
-                  onClick={() => gotoPage(totalPages)}
+                  onClick={() => onPageChange(totalPages)}
                   className={
-                    canNextPage
+                    page < totalPages
                       ? "cursor-pointer"
                       : "pointer-events-none opacity-50"
                   }
+                  aria-label="Última página"
                 >
                   Último
                 </PaginationLink>
               </PaginationItem>
             </PaginationContent>
           </Pagination>
-        </div>
+        )}
       </div>
 
       <p className="text-muted-foreground mt-4 text-center text-sm">

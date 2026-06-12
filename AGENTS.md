@@ -41,20 +41,22 @@ Sistema de gerenciamento de concessionária de motocicletas. Módulos atuais:
 app/
   (app)/                    # Rotas autenticadas (protegidas por requireAuth)
     bdc/
-      page.tsx              # Dashboard com tabela BDC (dados reais)
-      actions.ts            # Server Actions: getClients, deleteClient, searchChassis
+      _components/
+        bdc-page-client.tsx # Client Component com fetch paginado via URL params
+      page.tsx              # Server Component shell (metadata) + <BDCPageClient />
+      actions.ts            # Server Actions: getClients, getClientsPaginated, getBDCFilterOptions, searchChassis, deleteClient
       cliente/
         novo/
           page.tsx          # Cadastro de cliente (2 steps)
           actions.ts        # Server Action: createClient
         editar/
-          page.tsx          # Edição de cliente (form direto, sem stepper)
+          page.tsx          # Edição de cliente (fetch server-side, form direto)
           actions.ts        # Server Action: updateClient
-          _components/
-            editar-cliente-content.tsx
     estoque/
-      page.tsx              # Controle de motocicletas (tabela real)
-      actions.ts            # Server Actions: getMotorcycles, deleteMotorcycle
+      _components/
+        estoque-page-client.tsx # Client Component com fetch paginado via URL params
+      page.tsx              # Server Component shell (metadata) + <EstoquePageClient />
+      actions.ts            # Server Actions: getMotorcycles, getMotorcyclesPaginated, getEstoqueFilterOptions, deleteMotorcycle
       motocicleta/
         novo/
           page.tsx          # Cadastro de motocicleta
@@ -79,17 +81,17 @@ components/
     sidebar-resumo.tsx      # Sidebar colapsável com status da moto
     spreadsheet-upload-dialog.tsx # Dialog de importação de planilha
   estoque/                # Componentes de domínio Estoque
-    motorcycle-table.tsx    # Tabela de motos
+    motorcycle-table.tsx    # Tabela de motos (presentation-only, recebe props)
     motorcycle-form.tsx     # Form de cadastro de moto
     motorcycle-edit-form.tsx # Form de edição de moto (chassi editável)
   layout/                   # Navbar, Header
-  shadcn-studio/table/      # Tabela customizada
+  shadcn-studio/table/      # Tabela customizada (BDC)
   ui/                       # shadcn/ui components (NEVER edit directly)
 
 lib/
   data/                     # DAL — Data Access Layer
-    client.ts               # CRUD Client (Prisma)
-    motorcycle.ts          # CRUD Motorcycle (Prisma)
+    client.ts               # CRUD Client + getClientsPaginated + getBDCFilterOptions
+    motorcycle.ts           # CRUD Motorcycle + getMotorcyclesPaginated + getEstoqueFilterOptions
   bdc-data.ts               # Helpers: getStatusChegada(), mapRegistrationStatusLabel(), getSituacaoColor()
   cpf.ts                    # CPF validation: validateCPF(), formatCPF(), stripCPF()
   db.ts                     # Prisma client
@@ -103,8 +105,7 @@ validators/
   create-user-schema.ts
 
 prisma/
-  schema.prisma             # Schema do banco (User, Session, Account, Verification, Client, Motorcycle)
-
+  schema.prisma             # Schema do banco (User, Session, Account, Verification, Client, Motorcycle, Setting)
 ```
 
 ---
@@ -138,11 +139,14 @@ prisma/
 
 ## Arquitetura — Server Actions + DAL
 
-O projeto segue a arquitetura recomendada pelo Next.js: **Server Actions** na camada de UI + **DAL** (Data Access Layer) isolada.
+O projeto segue a arquitetura recomendada pelo Next.js: **Server Actions** na camada de UI + **DAL** (Data Access Layer) isolada. **Não usa TanStack React Query** — toda troca de dados é via Server Actions + `router.refresh()` / `router.push()`.
 
 ```
-Página (Server Component)
-  ↓ chama
+Página (Server Component shell)
+  ↓ renderiza
+Client Component (app/**/_components/*-page-client.tsx)
+  → lê searchParams (useSearchParams)
+  → chama Server Action via useEffect
 Server Action (app/**/actions.ts)
   → valida auth (requireAuth/requireUser)
   → valida input (Zod)
@@ -193,26 +197,35 @@ model Client {
   motorcycles      Motorcycle[]
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
+
+  @@index([sellerName])
+  @@index([city])
+  @@index([createdAt])
 }
 
 model Motorcycle {
   id                     String @id @default(uuid())
   chassis                String @unique
   model                  String
-  arrivalDate            DateTime?
+  forecastDate            DateTime?
   registrationStatus     RegistrationStatus @default(NO_PLATE)
   registrationStatusDate DateTime?
   clientId               String?
   client                 Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
+
+  @@index([createdAt])
+  @@index([updatedAt])
 }
+
+model Setting { ... }      // chave-valor para configs do sistema
 ```
 
 **Regras importantes:**
 - Um `Client` pode ter 0 ou N `motorcycles`.
 - Uma `Motorcycle` pode existir sem `clientId` (estoque).
-- `arrivalDate` é opcional — moto cadastrada sem data = "Em Trânsito".
+- `forecastDate` opcional — moto cadastrada sem data = "Em Trânsito".
 
 ---
 
@@ -227,12 +240,12 @@ model Motorcycle {
 ### Cadastro de Cliente (`/bdc/cliente/novo`)
 **Fluxo em 2 steps:**
 1. **Step 1 — Consulta de Chassi**: Digita chassi, clica "Consultar". Sistema busca no banco (`lib/data/motorcycle.ts`).
-   - **Encontrada**: preenche Modelo, marca `motoChegou` se tiver `arrivalDate`, avança Step 2.
+   - **Encontrada**: preenche Modelo, marca `motoChegou` se tiver `forecastDate`, avança Step 2.
    - **Não encontrada**: avança Step 2 com chassi preenchido, resto manual.
 2. **Step 2 — Dados do Cliente**: Campos disponíveis:
    - Cliente, Vendedor, Cidade, Modelo, Chassi (readonly)
    - **Data de Faturamento** (DatePicker shadcn)
-   - **Chegada na Loja**: Switch "Moto chegou?" + DatePicker (desabilitado se switch = OFF)
+   - **Previsão de Chegada**: DatePicker (opcional)
    - **Status de Emplacamento**: Select (Pendente / Em Emplacamento / Emplacado)
      - Se diferente de "Pendente": aparece DatePicker para data do emplacamento
    - Ações: "Voltar" (limpa tudo, volta Step 1) ou "Salvar" (cria Client + Motorcycle no banco)
@@ -244,18 +257,15 @@ model Motorcycle {
 - Breadcrumb: Home > BDC > Editar Cliente
 
 ### Tabela BDC (`/bdc`)
-Colunas: Cliente | CPF | Vendedor | Cidade | Modelo | Chassi | Data Faturamento | Status Chegada | Situação | Ações
+Colunas: Cliente | CPF | Vendedor | Cidade | Modelo | Chassi | Data Faturamento | Previsão Chegada | Situação | Ações
 
-- **Uma linha por moto** (cliente pode ter várias motos).
-- **Data Faturamento**: vinda do `Client.billingDate`.
-- **Status Chegada**: calculado via `dayjs` comparando `motorcycle.arrivalDate` com hoje:
-  - `<= hoje` → badge verde "Chegou"
-  - `> hoje` ou `null` → badge vermelho "Não Chegou"
-- **Situação**: `motorcycle.registrationStatus` mapeado para labels:
-  - `NO_PLATE` → "Pendente" (amarelo)
-  - `PLATING` → "Em Emplacamento" (azul)
-  - `PLATED` → "Emplacado" (verde)
-- Botão editar redireciona para `/bdc/cliente/editar?id={clientId}`
+- **Paginação server-side**: 20 clientes/página. Filtros e página via URL params (`?page=2&sellerName=...`).
+- **Client Component**: `BDCPageClient` lê `useSearchParams`, chama `getClientsPaginatedAction` + `getBDCFilterOptionsAction`, renderiza `<BDCTable>`.
+- **BDCTable** é puramente apresentação (recebe rows flat-mapped, filterOptions e callbacks como props).
+- **Navegação suave**: `useTransition` com `opacity-60` durante transições entre páginas/filtros.
+- **Busca por CPF**: input no canto direito envia `?q=...` para o backend.
+
+**Flat-mapping**: cada cliente com N motos vira N linhas. Cliente sem moto vira 1 linha com "—". O flat-map é feito no client component (`bdc-page-client.tsx`), não na tabela.
 
 ### Importação de Planilha (`/bdc` — botão "Importar Planilha")
 - **Componente**: `components/bdc/spreadsheet-upload-dialog.tsx`
@@ -270,12 +280,12 @@ Colunas: Cliente | CPF | Vendedor | Cidade | Modelo | Chassi | Data Faturamento 
   | `CHASSI` | `Motorcycle.chassis` |
   | `VENDEDOR` | `Client.sellerName` |
   | `CIDADE` | `Client.city` |
-  | `MOTO CHEGOU NA MATRIZ (SIM / NÃO)` | `Motorcycle.arrivalDate` ("SIM" = hoje, "NÃO" = null) |
+  | `MOTO CHEGOU NA MATRIZ (SIM / NÃO)` | `Motorcycle.forecastDate` ("SIM" = hoje, "NÃO" = null) |
   | `STATUS ATUALIZADO` | Ignorado (não altera status) |
 
 - **Regras de importação**:
-  - **Chassi já existe**: atualiza `arrivalDate` apenas se campo = "SIM" e for null
-  - **Chassi não existe**: cria nova moto com `registrationStatus = PENDING`
+  - **Chassi já existe**: atualiza `forecastDate` apenas se campo = "SIM" e for null
+  - **Chassi não existe**: cria nova moto com `registrationStatus = NO_PLATE`
   - **Cliente já existe** (nome + vendedor): vincula moto ao cliente existente
   - **Cliente não existe**: cria cliente + moto vinculada
   - **Campos obrigatórios**: chassi, cliente, vendedor (linhas sem esses campos são puladas)
@@ -291,22 +301,24 @@ Colunas: Cliente | CPF | Vendedor | Cidade | Modelo | Chassi | Data Faturamento 
 ## Regras de Negócio — Estoque
 
 ### Listagem (`/estoque`)
-Tabela: Modelo | Chassi | Data Chegada | Status | Ações
+Tabela: Modelo | Chassi | Previsão de Chegada | Status | Ações
 
-- **Data Chegada**: exibe `—` se `arrivalDate` é `null` (moto em trânsito, sem previsão).
-- **Status**:
-  - `arrivalDate <= hoje` → badge verde "Chegou"
-  - `arrivalDate > hoje` → badge âmbar "Em Trânsito"
-  - `arrivalDate = null` → badge âmbar "Em Trânsito"
+- **Paginação server-side**: 50 motos/página. Filtros via URL params (`?page=2&model=...&status=...&chassis=...`).
+- **Client Component**: `EstoquePageClient` lê `useSearchParams`, chama `getMotorcyclesPaginatedAction` + `getEstoqueFilterOptionsAction`, renderiza `<MotorcycleTable>`.
+- **MotorcycleTable** é puramente apresentação (recebe dados e callbacks como props).
+- **Status** (calculado server-side no DAL via `getMotorcyclesPaginated`):
+  - `forecastDate = null` ou `> hoje` → badge âmbar "Em Trânsito"
+  - `forecastDate = hoje` → badge verde "Chegou"
+  - `forecastDate < hoje` → badge vermelho "Atrasada"
 - Ações: editar (`/estoque/motocicleta/editar?id={id}`), excluir.
 
 ### Cadastro (`/estoque/motocicleta/novo`)
-- Form simples (sem stepper): Chassi, Modelo, Data de Chegada (opcional).
-- Data de chegada vazia = moto cadastrada "Em Trânsito".
+- Form simples (sem stepper): Chassi, Modelo, Previsão de Chegada (opcional).
+- Previsão de chegada vazia = moto cadastrada "Em Trânsito".
 - Salva no banco via DAL + redirect `/estoque`.
 
 ### Edição (`/estoque/motocicleta/editar?id={id}`)
-- Form: Chassi (editável!), Modelo, Data de Chegada.
+- Form: Chassi (editável!), Modelo, Previsão de Chegada.
 - **Chassi editável**: verifica duplicata no banco antes de salvar (não pode repetir em outra moto).
 - Atualiza via DAL + redirect `/estoque`.
 
@@ -319,9 +331,9 @@ Regra do badge no sidebar (cadastro/edição de cliente):
 | Condição | Badge | Texto |
 |----------|-------|-------|
 | Moto não encontrada no banco | 🔴 vermelho | **Não Encontrado** |
-| Moto encontrada + `arrivalDate = null` | 🟡 âmbar | **Sem Previsão** |
-| Moto encontrada + `arrivalDate > hoje` | 🟢 verde | **No Estoque** |
-| Moto encontrada + `arrivalDate <= hoje` | 🔵 azul | **Chegou** |
+| Moto encontrada + `forecastDate = null` | 🟡 âmbar | **Sem Previsão** |
+| Moto encontrada + `forecastDate > hoje` | 🟢 verde | **No Estoque** |
+| Moto encontrada + `forecastDate <= hoje` | 🔵 azul | **Chegou** |
 
 ---
 
@@ -363,21 +375,26 @@ arrivalDate: Date (optional)
 ### `ChassisStep`
 - Busca chassi no banco via `searchChassisAction()` (DAL `getMotorcycleByChassis`)
 - Preenche modelo e data de chegada automaticamente se encontrada
-- Passa `arrivalDate` para o sidebar via `onSearchResult`
+- Passa `forecastDate` para o sidebar via `onSearchResult`
 
 ### `SidebarResumo`
 - Sidebar colapsável (desktop) / acima do form (mobile)
-- Mostra status do chassi com base em `arrivalDate` (ver regra acima)
+- Mostra status do chassi com base em `forecastDate` (ver regra acima)
 - Dados reativos via `form.watch()`
 
+### `BDCTable`
+- **Presentation-only** (não faz fetch, não gerencia estado interno)
+- Props: `rows`, `totalRows`, `page`, `totalPages`, `filterOptions`, `filters`, `query`, `onFilterChange`, `onPageChange`, `onSearch`, `onClearSearch`
+- Recebe rows já flat-mapped do `BDCPageClient`
+
 ### `MotorcycleTable`
-- Tabela de motos do módulo Estoque
-- Dados vindos do banco via Server Action
-- Status de chegada calculado com `dayjs`
+- **Presentation-only** (não faz fetch, não gerencia estado interno)
+- Props: `motorcycles`, `totalRows`, `page`, `totalPages`, `filterOptions`, `filters`, `chassisSearch`, `onFilterChange`, `onPageChange`, `onChassisSearchChange`
+- Status calculado com `dayjs` (função local no componente)
 
 ### `MotorcycleForm` / `MotorcycleEditForm`
 - Formulários de cadastro/edição de motocicleta
-- Campos: Chassi, Modelo, Data de Chegada (DatePicker shadcn)
+- Campos: Chassi, Modelo, Previsão de Chegada (DatePicker shadcn)
 - Edit form permite alterar o chassi (com validação de duplicata)
 
 ---
@@ -442,8 +459,10 @@ pnpm install
 # Iniciar DB
 docker-compose up -d
 
-# Rodar migrations
+# Rodar migrations (use WSL bash se pnpm falhar com EPERM)
 pnpm exec prisma migrate dev --name <nome>
+# Alternativa via WSL:
+# wsl bash -c "cd /home/adone/workspace/auge-management && npx prisma migrate dev --name <nome>"
 
 # Gerar Prisma client
 pnpm exec prisma generate
@@ -451,8 +470,9 @@ pnpm exec prisma generate
 # Dev server
 pnpm dev          # localhost:3000
 
-# Build
+# Build (CI = skipa prisma generate + migrate deploy)
 pnpm build
+pnpm build:ci     # alternativa que contorna EPERM no Windows/WSL
 
 # Lint
 pnpm lint         # biome check
@@ -480,7 +500,12 @@ pnpm format       # biome format --write
 8. **Teste o build** (`pnpm build`) após alterações significativas.
 9. **Formate com Biome** antes de commits.
 10. **Chassi editável**: no Estoque, o chassi pode ser alterado na edição. Sempre verificar duplicata no banco.
-11. **Importação de planilha**: usar `xlsx` (SheetJS) para parse no client-side. Colunas obrigatórias: CLIENTE, CHASSI, VENDEDOR. Campo "MOTO CHEGOU" = "SIM" → `arrivalDate = hoje`.
+11. **Importação de planilha**: usar `xlsx` (SheetJS) para parse no client-side. Colunas obrigatórias: CLIENTE, CHASSI, VENDEDOR. Campo "MOTO CHEGOU" = "SIM" → `forecastDate = hoje`.
+12. **TanStack React Query não é usado** — nunca importe `@tanstack/react-query`. Toda troca de dados é via Server Actions + `router.refresh()` / `router.push()`.
+13. **Páginas de listagem (BDC/Estoque)**: Server Component shell (para metadata) renderiza Client Component em `_components/`. O Client Component lê `useSearchParams`, faz fetch via Server Action em `useEffect`, e gerencia navegação com `useTransition` + `router.push()` com URL params. Filtros e página são controlados por URL, não por estado local.
+14. **Tabelas (BDCTable/MotorcycleTable)**: puramente apresentação. Props: dados, opções de filtro, filtros ativos, totalRows, page, totalPages, e callbacks (`onFilterChange`, `onPageChange`, etc.). Sem fetch, sem `useMemo` para filtro, sem estado de paginação.
+15. **Client indexes**: `Client` tem `@@index([sellerName])`, `@@index([city])`, `@@index([createdAt])` para performance dos filtros server-side.
+16. **EM CIMA DO ARQUIVO ATUAL 2025**: o schema Prisma tem `deliveryForecast` em `Client` e `forecastDate` em `Motorcycle`. Ambos são usados. `forecastDate` é a "previsão de chegada" da moto. `deliveryForecast` no Client é um campo legado não utilizado pelo frontend.
 
 ---
 
@@ -491,13 +516,14 @@ pnpm format       # biome format --write
 - [x] Implementar busca real de chassi no banco
 - [x] Importação de planilha Excel no BDC
 - [x] CPF como identificador único do cliente (com validação de dígitos)
+- [x] Substituir TanStack React Query por Server Components + router.refresh()
+- [x] Server-side pagination com URL params (BDC 20/página, Estoque 50/página)
+- [x] Filtros server-side com índices no banco
 - [ ] Upload de documentos no formulário
-- [ ] Filtros e paginação na tabela BDC
-- [ ] Filtros e paginação na tabela Estoque
 - [ ] Toast/notificação após salvar (em vez de redirect silencioso)
 - [ ] Responsividade mobile da sidebar (drawer)
 - [ ] Testes E2E com Playwright
 
 ---
 
-*Última atualização: 2026-06-11 — implementado CPF como identificador único do cliente (validação completa, formatação automática, coluna na tabela BDC).*
+*Última atualização: 2026-06-12 — implementado server-side pagination com URL params (useSearchParams + useTransition), BDCTable/MotorcycleTable viram presentation-only, removido TanStack Query e hooks de paginação client-side, adicionados índices no Client.*

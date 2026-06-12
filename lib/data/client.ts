@@ -156,6 +156,94 @@ export async function searchClientsByName(name: string) {
   });
 }
 
+export async function getBDCFilterOptions() {
+  const [sellers, cities, models] = await Promise.all([
+    prisma.client.findMany({
+      select: { sellerName: true },
+      distinct: ["sellerName"],
+      where: { sellerName: { not: "" } },
+      orderBy: { sellerName: "asc" },
+    }),
+    prisma.client.findMany({
+      select: { city: true },
+      distinct: ["city"],
+      where: { city: { not: "" } },
+      orderBy: { city: "asc" },
+    }),
+    prisma.motorcycle.findMany({
+      select: { model: true },
+      distinct: ["model"],
+      where: { model: { not: "" } },
+      orderBy: { model: "asc" },
+    }),
+  ]);
+
+  return {
+    sellers: sellers.map((s) => s.sellerName),
+    cities: cities.map((c) => c.city),
+    models: models.map((m) => m.model),
+  };
+}
+
+export async function getClientsPaginated(params: {
+  page: number;
+  pageSize: number;
+  sellerName?: string;
+  city?: string;
+  model?: string;
+  search?: string;
+}) {
+  const where: Record<string, unknown> = {};
+
+  if (params.sellerName) {
+    where.sellerName = params.sellerName;
+  }
+  if (params.city) {
+    where.city = params.city;
+  }
+  if (params.model) {
+    where.motorcycles = { some: { model: params.model } };
+  }
+  if (params.search) {
+    where.cpf = { contains: params.search };
+  }
+
+  const [data, total] = await Promise.all([
+    prisma.client.findMany({
+      where,
+      skip: (params.page - 1) * params.pageSize,
+      take: params.pageSize,
+      select: {
+        id: true,
+        cpf: true,
+        name: true,
+        sellerName: true,
+        city: true,
+        billingDate: true,
+        motorcycles: {
+          select: {
+            id: true,
+            chassis: true,
+            model: true,
+            forecastDate: true,
+            registrationStatus: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.client.count({ where }),
+  ]);
+
+  return {
+    clients: data,
+    total,
+    page: params.page,
+    pageSize: params.pageSize,
+    totalPages: Math.ceil(total / params.pageSize),
+  };
+}
+
 export async function searchClients(query: string) {
   const stripped = stripCPF(query);
   if (!stripped) return [];

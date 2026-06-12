@@ -81,6 +81,9 @@ model Client {
   deliveryForecast DateTime?
   motorcycles      Motorcycle[]
 
+  @@index([sellerName])
+  @@index([city])
+  @@index([createdAt])
   @@map("client")
 }
 

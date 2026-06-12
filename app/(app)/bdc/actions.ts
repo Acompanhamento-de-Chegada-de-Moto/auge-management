@@ -8,6 +8,8 @@ import {
   createClientsBatch,
   deleteClient as dalDeleteClient,
   getClients as dalGetClients,
+  getBDCFilterOptions as dalGetBDCFilterOptions,
+  getClientsPaginated as dalGetClientsPaginated,
   searchClients as dalSearchClients,
   getAllClientsForImport,
 } from "@/lib/data/client";
@@ -71,6 +73,23 @@ const ARRIVAL_DATE_KEYS = [
 export async function getClientsAction() {
   await requireAuth();
   return dalGetClients();
+}
+
+export async function getBDCFilterOptionsAction() {
+  await requireAuth();
+  return dalGetBDCFilterOptions();
+}
+
+export async function getClientsPaginatedAction(params: {
+  page: number;
+  pageSize: number;
+  sellerName?: string;
+  city?: string;
+  model?: string;
+  search?: string;
+}) {
+  await requireAuth();
+  return dalGetClientsPaginated(params);
 }
 
 export async function searchChassisAction(chassis: string) {
