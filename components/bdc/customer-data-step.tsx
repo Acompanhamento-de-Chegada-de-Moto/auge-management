@@ -25,7 +25,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import type { CustomerFormData } from "@/validators/customer-schema";
@@ -33,12 +32,12 @@ import type { CustomerFormData } from "@/validators/customer-schema";
 interface CustomerDataStepProps {
   form: UseFormReturn<CustomerFormData>;
   onBack?: () => void;
+  isPending?: boolean;
 }
 
-export function CustomerDataStep({ form, onBack }: CustomerDataStepProps) {
-  const hasArrived = form.watch("hasArrived");
+export function CustomerDataStep({ form, onBack, isPending }: CustomerDataStepProps) {
   const [registrationStatus, setRegistrationStatus] = useState(
-    form.getValues("registrationStatus") || "Pendente",
+    form.getValues("registrationStatus") || "Sem Emplacamento",
   );
 
   return (
@@ -51,6 +50,35 @@ export function CustomerDataStep({ form, onBack }: CustomerDataStepProps) {
             <FormLabel>Cliente</FormLabel>
             <FormControl>
               <Input placeholder="Nome do cliente" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="cpf"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>CPF</FormLabel>
+            <FormControl>
+              <Input
+                placeholder="000.000.000-00"
+                {...field}
+                onChange={(e) => {
+                  const raw = e.target.value.replace(/\D/g, "").slice(0, 11);
+                  const formatted = raw.replace(
+                    /(\d{3})(\d{3})(\d{3})(\d{0,2})/,
+                    (_, a, b, c, d) => {
+                      let result = `${a}.${b}.${c}`;
+                      if (d) result += `-${d}`;
+                      return result;
+                    },
+                  );
+                  field.onChange(formatted);
+                }}
+              />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -154,25 +182,10 @@ export function CustomerDataStep({ form, onBack }: CustomerDataStepProps) {
 
       <FormField
         control={form.control}
-        name="hasArrived"
-        render={({ field }) => (
-          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-            <div className="space-y-0.5">
-              <FormLabel>Moto chegou na loja?</FormLabel>
-            </div>
-            <FormControl>
-              <Switch checked={field.value} onCheckedChange={field.onChange} />
-            </FormControl>
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={form.control}
-        name="arrivalDate"
+        name="forecastDate"
         render={({ field }) => (
           <FormItem className="flex flex-col">
-            <FormLabel>Data de Chegada</FormLabel>
+            <FormLabel>Previsão de Chegada</FormLabel>
             <Popover>
               <PopoverTrigger asChild>
                 <FormControl>
@@ -182,7 +195,6 @@ export function CustomerDataStep({ form, onBack }: CustomerDataStepProps) {
                       "w-full pl-3 text-left font-normal",
                       !field.value && "text-muted-foreground",
                     )}
-                    disabled={!hasArrived}
                   >
                     {field.value ? (
                       format(field.value, "dd/MM/yyyy")
@@ -198,7 +210,6 @@ export function CustomerDataStep({ form, onBack }: CustomerDataStepProps) {
                   mode="single"
                   selected={field.value}
                   onSelect={field.onChange}
-                  disabled={!hasArrived}
                   autoFocus
                 />
               </PopoverContent>
@@ -217,8 +228,8 @@ export function CustomerDataStep({ form, onBack }: CustomerDataStepProps) {
             <Select
               onValueChange={(value) => {
                 const status = value as
-                  | "Pendente"
-                  | "Em Emplacamento"
+                  | "Sem Emplacamento"
+                  | "Emplacando"
                   | "Emplacado";
                 field.onChange(status);
                 setRegistrationStatus(status);
@@ -231,8 +242,8 @@ export function CustomerDataStep({ form, onBack }: CustomerDataStepProps) {
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                <SelectItem value="Pendente">Pendente</SelectItem>
-                <SelectItem value="Em Emplacamento">Em Emplacamento</SelectItem>
+                <SelectItem value="Sem Emplacamento">Sem Emplacamento</SelectItem>
+                <SelectItem value="Emplacando">Emplacando</SelectItem>
                 <SelectItem value="Emplacado">Emplacado</SelectItem>
               </SelectContent>
             </Select>
@@ -241,7 +252,7 @@ export function CustomerDataStep({ form, onBack }: CustomerDataStepProps) {
         )}
       />
 
-      {registrationStatus !== "Pendente" && (
+      {registrationStatus !== "Sem Emplacamento" && (
         <FormField
           control={form.control}
           name="plateDate"
@@ -288,7 +299,9 @@ export function CustomerDataStep({ form, onBack }: CustomerDataStepProps) {
             Voltar
           </Button>
         )}
-        <Button type="submit">Salvar</Button>
+        <Button type="submit" disabled={isPending}>
+          {isPending ? "Salvando..." : "Salvar"}
+        </Button>
       </div>
     </div>
   );

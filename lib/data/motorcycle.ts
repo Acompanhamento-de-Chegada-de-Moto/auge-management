@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 
-type RegistrationStatus = "PENDING" | "IN_PROGRESS" | "COMPLETED";
+type RegistrationStatus = "NO_PLATE" | "PLATING" | "PLATED";
 
 export async function getAllMotorcycles() {
   return prisma.motorcycle.findMany({
@@ -20,7 +20,7 @@ export async function getAllMotorcyclesForImport() {
     select: {
       id: true,
       chassis: true,
-      arrivalDate: true,
+      forecastDate: true,
       clientId: true,
     },
   });
@@ -30,7 +30,7 @@ export async function createMotorcyclesBatch(
   motorcycles: Array<{
     chassis: string;
     model: string;
-    arrivalDate?: Date | null;
+    forecastDate?: Date | null;
     registrationStatus?: RegistrationStatus;
     clientId?: string;
   }>,
@@ -40,8 +40,8 @@ export async function createMotorcyclesBatch(
     data: motorcycles.map((m) => ({
       chassis: m.chassis,
       model: m.model,
-      arrivalDate: m.arrivalDate ?? null,
-      registrationStatus: m.registrationStatus ?? "PENDING",
+      forecastDate: m.forecastDate ?? null,
+      registrationStatus: m.registrationStatus ?? "NO_PLATE",
       clientId: m.clientId,
     })),
   });
@@ -50,14 +50,14 @@ export async function createMotorcyclesBatch(
 export async function updateMotorcyclesBatch(
   updates: Array<{
     chassis: string;
-    arrivalDate: Date;
+    forecastDate: Date;
   }>,
 ) {
   if (updates.length === 0) return;
   const operations = updates.map((u) =>
     prisma.motorcycle.update({
       where: { chassis: u.chassis },
-      data: { arrivalDate: u.arrivalDate },
+      data: { forecastDate: u.forecastDate },
     }),
   );
   return prisma.$transaction(operations);
@@ -79,7 +79,7 @@ export async function linkMotorcyclesBatch(
 export async function createMotorcycle(data: {
   chassis: string;
   model: string;
-  arrivalDate?: Date | null;
+  forecastDate?: Date | null;
   registrationStatus?: RegistrationStatus;
   registrationStatusDate?: Date | null;
   clientId?: string;
@@ -88,8 +88,8 @@ export async function createMotorcycle(data: {
     data: {
       chassis: data.chassis,
       model: data.model,
-      arrivalDate: data.arrivalDate,
-      registrationStatus: data.registrationStatus ?? "PENDING",
+      forecastDate: data.forecastDate,
+      registrationStatus: data.registrationStatus ?? "NO_PLATE",
       registrationStatusDate: data.registrationStatusDate,
       clientId: data.clientId,
     },
@@ -113,7 +113,7 @@ export async function updateMotorcycle(
   data: {
     chassis?: string;
     model?: string;
-    arrivalDate?: Date | null;
+    forecastDate?: Date | null;
     registrationStatus?: RegistrationStatus;
     registrationStatusDate?: Date | null;
     clientId?: string | null;
@@ -124,7 +124,7 @@ export async function updateMotorcycle(
     data: {
       chassis: data.chassis,
       model: data.model,
-      arrivalDate: data.arrivalDate,
+      forecastDate: data.forecastDate,
       registrationStatus: data.registrationStatus,
       registrationStatusDate: data.registrationStatusDate,
       clientId: data.clientId,
@@ -136,7 +136,7 @@ export async function updateMotorcycleByChassis(
   chassis: string,
   data: {
     model?: string;
-    arrivalDate?: Date | null;
+    forecastDate?: Date | null;
     registrationStatus?: RegistrationStatus;
     registrationStatusDate?: Date | null;
     clientId?: string | null;
@@ -146,7 +146,7 @@ export async function updateMotorcycleByChassis(
     where: { chassis },
     data: {
       model: data.model,
-      arrivalDate: data.arrivalDate,
+      forecastDate: data.forecastDate,
       registrationStatus: data.registrationStatus,
       registrationStatusDate: data.registrationStatusDate,
       clientId: data.clientId,

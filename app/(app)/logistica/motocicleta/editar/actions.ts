@@ -41,12 +41,14 @@ export async function updateMotorcycleAction(id: string, data: unknown) {
     await dalUpdateMotorcycle(id, {
       chassis: formData.chassis,
       model: formData.model,
-      arrivalDate: formData.arrivalDate ?? null,
+      forecastDate: formData.forecastDate ?? null,
     });
 
     revalidatePath("/logistica");
-    redirect("/logistica");
+    revalidatePath("/bdc");
   } catch {
     return { success: false, error: "Erro ao atualizar motocicleta." };
   }
+
+  redirect("/logistica");
 }

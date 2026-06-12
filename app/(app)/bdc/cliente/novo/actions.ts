@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { requireAuth } from "@/app/data/require-user";
 import { createClient as dalCreateClient } from "@/lib/data/client";
 import {
@@ -12,12 +11,12 @@ import {
 import { customerSchema } from "@/validators/customer-schema";
 
 function mapRegistrationStatus(
-  status: "Pendente" | "Em Emplacamento" | "Emplacado",
-): "PENDING" | "IN_PROGRESS" | "COMPLETED" {
+  status: "Sem Emplacamento" | "Emplacando" | "Emplacado",
+): "NO_PLATE" | "PLATING" | "PLATED" {
   const map = {
-    Pendente: "PENDING",
-    "Em Emplacamento": "IN_PROGRESS",
-    Emplacado: "COMPLETED",
+    "Sem Emplacamento": "NO_PLATE",
+    Emplacando: "PLATING",
+    Emplacado: "PLATED",
   } as const;
   return map[status];
 }
@@ -38,6 +37,7 @@ export async function createClientAction(formData: unknown) {
 
   try {
     const client = await dalCreateClient({
+      cpf: data.cpf,
       name: data.customerName,
       sellerName: data.sellerName,
       city: data.city,
@@ -50,7 +50,7 @@ export async function createClientAction(formData: unknown) {
       if (existingMoto) {
         await updateMotorcycleByChassis(data.chassis, {
           model: data.model,
-          arrivalDate: data.hasArrived ? data.arrivalDate : null,
+          forecastDate: data.forecastDate ?? null,
           registrationStatus: mapRegistrationStatus(data.registrationStatus),
           registrationStatusDate: data.plateDate,
           clientId: client.id,
@@ -59,7 +59,7 @@ export async function createClientAction(formData: unknown) {
         await createMotorcycle({
           chassis: data.chassis,
           model: data.model,
-          arrivalDate: data.hasArrived ? data.arrivalDate : null,
+          forecastDate: data.forecastDate ?? null,
           registrationStatus: mapRegistrationStatus(data.registrationStatus),
           registrationStatusDate: data.plateDate,
           clientId: client.id,
@@ -68,7 +68,9 @@ export async function createClientAction(formData: unknown) {
     }
 
     revalidatePath("/bdc");
-    redirect("/bdc");
+    revalidatePath("/logistica");
+
+    return { success: true };
   } catch {
     return { success: false, error: "Erro ao salvar cliente." };
   }

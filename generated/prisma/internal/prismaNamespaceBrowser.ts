@@ -56,7 +56,8 @@ export const ModelName = {
   Account: 'Account',
   Verification: 'Verification',
   Client: 'Client',
-  Motorcycle: 'Motorcycle'
+  Motorcycle: 'Motorcycle',
+  Setting: 'Setting'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -141,7 +142,9 @@ export const ClientScalarFieldEnum = {
   city: 'city',
   billingDate: 'billingDate',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  cpf: 'cpf',
+  deliveryForecast: 'deliveryForecast'
 } as const
 
 export type ClientScalarFieldEnum = (typeof ClientScalarFieldEnum)[keyof typeof ClientScalarFieldEnum]
@@ -151,7 +154,7 @@ export const MotorcycleScalarFieldEnum = {
   id: 'id',
   chassis: 'chassis',
   model: 'model',
-  arrivalDate: 'arrivalDate',
+  forecastDate: 'forecastDate',
   registrationStatus: 'registrationStatus',
   registrationStatusDate: 'registrationStatusDate',
   clientId: 'clientId',
@@ -160,6 +163,16 @@ export const MotorcycleScalarFieldEnum = {
 } as const
 
 export type MotorcycleScalarFieldEnum = (typeof MotorcycleScalarFieldEnum)[keyof typeof MotorcycleScalarFieldEnum]
+
+
+export const SettingScalarFieldEnum = {
+  id: 'id',
+  key: 'key',
+  value: 'value',
+  updatedAt: 'updatedAt'
+} as const
+
+export type SettingScalarFieldEnum = (typeof SettingScalarFieldEnum)[keyof typeof SettingScalarFieldEnum]
 
 
 export const SortOrder = {

@@ -1,5 +1,6 @@
 "use client";
 
+import { formatCPF } from "@/lib/cpf";
 import { CustomerForm } from "@/components/bdc/customer-form";
 import { EditClientSkeleton } from "@/components/bdc/edit-client-skeleton";
 import { useClientById } from "@/hooks/use-client-by-id";
@@ -32,18 +33,18 @@ export function EditClientContent({
 
   const initialData: Partial<CustomerFormData> = {
     chassis: motorcycle?.chassis ?? "",
+    cpf: client.cpf ? formatCPF(client.cpf) : "",
     customerName: client.name,
     sellerName: client.sellerName,
     city: client.city,
     model: motorcycle?.model ?? "",
     billingDate: client.billingDate ?? undefined,
-    hasArrived: !!motorcycle?.arrivalDate,
-    arrivalDate: motorcycle?.arrivalDate ?? undefined,
-    registrationStatus: (motorcycle?.registrationStatus === "PENDING"
-      ? "Pendente"
-      : motorcycle?.registrationStatus === "IN_PROGRESS"
-        ? "Em Emplacamento"
-        : "Emplacado") as "Pendente" | "Em Emplacamento" | "Emplacado",
+    forecastDate: motorcycle?.forecastDate ?? undefined,
+    registrationStatus: (motorcycle?.registrationStatus === "NO_PLATE"
+      ? "Sem Emplacamento"
+      : motorcycle?.registrationStatus === "PLATING"
+        ? "Emplacando"
+        : "Emplacado") as "Sem Emplacamento" | "Emplacando" | "Emplacado",
     plateDate: motorcycle?.registrationStatusDate ?? undefined,
   };
 

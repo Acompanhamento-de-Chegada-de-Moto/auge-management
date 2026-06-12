@@ -1,8 +1,10 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
 import { Form } from "@/components/ui/form";
 import {
   type CustomerFormData,
@@ -14,14 +16,14 @@ import { SidebarSummary } from "./sidebar-summary";
 
 const defaultValues: CustomerFormData = {
   chassis: "",
+  cpf: "",
   customerName: "",
   sellerName: "",
   city: "",
   model: "",
   billingDate: undefined,
-  hasArrived: false,
-  arrivalDate: undefined,
-  registrationStatus: "Pendente",
+  forecastDate: undefined,
+  registrationStatus: "Sem Emplacamento",
   plateDate: undefined,
 };
 
@@ -38,11 +40,13 @@ export function CustomerForm({
 }: CustomerFormProps) {
   const [step, setStep] = useState<1 | 2>(mode === "edit" ? 2 : 1);
   const [isPending, startTransition] = useTransition();
+  const queryClient = useQueryClient();
+  const router = useRouter();
   const [sidebarData, setSidebarData] = useState<{
     found: boolean;
     model?: string;
     city?: string;
-    arrivalDate?: Date | null;
+    forecastDate?: Date | null;
   }>({ found: false });
 
   const form = useForm<CustomerFormData>({
@@ -59,20 +63,20 @@ export function CustomerForm({
         found: true,
         model: initialData.model || undefined,
         city: initialData.city || undefined,
-        arrivalDate: initialData.arrivalDate,
+        forecastDate: initialData.forecastDate,
       });
     }
   }, [mode, initialData]);
 
   const handleSearchResult = (
     found: boolean,
-    data?: { model: string; city: string; arrivalDate?: Date | null },
+    data?: { model: string; city: string; forecastDate?: Date | null },
   ) => {
     setSidebarData({
       found,
       model: data?.model,
       city: data?.city,
-      arrivalDate: data?.arrivalDate,
+      forecastDate: data?.forecastDate,
     });
     setStep(2);
   };
@@ -80,21 +84,25 @@ export function CustomerForm({
   const handleBack = () => {
     setStep(1);
     form.setValue("chassis", "");
+    form.setValue("cpf", "");
     form.setValue("model", "");
     form.setValue("city", "");
-    form.setValue("hasArrived", false);
     form.setValue("customerName", "");
     form.setValue("sellerName", "");
     form.setValue("billingDate", undefined);
-    form.setValue("arrivalDate", undefined);
-    form.setValue("registrationStatus", "Pendente");
+    form.setValue("forecastDate", undefined);
+    form.setValue("registrationStatus", "Sem Emplacamento");
     form.setValue("plateDate", undefined);
     setSidebarData({ found: false });
   };
 
   const handleSubmit = (data: CustomerFormData) => {
     startTransition(async () => {
-      await action(data);
+      const result = await action(data);
+      if (result && typeof result === "object" && "success" in result && result.success) {
+        queryClient.invalidateQueries({ queryKey: ["clients"] });
+        router.push("/bdc");
+      }
     });
   };
 
@@ -146,6 +154,7 @@ export function CustomerForm({
               <CustomerDataStep
                 form={form}
                 onBack={!isEditMode ? handleBack : undefined}
+                isPending={isPending}
               />
             )}
           </form>
@@ -161,8 +170,7 @@ export function CustomerForm({
           customerName={watchedValues.customerName}
           sellerName={watchedValues.sellerName}
           registrationStatus={watchedValues.registrationStatus}
-          hasArrived={watchedValues.hasArrived}
-          arrivalDate={sidebarData.arrivalDate}
+          forecastDate={sidebarData.forecastDate}
         />
       )}
     </div>

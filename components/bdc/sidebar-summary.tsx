@@ -2,21 +2,20 @@
 
 import {
   AlertTriangleIcon,
-  Car,
-  CheckCircle2Icon,
+  CalendarIcon,
+  Motorbike,
   ChevronLeftIcon,
   ChevronRightIcon,
   Clock,
   FileText,
   MapPin,
-  Package,
   Tag,
-  Truck,
   User,
 } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { getForecastStatus } from "@/lib/bdc-data";
 
 interface SidebarSummaryProps {
   chassis: string;
@@ -26,11 +25,10 @@ interface SidebarSummaryProps {
   customerName?: string;
   sellerName?: string;
   registrationStatus?: string;
-  hasArrived?: boolean;
-  arrivalDate?: Date | null;
+  forecastDate?: Date | null;
 }
 
-function getStatusBadge(found: boolean, arrivalDate?: Date | null) {
+function getStatusBadge(found: boolean, forecastDate?: Date | null) {
   if (!found) {
     return {
       label: "Não Encontrado",
@@ -40,34 +38,17 @@ function getStatusBadge(found: boolean, arrivalDate?: Date | null) {
     };
   }
 
-  if (!arrivalDate) {
-    return {
-      label: "Sem Previsão",
-      color:
-        "bg-amber-100 text-amber-800 hover:bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400",
-      icon: Clock,
-    };
-  }
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const arrival = new Date(arrivalDate);
-  arrival.setHours(0, 0, 0, 0);
-
-  if (arrival > today) {
-    return {
-      label: "Na Logística",
-      color:
-        "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400",
-      icon: Package,
-    };
-  }
+  const forecast = getForecastStatus(forecastDate);
+  const iconMap = {
+    "Sem Previsão": Clock,
+    "Previsão Futura": CalendarIcon,
+    "Previsão Passada": CalendarIcon,
+  } as const;
 
   return {
-    label: "Chegou",
-    color:
-      "bg-blue-100 text-blue-800 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400",
-    icon: CheckCircle2Icon,
+    label: forecast.label,
+    color: forecast.color,
+    icon: iconMap[forecast.label as keyof typeof iconMap] || Clock,
   };
 }
 
@@ -79,13 +60,12 @@ export function SidebarSummary({
   customerName,
   sellerName,
   registrationStatus,
-  hasArrived,
-  arrivalDate,
+  forecastDate,
 }: SidebarSummaryProps) {
   const [collapsed, setCollapsed] = useState(false);
 
   const hasData = chassis || customerName || model;
-  const status = getStatusBadge(found, arrivalDate);
+  const status = getStatusBadge(found, forecastDate);
   const StatusIcon = status.icon;
 
   return (
@@ -140,7 +120,7 @@ export function SidebarSummary({
                 {model && (
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Car className="size-3" />
+                      <Motorbike className="size-3" />
                       <span>Modelo</span>
                     </div>
                     <p className="text-sm font-medium">{model}</p>
@@ -174,18 +154,6 @@ export function SidebarSummary({
                       <span>Vendedor</span>
                     </div>
                     <p className="text-sm font-medium">{sellerName}</p>
-                  </div>
-                )}
-
-                {hasArrived !== undefined && (
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Truck className="size-3" />
-                      <span>Chegou na Loja</span>
-                    </div>
-                    <p className="text-sm font-medium">
-                      {hasArrived ? "Sim" : "Não"}
-                    </p>
                   </div>
                 )}
 

@@ -13,7 +13,7 @@ interface ChassisStepProps {
   form: UseFormReturn<CustomerFormData>;
   onSearchResult: (
     found: boolean,
-    data?: { model: string; city: string; arrivalDate?: Date | null },
+    data?: { model: string; city: string; forecastDate?: Date | null },
   ) => void;
 }
 
@@ -38,19 +38,17 @@ export function ChassisStep({ form, onSearchResult }: ChassisStepProps) {
       if (motorcycle) {
         form.setValue("model", motorcycle.model);
         form.setValue("city", "");
-        form.setValue("hasArrived", !!motorcycle.arrivalDate);
-        form.setValue("arrivalDate", motorcycle.arrivalDate ?? undefined);
+        form.setValue("forecastDate", motorcycle.forecastDate ?? undefined);
 
         onSearchResult(true, {
           model: motorcycle.model,
           city: "",
-          arrivalDate: motorcycle.arrivalDate,
+          forecastDate: motorcycle.forecastDate,
         });
       } else {
         form.setValue("model", "");
         form.setValue("city", "");
-        form.setValue("hasArrived", false);
-        form.setValue("arrivalDate", undefined);
+        form.setValue("forecastDate", undefined);
 
         onSearchResult(false);
       }

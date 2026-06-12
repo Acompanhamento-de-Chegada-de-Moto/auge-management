@@ -34,8 +34,8 @@ import {
 import { useMotorcycles } from "@/hooks/use-motorcycles";
 import { usePagination } from "@/hooks/use-pagination";
 
-function getArrivalStatus(arrivalDate: Date | null) {
-  if (!arrivalDate) {
+function getArrivalStatus(forecastDate: Date | null) {
+  if (!forecastDate) {
     return {
       label: "Em Trânsito",
       color:
@@ -45,7 +45,7 @@ function getArrivalStatus(arrivalDate: Date | null) {
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const arrival = new Date(arrivalDate);
+  const arrival = new Date(forecastDate);
   arrival.setHours(0, 0, 0, 0);
 
   if (arrival <= today) {
@@ -186,7 +186,7 @@ export default function MotorcycleTable() {
               </TableRow>
             ) : (
               paginatedMotorcycles.map((motorcycle) => {
-                const status = getArrivalStatus(motorcycle.arrivalDate);
+                const status = getArrivalStatus(motorcycle.forecastDate);
                 return (
                   <TableRow key={motorcycle.id}>
                     <TableCell className="font-medium">
@@ -219,8 +219,8 @@ export default function MotorcycleTable() {
                       </button>
                     </TableCell>
                     <TableCell>
-                      {motorcycle.arrivalDate
-                        ? new Date(motorcycle.arrivalDate).toLocaleDateString(
+                      {motorcycle.forecastDate
+                        ? new Date(motorcycle.forecastDate).toLocaleDateString(
                             "pt-BR",
                           )
                         : "—"}

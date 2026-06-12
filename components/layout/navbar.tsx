@@ -21,7 +21,7 @@ import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 
 const navigationData = [
-  { title: "Home", href: "/" },
+  { title: "Consultar", href: "/consultar" },
   { title: "BDC", href: "/bdc" },
   { title: "Logística", href: "/logistica" },
 ];
@@ -88,7 +88,7 @@ const Navbar = () => {
         {/* ─── Top Row ─── */}
         <div className="flex items-center h-14 justify-between gap-4">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-3 shrink-0">
+          <Link href="/consultar" className="flex items-center gap-3 shrink-0">
             <div className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
               <Bike className="size-5" />
             </div>
@@ -210,15 +210,6 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* ─── Bottom Row (Breadcrumb) ─── */}
-        <div className="flex items-center h-11 gap-4 border-t border-border/40">
-          {/* Breadcrumb — left (hidden on BDC page) */}
-          {pathname !== "/bdc" && (
-            <div className="hidden sm:flex items-center overflow-x-auto">
-              <BreadcrumbNav />
-            </div>
-          )}
-        </div>
       </div>
     </header>
   );

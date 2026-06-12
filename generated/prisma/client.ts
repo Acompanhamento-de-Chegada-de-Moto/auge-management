@@ -71,3 +71,8 @@ export type Client = Prisma.ClientModel
  * 
  */
 export type Motorcycle = Prisma.MotorcycleModel
+/**
+ * Model Setting
+ * 
+ */
+export type Setting = Prisma.SettingModel

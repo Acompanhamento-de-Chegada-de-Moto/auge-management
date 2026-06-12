@@ -3,6 +3,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -11,11 +12,15 @@ import {
   getArrivalStatus,
   mapRegistrationStatusLabel,
 } from "@/lib/bdc-data";
-import type { searchClientsByName } from "@/lib/data/client";
+import type { searchClients } from "@/lib/data/client";
 import { maskChassis } from "@/lib/utils";
+import { CopyLinkButton } from "./copy-link-button";
+import Link from "next/link";
+import { Share2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 type ClientWithMotorcycles = Awaited<
-  ReturnType<typeof searchClientsByName>
+  ReturnType<typeof searchClients>
 >[number];
 
 interface ClientCardProps {
@@ -36,7 +41,7 @@ export function ClientCard({ client }: ClientCardProps) {
           </p>
         )}
         {client.motorcycles.map((motorcycle) => {
-          const arrivalStatus = getArrivalStatus(motorcycle.arrivalDate);
+          const arrivalStatus = getArrivalStatus(motorcycle.forecastDate);
           const statusLabel = mapRegistrationStatusLabel(
             motorcycle.registrationStatus,
           );
@@ -75,6 +80,15 @@ export function ClientCard({ client }: ClientCardProps) {
           );
         })}
       </CardContent>
+      <CardFooter className="flex gap-2 border-t pt-4">
+        <Button variant="outline" size="sm" asChild>
+          <Link href={`/consultar/cliente/${client.id}`}>
+            <Share2 className="mr-1.5 size-3.5" />
+            Compartilhar
+          </Link>
+        </Button>
+        <CopyLinkButton url={`/consultar/cliente/${client.id}`} />
+      </CardFooter>
     </Card>
   );
 }

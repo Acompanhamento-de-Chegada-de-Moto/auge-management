@@ -41,7 +41,6 @@ import {
 import { useClients } from "@/hooks/use-clients";
 import { usePagination } from "@/hooks/use-pagination";
 import {
-  getArrivalStatus,
   getStatusColor,
   mapRegistrationStatusLabel,
 } from "@/lib/bdc-data";
@@ -50,12 +49,13 @@ interface MotorcycleRow {
   id: string;
   model: string;
   chassis: string;
-  arrivalDate: Date | null;
-  registrationStatus: "PENDING" | "IN_PROGRESS" | "COMPLETED";
+  forecastDate: Date | null;
+  registrationStatus: "NO_PLATE" | "PLATING" | "PLATED";
 }
 
 interface ClientRow {
   id: string;
+  cpf: string;
   name: string;
   sellerName: string;
   city: string;
@@ -67,7 +67,6 @@ interface Filters {
   sellerName: string;
   city: string;
   model: string;
-  arrivalStatus: string;
 }
 
 function BDCTableSkeleton() {
@@ -90,12 +89,13 @@ function BDCTableSkeleton() {
           <TableHeader>
             <TableRow className="hover:bg-transparent">
               <TableHead>Cliente</TableHead>
+              <TableHead>CPF</TableHead>
               <TableHead>Vendedor</TableHead>
               <TableHead>Cidade</TableHead>
               <TableHead>Modelo</TableHead>
               <TableHead>Chassi</TableHead>
               <TableHead>Data Faturamento</TableHead>
-              <TableHead>Status Chegada</TableHead>
+              <TableHead>Previsão Chegada</TableHead>
               <TableHead>Situação</TableHead>
               <TableHead className="w-0 pr-4 text-end">Ações</TableHead>
             </TableRow>
@@ -106,6 +106,9 @@ function BDCTableSkeleton() {
               <TableRow key={`skeleton-${i}`}>
                 <TableCell>
                   <Skeleton className="h-4 w-32" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-4 w-28" />
                 </TableCell>
                 <TableCell>
                   <Skeleton className="h-4 w-24" />
@@ -156,27 +159,33 @@ const BDCTable = () => {
     sellerName: "",
     city: "",
     model: "",
-    arrivalStatus: "",
   });
+
+  function formatCPF(cpf: string): string {
+    const digits = cpf.replace(/\D/g, "");
+    if (digits.length !== 11) return cpf;
+    return digits.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+  }
 
   const rows: Array<{
     id: string;
     clientId: string;
     customerName: string;
+    cpf: string;
     sellerName: string;
     city: string;
     model: string;
     chassis: string;
     billingDate: string;
-    arrivalDate: Date | null;
-    registrationStatus: "Pendente" | "Em Emplacamento" | "Emplacado";
-    hasArrived: boolean;
+    forecastDate: Date | null;
+    registrationStatus: "Sem Emplacamento" | "Emplacando" | "Emplacado";
   }> = (clients ?? []).flatMap((client: ClientRow) =>
     client.motorcycles.length > 0
       ? client.motorcycles.map((motorcycle) => ({
           id: `${client.id}-${motorcycle.id}`,
           clientId: client.id,
           customerName: client.name,
+          cpf: client.cpf,
           sellerName: client.sellerName,
           city: client.city,
           model: motorcycle.model,
@@ -184,18 +193,17 @@ const BDCTable = () => {
           billingDate: client.billingDate
             ? new Date(client.billingDate).toLocaleDateString("pt-BR")
             : "—",
-          arrivalDate: motorcycle.arrivalDate,
+          forecastDate: motorcycle.forecastDate,
           registrationStatus: mapRegistrationStatusLabel(
             motorcycle.registrationStatus,
-          ) as "Pendente" | "Em Emplacamento" | "Emplacado",
-          hasArrived:
-            getArrivalStatus(motorcycle.arrivalDate).label === "Chegou",
+          ) as "Sem Emplacamento" | "Emplacando" | "Emplacado",
         }))
       : [
           {
             id: client.id,
             clientId: client.id,
             customerName: client.name,
+            cpf: client.cpf,
             sellerName: client.sellerName,
             city: client.city,
             model: "—",
@@ -203,9 +211,8 @@ const BDCTable = () => {
             billingDate: client.billingDate
               ? new Date(client.billingDate).toLocaleDateString("pt-BR")
               : "—",
-            arrivalDate: null,
-            registrationStatus: "Pendente" as const,
-            hasArrived: false,
+            forecastDate: null,
+            registrationStatus: "Sem Emplacamento" as const,
           },
         ],
   );
@@ -237,9 +244,6 @@ const BDCTable = () => {
         if (activeFilter(filters.city) && row.city !== filters.city)
           return false;
         if (activeFilter(filters.model) && row.model !== filters.model)
-          return false;
-        if (filters.arrivalStatus === "Chegou" && !row.hasArrived) return false;
-        if (filters.arrivalStatus === "Não Chegou" && row.hasArrived)
           return false;
         return true;
       }),
@@ -361,20 +365,6 @@ const BDCTable = () => {
           </SelectContent>
         </Select>
 
-        <Select
-          value={filters.arrivalStatus}
-          onValueChange={(v) => handleFilterChange("arrivalStatus", v)}
-        >
-          <SelectTrigger className="w-[160px] h-8 text-sm">
-            <SelectValue placeholder="Status Chegada" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value=" ">Todos</SelectItem>
-            <SelectItem value="Chegou">Chegou</SelectItem>
-            <SelectItem value="Não Chegou">Não Chegou</SelectItem>
-          </SelectContent>
-        </Select>
-
         <form
           key={query ?? ""}
           onSubmit={(e) => {
@@ -392,7 +382,7 @@ const BDCTable = () => {
             <input
               name="search"
               type="text"
-              placeholder="Buscar..."
+              placeholder="Buscar por CPF..."
               defaultValue={query}
               className="h-8 w-40 sm:w-56 pl-8 pr-8 text-sm rounded-lg border border-border/60 bg-muted/40 focus-visible:bg-background"
             />
@@ -422,12 +412,13 @@ const BDCTable = () => {
           <TableHeader>
             <TableRow className="hover:bg-transparent">
               <TableHead>Cliente</TableHead>
+              <TableHead>CPF</TableHead>
               <TableHead>Vendedor</TableHead>
               <TableHead>Cidade</TableHead>
               <TableHead>Modelo</TableHead>
               <TableHead>Chassi</TableHead>
               <TableHead>Data Faturamento</TableHead>
-              <TableHead>Status Chegada</TableHead>
+              <TableHead>Previsão Chegada</TableHead>
               <TableHead>Situação</TableHead>
               <TableHead className="w-0 pr-4 text-end">Ações</TableHead>
             </TableRow>
@@ -436,7 +427,7 @@ const BDCTable = () => {
             {paginatedRows.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={9}
+                  colSpan={10}
                   className="text-center text-muted-foreground py-8"
                 >
                   {rows.length === 0
@@ -446,11 +437,40 @@ const BDCTable = () => {
               </TableRow>
             ) : (
               paginatedRows.map((item) => {
-                const statusChegada = getArrivalStatus(item.arrivalDate);
                 return (
                   <TableRow key={item.id}>
                     <TableCell className="font-medium">
                       {item.customerName}
+                    </TableCell>
+                    <TableCell className="font-mono text-xs">
+                      {item.cpf ? (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleCopy(formatCPF(item.cpf), `${item.id}-cpf`)
+                          }
+                          className="group inline-flex cursor-pointer items-center gap-1.5 font-mono text-xs transition-colors"
+                          title="Clique para copiar o CPF"
+                        >
+                          {copiedId === `${item.id}-cpf` ? (
+                            <>
+                              <CheckIcon className="size-3.5 text-green-600 dark:text-green-400" />
+                              <span className="text-green-600 dark:text-green-400">
+                                Copiado!
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <CopyIcon className="size-3.5 opacity-0 transition-opacity group-hover:opacity-100" />
+                              <span className="hover:underline">
+                                {formatCPF(item.cpf)}
+                              </span>
+                            </>
+                          )}
+                        </button>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
                     </TableCell>
                     <TableCell>{item.sellerName}</TableCell>
                     <TableCell>{item.city}</TableCell>
@@ -485,11 +505,9 @@ const BDCTable = () => {
                     </TableCell>
                     <TableCell>{item.billingDate}</TableCell>
                     <TableCell>
-                      <span
-                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusChegada.color}`}
-                      >
-                        {statusChegada.label}
-                      </span>
+                      {item.forecastDate
+                        ? new Date(item.forecastDate).toLocaleDateString("pt-BR")
+                        : "—"}
                     </TableCell>
                     <TableCell>
                       <span

@@ -20,6 +20,7 @@ export async function deleteMotorcycleAction(id: string) {
     await dalDeleteMotorcycle(id);
 
     revalidatePath("/logistica");
+    revalidatePath("/bdc");
     return { success: true };
   } catch {
     return { success: false, error: "Erro ao remover motocicleta." };

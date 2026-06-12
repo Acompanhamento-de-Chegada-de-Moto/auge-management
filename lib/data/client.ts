@@ -1,6 +1,8 @@
+import { stripCPF } from "@/lib/cpf";
 import { prisma } from "@/lib/db";
 
 export async function createClient(data: {
+  cpf: string;
   name: string;
   sellerName: string;
   city: string;
@@ -8,13 +10,14 @@ export async function createClient(data: {
   motorcycles?: Array<{
     chassis: string;
     model: string;
-    arrivalDate?: Date | null;
-    registrationStatus?: "PENDING" | "IN_PROGRESS" | "COMPLETED";
+    forecastDate?: Date | null;
+    registrationStatus?: "NO_PLATE" | "PLATING" | "PLATED";
     registrationStatusDate?: Date | null;
   }>;
 }) {
   return prisma.client.create({
     data: {
+      cpf: stripCPF(data.cpf),
       name: data.name,
       sellerName: data.sellerName,
       city: data.city,
@@ -42,6 +45,7 @@ export async function getAllClientsForImport() {
   return prisma.client.findMany({
     select: {
       id: true,
+      cpf: true,
       name: true,
       sellerName: true,
     },
@@ -50,6 +54,7 @@ export async function getAllClientsForImport() {
 
 export async function createClientsBatch(
   clients: Array<{
+    cpf?: string;
     name: string;
     sellerName: string;
     city: string;
@@ -57,15 +62,22 @@ export async function createClientsBatch(
   }>,
 ) {
   if (clients.length === 0) return [];
+  let index = 0;
   return prisma.client.createManyAndReturn({
-    data: clients.map((c) => ({
-      name: c.name,
-      sellerName: c.sellerName,
-      city: c.city,
-      billingDate: c.billingDate ?? null,
-    })),
+    data: clients.map((c) => {
+      const cpf = c.cpf ? stripCPF(c.cpf) : `TEMP-${index.toString().padStart(11, "0")}`;
+      index++;
+      return {
+        cpf,
+        name: c.name,
+        sellerName: c.sellerName,
+        city: c.city,
+        billingDate: c.billingDate ?? null,
+      };
+    }),
     select: {
       id: true,
+      cpf: true,
       name: true,
       sellerName: true,
     },
@@ -84,6 +96,7 @@ export async function getClientById(id: string) {
 export async function updateClient(
   id: string,
   data: {
+    cpf?: string;
     name?: string;
     sellerName?: string;
     city?: string;
@@ -93,6 +106,7 @@ export async function updateClient(
   return prisma.client.update({
     where: { id },
     data: {
+      cpf: data.cpf ? stripCPF(data.cpf) : undefined,
       name: data.name,
       sellerName: data.sellerName,
       city: data.city,
@@ -128,15 +142,14 @@ export async function searchClientsByName(name: string) {
 }
 
 export async function searchClients(query: string) {
+  const stripped = stripCPF(query);
+  if (!stripped) return [];
+
   return prisma.client.findMany({
     where: {
       OR: [
-        { name: { contains: query, mode: "insensitive" } },
-        {
-          motorcycles: {
-            some: { chassis: { contains: query, mode: "insensitive" } },
-          },
-        },
+        { cpf: { contains: stripped } },
+        { cpf: { contains: query } },
       ],
     },
     include: {
@@ -163,6 +176,15 @@ export async function getClientByNameAndSeller(
         mode: "insensitive",
       },
     },
+    include: {
+      motorcycles: true,
+    },
+  });
+}
+
+export async function getClientByCpf(cpf: string) {
+  return prisma.client.findUnique({
+    where: { cpf },
     include: {
       motorcycles: true,
     },

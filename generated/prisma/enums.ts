@@ -18,9 +18,9 @@ export type UserRole = (typeof UserRole)[keyof typeof UserRole]
 
 
 export const RegistrationStatus = {
-  PENDING: 'PENDING',
-  IN_PROGRESS: 'IN_PROGRESS',
-  COMPLETED: 'COMPLETED'
+  NO_PLATE: 'NO_PLATE',
+  PLATING: 'PLATING',
+  PLATED: 'PLATED'
 } as const
 
 export type RegistrationStatus = (typeof RegistrationStatus)[keyof typeof RegistrationStatus]

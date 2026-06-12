@@ -38,7 +38,7 @@ export function MotorcycleEditForm({
     defaultValues: {
       chassis: "",
       model: "",
-      arrivalDate: undefined,
+      forecastDate: undefined,
       ...initialData,
     },
   });
@@ -84,19 +84,19 @@ export function MotorcycleEditForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="arrivalDate">Data de Chegada</Label>
+          <Label htmlFor="forecastDate">Data de Chegada</Label>
           <Popover>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
                 className={cn(
                   "w-full justify-start text-left font-normal",
-                  !form.watch("arrivalDate") && "text-muted-foreground",
+                  !form.watch("forecastDate") && "text-muted-foreground",
                 )}
               >
                 <CalendarIcon className="mr-2 size-4" />
-                {form.watch("arrivalDate") ? (
-                  format(form.watch("arrivalDate") as Date, "dd/MM/yyyy", {
+                {form.watch("forecastDate") ? (
+                  format(form.watch("forecastDate") as Date, "dd/MM/yyyy", {
                     locale: ptBR,
                   })
                 ) : (
@@ -107,14 +107,14 @@ export function MotorcycleEditForm({
             <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 mode="single"
-                selected={form.watch("arrivalDate")}
-                onSelect={(date) => form.setValue("arrivalDate", date)}
+                selected={form.watch("forecastDate")}
+                onSelect={(date) => form.setValue("forecastDate", date)}
               />
             </PopoverContent>
           </Popover>
-          {form.formState.errors.arrivalDate && (
+          {form.formState.errors.forecastDate && (
             <p className="text-sm text-red-500">
-              {form.formState.errors.arrivalDate.message}
+              {form.formState.errors.forecastDate.message}
             </p>
           )}
         </div>

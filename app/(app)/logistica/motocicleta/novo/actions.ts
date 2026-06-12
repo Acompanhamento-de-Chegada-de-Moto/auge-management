@@ -3,7 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAuth } from "@/app/data/require-user";
-import { createMotorcycle as dalCreateMotorcycle } from "@/lib/data/motorcycle";
+import {
+  createMotorcycle as dalCreateMotorcycle,
+  getMotorcycleByChassis,
+} from "@/lib/data/motorcycle";
 import { motorcycleSchema } from "@/validators/motorcycle-schema";
 
 export async function createMotorcycleAction(data: unknown) {
@@ -20,16 +23,23 @@ export async function createMotorcycleAction(data: unknown) {
 
   const formData = parsed.data;
 
+  const existing = await getMotorcycleByChassis(formData.chassis);
+  if (existing) {
+    return { success: false, error: "Este chassi já está cadastrado." };
+  }
+
   try {
     await dalCreateMotorcycle({
       chassis: formData.chassis,
       model: formData.model,
-      arrivalDate: formData.arrivalDate ?? null,
+      forecastDate: formData.forecastDate ?? null,
     });
 
     revalidatePath("/logistica");
-    redirect("/logistica");
+    revalidatePath("/bdc");
   } catch {
     return { success: false, error: "Erro ao salvar motocicleta." };
   }
+
+  redirect("/logistica");
 }

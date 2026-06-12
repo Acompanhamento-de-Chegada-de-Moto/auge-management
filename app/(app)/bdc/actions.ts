@@ -90,6 +90,7 @@ export async function deleteClientAction(id: string) {
     await dalDeleteClient(id);
 
     revalidatePath("/bdc");
+    revalidatePath("/logistica");
     return { success: true };
   } catch {
     return { success: false, error: "Erro ao remover cliente." };
@@ -105,7 +106,7 @@ function readMainSheet(workbook: XLSX.WorkBook): Record<string, unknown>[] {
 
 function readArrivalSheet(
   workbook: XLSX.WorkBook,
-): Map<string, { arrivalDate: Date | null }> {
+): Map<string, { forecastDate: Date | null }> {
   const sheetNames = ["Página2", "Plan2", "Planilha2"];
   const sheet = findSheet(workbook, sheetNames);
   if (!sheet) return new Map();
@@ -114,7 +115,7 @@ function readArrivalSheet(
     string,
     unknown
   >[];
-  const map = new Map<string, { arrivalDate: Date | null }>();
+  const map = new Map<string, { forecastDate: Date | null }>();
 
   for (const row of rows) {
     const chassisRaw = detectColumn(row, CHASSIS_KEYS);
@@ -123,10 +124,10 @@ function readArrivalSheet(
     const chassis = String(chassisRaw).trim().toUpperCase();
     if (!chassis) continue;
 
-    const arrivalDateRaw = detectColumn(row, ARRIVAL_DATE_KEYS);
-    const arrivalDate = parseExcelDate(arrivalDateRaw);
+    const forecastDateRaw = detectColumn(row, ARRIVAL_DATE_KEYS);
+    const forecastDate = parseExcelDate(forecastDateRaw);
 
-    map.set(chassis, { arrivalDate: arrivalDate ?? null });
+    map.set(chassis, { forecastDate: forecastDate ?? null });
   }
 
   return map;
@@ -173,7 +174,7 @@ export async function importSpreadsheetAction(formData: FormData) {
       {
         id: string;
         chassis: string;
-        arrivalDate: Date | null;
+        forecastDate: Date | null;
         clientId: string | null;
       }
     >();
@@ -190,11 +191,11 @@ export async function importSpreadsheetAction(formData: FormData) {
     const motorcyclesToCreate: Array<{
       chassis: string;
       model: string;
-      arrivalDate?: Date | null;
-      registrationStatus: "PENDING";
+      forecastDate?: Date | null;
+      registrationStatus: "NO_PLATE";
       clientId?: string;
     }> = [];
-    const motorcyclesToUpdate: Array<{ chassis: string; arrivalDate: Date }> =
+    const motorcyclesToUpdate: Array<{ chassis: string; forecastDate: Date }> =
       [];
     const motorcyclesToLink: Array<{ chassis: string; clientId: string }> = [];
 
@@ -210,7 +211,7 @@ export async function importSpreadsheetAction(formData: FormData) {
       billingDate?: Date | null;
       chassis: string;
       model: string;
-      arrivalDate: Date | null;
+      forecastDate: Date | null;
     }> = [];
 
     for (const row of json as Record<string, unknown>[]) {
@@ -239,11 +240,11 @@ export async function importSpreadsheetAction(formData: FormData) {
           ? hasArrivedRaw.trim().toUpperCase() === "SIM"
           : false;
 
-      let arrivalDate: Date | null = null;
-      if (arrivalInfo?.arrivalDate) {
-        arrivalDate = arrivalInfo.arrivalDate;
+      let forecastDate: Date | null = null;
+      if (arrivalInfo?.forecastDate) {
+        forecastDate = arrivalInfo.forecastDate;
       } else if (hasArrivedFromMainSheet) {
-        arrivalDate = new Date();
+        forecastDate = new Date();
       }
 
       const clientKey = `${nameStr.toLowerCase()}|${sellerStr.toLowerCase()}`;
@@ -256,7 +257,7 @@ export async function importSpreadsheetAction(formData: FormData) {
         billingDate,
         chassis: chassisStr,
         model,
-        arrivalDate,
+        forecastDate,
       });
     }
 
@@ -288,12 +289,12 @@ export async function importSpreadsheetAction(formData: FormData) {
       const existingMoto = motorcycleMap.get(row.chassis);
 
       if (existingMoto) {
-        if (row.arrivalDate && !existingMoto.arrivalDate) {
+        if (row.forecastDate && !existingMoto.forecastDate) {
           motorcyclesToUpdate.push({
             chassis: row.chassis,
-            arrivalDate: row.arrivalDate,
+            forecastDate: row.forecastDate,
           });
-          existingMoto.arrivalDate = row.arrivalDate;
+          existingMoto.forecastDate = row.forecastDate;
           updated++;
         }
 
@@ -305,14 +306,14 @@ export async function importSpreadsheetAction(formData: FormData) {
         motorcyclesToCreate.push({
           chassis: row.chassis,
           model: row.model,
-          arrivalDate: row.arrivalDate,
-          registrationStatus: "PENDING",
+          forecastDate: row.forecastDate,
+          registrationStatus: "NO_PLATE",
           clientId: client.id,
         });
         motorcycleMap.set(row.chassis, {
           id: "",
           chassis: row.chassis,
-          arrivalDate: row.arrivalDate,
+          forecastDate: row.forecastDate,
           clientId: client.id,
         });
         created++;
@@ -326,6 +327,7 @@ export async function importSpreadsheetAction(formData: FormData) {
     const success = processedRows.length;
 
     revalidatePath("/bdc");
+    revalidatePath("/logistica");
 
     return {
       success: true,

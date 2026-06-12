@@ -91,6 +91,7 @@ lib/
     client.ts               # CRUD Client (Prisma)
     motorcycle.ts          # CRUD Motorcycle (Prisma)
   bdc-data.ts               # Helpers: getStatusChegada(), mapRegistrationStatusLabel(), getSituacaoColor()
+  cpf.ts                    # CPF validation: validateCPF(), formatCPF(), stripCPF()
   db.ts                     # Prisma client
   auth.ts                   # Better Auth server config
   auth-client.ts            # Better Auth client
@@ -174,7 +175,7 @@ DAL (lib/data/*.ts)
 
 ```prisma
 enum UserRole { USER, ADMIN }
-enum RegistrationStatus { PENDING, IN_PROGRESS, COMPLETED }
+enum RegistrationStatus { NO_PLATE, PLATING, PLATED }
 
 model User { ... }           // better-auth
 model Session { ... }        // better-auth
@@ -182,14 +183,16 @@ model Account { ... }        // better-auth
 model Verification { ... }   // better-auth
 
 model Client {
-  id          String    @id @default(uuid())
-  name        String
-  sellerName  String
-  city        String
-  billingDate DateTime?
-  motorcycles Motorcycle[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id               String       @id @default(uuid())
+  cpf              String       @unique
+  name             String
+  sellerName       String
+  city             String
+  billingDate      DateTime?
+  deliveryForecast DateTime?
+  motorcycles      Motorcycle[]
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
 }
 
 model Motorcycle {
@@ -197,7 +200,7 @@ model Motorcycle {
   chassis                String @unique
   model                  String
   arrivalDate            DateTime?
-  registrationStatus     RegistrationStatus @default(PENDING)
+  registrationStatus     RegistrationStatus @default(NO_PLATE)
   registrationStatusDate DateTime?
   clientId               String?
   client                 Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
@@ -214,6 +217,12 @@ model Motorcycle {
 ---
 
 ## Regras de Negócio — BDC
+
+### CPF como Identificador Único
+- **CPF** é obrigatório no cadastro de cliente (`cpf` no model `Client`, unique)
+- Possui **validação completa** de formato e dígitos verificadores (`lib/cpf.ts:validateCPF()`)
+- O input do CPF no formulário tem **formatação automática** (`XXX.XXX.XXX-XX`)
+- O CPF aparece como coluna na tabela BDC
 
 ### Cadastro de Cliente (`/bdc/cliente/novo`)
 **Fluxo em 2 steps:**
@@ -235,7 +244,7 @@ model Motorcycle {
 - Breadcrumb: Home > BDC > Editar Cliente
 
 ### Tabela BDC (`/bdc`)
-Colunas: Cliente | Vendedor | Cidade | Modelo | Chassi | Data Faturamento | Status Chegada | Situação | Ações
+Colunas: Cliente | CPF | Vendedor | Cidade | Modelo | Chassi | Data Faturamento | Status Chegada | Situação | Ações
 
 - **Uma linha por moto** (cliente pode ter várias motos).
 - **Data Faturamento**: vinda do `Client.billingDate`.
@@ -243,9 +252,9 @@ Colunas: Cliente | Vendedor | Cidade | Modelo | Chassi | Data Faturamento | Stat
   - `<= hoje` → badge verde "Chegou"
   - `> hoje` ou `null` → badge vermelho "Não Chegou"
 - **Situação**: `motorcycle.registrationStatus` mapeado para labels:
-  - `PENDING` → "Pendente" (amarelo)
-  - `IN_PROGRESS` → "Em Emplacamento" (azul)
-  - `COMPLETED` → "Emplacado" (verde)
+  - `NO_PLATE` → "Pendente" (amarelo)
+  - `PLATING` → "Em Emplacamento" (azul)
+  - `PLATED` → "Emplacado" (verde)
 - Botão editar redireciona para `/bdc/cliente/editar?id={clientId}`
 
 ### Importação de Planilha (`/bdc` — botão "Importar Planilha")
@@ -321,6 +330,7 @@ Regra do badge no sidebar (cadastro/edição de cliente):
 ### BDC — `validators/customer-schema.ts`
 ```typescript
 chassi: string (min 1)
+cpf: string (validado: 11 dígitos + dígitos verificadores)
 cliente: string (min 1)
 vendedor: string (min 1)
 cidade: string (min 1)
@@ -480,6 +490,7 @@ pnpm format       # biome format --write
 - [x] Adicionar tabela/modelo de Logística (motos em trânsito)
 - [x] Implementar busca real de chassi no banco
 - [x] Importação de planilha Excel no BDC
+- [x] CPF como identificador único do cliente (com validação de dígitos)
 - [ ] Upload de documentos no formulário
 - [ ] Filtros e paginação na tabela BDC
 - [ ] Filtros e paginação na tabela Logística
@@ -489,4 +500,4 @@ pnpm format       # biome format --write
 
 ---
 
-*Última atualização: 2026-05-21 — adicionada importação de planilha Excel no BDC.*
+*Última atualização: 2026-06-11 — implementado CPF como identificador único do cliente (validação completa, formatação automática, coluna na tabela BDC).*
