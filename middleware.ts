@@ -17,7 +17,8 @@ export async function middleware(request: NextRequest) {
   if (
     pathname === "/" ||
     pathname.startsWith("/sign-") ||
-    pathname.startsWith("/api/")
+    pathname.startsWith("/api/") ||
+    pathname.startsWith("/consultar")
   ) {
     return NextResponse.next();
   }
