@@ -32,12 +32,27 @@ export async function createClient(data: {
 
 export async function getClients() {
   return prisma.client.findMany({
-    include: {
-      motorcycles: true,
+    select: {
+      id: true,
+      cpf: true,
+      name: true,
+      sellerName: true,
+      city: true,
+      billingDate: true,
+      motorcycles: {
+        select: {
+          id: true,
+          chassis: true,
+          model: true,
+          forecastDate: true,
+          registrationStatus: true,
+        },
+      },
     },
     orderBy: {
       createdAt: "desc",
     },
+    take: 500,
   });
 }
 
@@ -147,17 +162,29 @@ export async function searchClients(query: string) {
 
   return prisma.client.findMany({
     where: {
-      OR: [
-        { cpf: { contains: stripped } },
-        { cpf: { contains: query } },
-      ],
+      cpf: { contains: stripped },
     },
-    include: {
-      motorcycles: true,
+    select: {
+      id: true,
+      cpf: true,
+      name: true,
+      sellerName: true,
+      city: true,
+      billingDate: true,
+      motorcycles: {
+        select: {
+          id: true,
+          chassis: true,
+          model: true,
+          forecastDate: true,
+          registrationStatus: true,
+        },
+      },
     },
     orderBy: {
       createdAt: "desc",
     },
+    take: 500,
   });
 }
 

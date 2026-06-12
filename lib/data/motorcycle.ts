@@ -4,14 +4,16 @@ type RegistrationStatus = "NO_PLATE" | "PLATING" | "PLATED";
 
 export async function getAllMotorcycles() {
   return prisma.motorcycle.findMany({
-    include: {
-      client: {
-        select: { name: true },
-      },
+    select: {
+      id: true,
+      chassis: true,
+      model: true,
+      forecastDate: true,
     },
     orderBy: {
       createdAt: "desc",
     },
+    take: 500,
   });
 }
 
