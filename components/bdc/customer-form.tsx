@@ -1,6 +1,5 @@
 "use client";
 
-import { useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
@@ -40,7 +39,6 @@ export function CustomerForm({
 }: CustomerFormProps) {
   const [step, setStep] = useState<1 | 2>(mode === "edit" ? 2 : 1);
   const [isPending, startTransition] = useTransition();
-  const queryClient = useQueryClient();
   const router = useRouter();
   const [sidebarData, setSidebarData] = useState<{
     found: boolean;
@@ -100,7 +98,6 @@ export function CustomerForm({
     startTransition(async () => {
       const result = await action(data);
       if (result && typeof result === "object" && "success" in result && result.success) {
-        queryClient.invalidateQueries({ queryKey: ["clients"] });
         router.push("/bdc");
       }
     });

@@ -1,10 +1,10 @@
 "use client";
 
-import { useQueryClient } from "@tanstack/react-query";
 import { FileSpreadsheet, Loader2, Upload, X } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 import { importSpreadsheetAction } from "@/app/(app)/bdc/actions";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,7 +27,7 @@ const ACCEPTED_TYPES = {
 };
 
 export function SpreadsheetUploadDialog() {
-  const queryClient = useQueryClient();
+  const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
   const [open, setOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -73,7 +73,7 @@ export function SpreadsheetUploadDialog() {
         });
         setFile(null);
         setOpen(false);
-        queryClient.invalidateQueries({ queryKey: ["clients"] });
+        router.refresh();
       } else {
         toast.error("Erro na importação", {
           description: result.error,

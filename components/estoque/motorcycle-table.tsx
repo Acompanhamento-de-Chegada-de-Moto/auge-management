@@ -1,9 +1,8 @@
 "use client";
 
-import { useQueryClient } from "@tanstack/react-query";
 import { CheckIcon, CopyIcon, PencilIcon, SearchIcon, Trash2Icon } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { deleteMotorcycleAction } from "@/app/(app)/estoque/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,7 +22,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -32,7 +30,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useMotorcycles } from "@/hooks/use-motorcycles";
 import dayjs from "dayjs";
 import { usePagination } from "@/hooks/use-pagination";
 
@@ -70,60 +67,22 @@ function getArrivalStatus(forecastDate: Date | null) {
   };
 }
 
-function MotorcycleTableSkeleton() {
-  return (
-    <div className="w-full">
-      <div className="rounded-sm border">
-        <Table>
-          <TableHeader>
-            <TableRow className="hover:bg-transparent">
-              <TableHead>Modelo</TableHead>
-              <TableHead>Chassi</TableHead>
-              <TableHead>Previsão de Chegada</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="w-0 pr-4 text-end">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {Array.from({ length: 10 }).map((_, i) => (
-              // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton rows
-              <TableRow key={`skeleton-${i}`}>
-                <TableCell>
-                  <Skeleton className="h-4 w-28" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-4 w-40" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-4 w-24" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-5 w-20 rounded-full" />
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-1 justify-end">
-                    <Skeleton className="h-8 w-8 rounded-full" />
-                    <Skeleton className="h-8 w-8 rounded-full" />
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-    </div>
-  );
-}
-
 interface Filters {
   model: string;
   status: string;
 }
 
-export default function MotorcycleTable() {
+interface MotorcycleTableProps {
+  motorcycles: Array<{
+    id: string;
+    chassis: string;
+    model: string;
+    forecastDate: Date | null;
+  }>;
+}
+
+export default function MotorcycleTable({ motorcycles }: MotorcycleTableProps) {
   const router = useRouter();
-  const queryClient = useQueryClient();
-  const { data: motorcycles, isLoading, error } = useMotorcycles();
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [filters, setFilters] = useState<Filters>({ model: "", status: "" });
   const [chassisSearch, setChassisSearch] = useState("");
@@ -182,29 +141,17 @@ export default function MotorcycleTable() {
     [filteredMotorcycles, paginatedRange.start, paginatedRange.end],
   );
 
-  const handleCopy = useCallback((text: string, id: string) => {
+  const handleCopy = (text: string, id: string) => {
     navigator.clipboard.writeText(text).then(() => {
       setCopiedId(id);
       setTimeout(() => setCopiedId(null), 2000);
     });
-  }, []);
+  };
 
   const handleDelete = async (id: string) => {
     await deleteMotorcycleAction(id);
-    queryClient.invalidateQueries({ queryKey: ["motorcycles"] });
+    router.refresh();
   };
-
-  if (isLoading) {
-    return <MotorcycleTableSkeleton />;
-  }
-
-  if (error) {
-    return (
-      <div className="text-center py-12 text-destructive">
-        Erro ao carregar dados. Tente novamente.
-      </div>
-    );
-  }
 
   const statusOptions = ["Em Trânsito", "Chegou", "Atrasada"];
 

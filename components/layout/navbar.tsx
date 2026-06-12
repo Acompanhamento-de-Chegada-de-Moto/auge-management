@@ -1,12 +1,9 @@
 "use client";
 
-import { useQueryClient } from "@tanstack/react-query";
 import { Bike, LogOut, Settings, TextAlignJustify, User } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { getClientsAction } from "@/app/(app)/bdc/actions";
-import { getMotorcyclesAction } from "@/app/(app)/estoque/actions";
 import { BreadcrumbNav } from "@/components/layout/breadcrumb-nav";
 import { ModeToggle } from "@/components/mode-toggle";
 import { Button } from "@/components/ui/button";
@@ -29,27 +26,9 @@ const navigationData = [
 const Navbar = () => {
   const pathname = usePathname();
   const router = useRouter();
-  const queryClient = useQueryClient();
   const { data: session } = authClient.useSession();
   const [sticky, setSticky] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  const handlePrefetch = useCallback(
-    (href: string) => {
-      if (href === "/bdc") {
-        queryClient.prefetchQuery({
-          queryKey: ["clients"],
-          queryFn: getClientsAction,
-        });
-      } else if (href === "/estoque") {
-        queryClient.prefetchQuery({
-          queryKey: ["motorcycles"],
-          queryFn: getMotorcyclesAction,
-        });
-      }
-    },
-    [queryClient],
-  );
 
   const handleScroll = useCallback(() => {
     setSticky(window.scrollY >= 10);
@@ -110,7 +89,6 @@ const Navbar = () => {
                 <Link
                   key={item.title}
                   href={item.href}
-                  onMouseEnter={() => handlePrefetch(item.href)}
                   className={cn(
                     "px-4 py-2 text-sm font-medium rounded-lg transition-colors",
                     isActive
@@ -194,7 +172,6 @@ const Navbar = () => {
                     <DropdownMenuItem key={item.title} asChild>
                       <Link
                         href={item.href}
-                        onMouseEnter={() => handlePrefetch(item.href)}
                         className={cn(
                           "w-full cursor-pointer text-sm font-medium",
                           pathname === item.href && "font-semibold",

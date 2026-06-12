@@ -6,7 +6,6 @@ import { ptBR } from "date-fns/locale";
 import { CalendarIcon } from "lucide-react";
 import { useCallback, useTransition } from "react";
 import { useForm } from "react-hook-form";
-import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -34,7 +33,6 @@ export function MotorcycleEditForm({
   action,
 }: MotorcycleEditFormProps) {
   const router = useRouter();
-  const queryClient = useQueryClient();
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<MotorcycleFormData>({
@@ -52,12 +50,11 @@ export function MotorcycleEditForm({
       startTransition(async () => {
         const result = (await action(data)) as { success: boolean } | undefined;
         if (result?.success) {
-          queryClient.invalidateQueries({ queryKey: ["motorcycles"] });
           router.push("/estoque");
         }
       });
     },
-    [action, queryClient, router],
+    [action, router],
   );
 
   return (

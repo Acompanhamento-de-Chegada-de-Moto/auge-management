@@ -1,6 +1,5 @@
 "use client";
 
-import { useQueryClient } from "@tanstack/react-query";
 import {
   CheckIcon,
   CopyIcon,
@@ -9,8 +8,8 @@ import {
   Trash2Icon,
   X,
 } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
 import { deleteClientAction } from "@/app/(app)/bdc/actions";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,7 +28,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -38,7 +36,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useClients } from "@/hooks/use-clients";
 import { usePagination } from "@/hooks/use-pagination";
 import {
   getStatusColor,
@@ -69,90 +66,13 @@ interface Filters {
   model: string;
 }
 
-function BDCTableSkeleton() {
-  return (
-    <div className="w-full">
-      <div className="flex flex-wrap items-center gap-2 mb-4">
-        <Skeleton className="h-5 w-16" />
-        <Skeleton className="h-8 w-[160px]" />
-        <Skeleton className="h-8 w-[160px]" />
-        <Skeleton className="h-8 w-[160px]" />
-        <Skeleton className="h-8 w-[160px]" />
-        <div className="flex items-center gap-1 ml-auto">
-          <Skeleton className="h-8 w-56" />
-          <Skeleton className="h-8 w-8" />
-        </div>
-      </div>
-
-      <div className="rounded-sm border">
-        <Table>
-          <TableHeader>
-            <TableRow className="hover:bg-transparent">
-              <TableHead>Cliente</TableHead>
-              <TableHead>CPF</TableHead>
-              <TableHead>Vendedor</TableHead>
-              <TableHead>Cidade</TableHead>
-              <TableHead>Modelo</TableHead>
-              <TableHead>Chassi</TableHead>
-              <TableHead>Data Faturamento</TableHead>
-              <TableHead>Previsão Chegada</TableHead>
-              <TableHead>Situação</TableHead>
-              <TableHead className="w-0 pr-4 text-end">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {Array.from({ length: 10 }).map((_, i) => (
-              // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton rows
-              <TableRow key={`skeleton-${i}`}>
-                <TableCell>
-                  <Skeleton className="h-4 w-32" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-4 w-28" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-4 w-24" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-4 w-20" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-4 w-24" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-4 w-40" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-4 w-24" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-5 w-20 rounded-full" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-5 w-24 rounded-full" />
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-1 justify-end">
-                    <Skeleton className="h-8 w-8 rounded-full" />
-                    <Skeleton className="h-8 w-8 rounded-full" />
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-    </div>
-  );
+interface BDCTableProps {
+  clients: ClientRow[];
+  query?: string;
 }
 
-const BDCTable = () => {
+const BDCTable = ({ clients, query }: BDCTableProps) => {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const query = searchParams.get("q") ?? undefined;
-  const queryClient = useQueryClient();
-
-  const { data: clients, isLoading, error } = useClients(query);
 
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [filters, setFilters] = useState<Filters>({
@@ -278,12 +198,12 @@ const BDCTable = () => {
     [filteredRows, paginatedRange.start, paginatedRange.end],
   );
 
-  const handleCopy = useCallback((text: string, id: string) => {
+  const handleCopy = (text: string, id: string) => {
     navigator.clipboard.writeText(text).then(() => {
       setCopiedId(id);
       setTimeout(() => setCopiedId(null), 2000);
     });
-  }, []);
+  };
 
   const handleEdit = (id: string) => {
     router.push(`/bdc/cliente/editar?id=${id}`);
@@ -291,20 +211,8 @@ const BDCTable = () => {
 
   const handleDelete = async (id: string) => {
     await deleteClientAction(id);
-    queryClient.invalidateQueries({ queryKey: ["clients"] });
+    router.refresh();
   };
-
-  if (isLoading) {
-    return <BDCTableSkeleton />;
-  }
-
-  if (error) {
-    return (
-      <div className="text-center py-12 text-destructive">
-        Erro ao carregar dados. Tente novamente.
-      </div>
-    );
-  }
 
   return (
     <div className="w-full">

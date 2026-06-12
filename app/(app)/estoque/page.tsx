@@ -3,12 +3,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import MotorcycleTable from "@/components/estoque/motorcycle-table";
 import { Button } from "@/components/ui/button";
+import { getMotorcyclesAction } from "./actions";
 
 export const metadata: Metadata = {
   title: "Estoque",
 };
 
-export default function EstoquePage() {
+export default async function EstoquePage() {
+  const motorcycles = await getMotorcyclesAction();
+
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="flex justify-between items-center mb-4">
@@ -25,7 +28,7 @@ export default function EstoquePage() {
           </Link>
         </Button>
       </div>
-      <MotorcycleTable />
+      <MotorcycleTable motorcycles={motorcycles} />
     </div>
   );
 }
