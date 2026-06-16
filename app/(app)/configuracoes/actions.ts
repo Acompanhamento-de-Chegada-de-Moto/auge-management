@@ -2,7 +2,7 @@
 
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
-import { requireUser } from "@/app/data/require-user";
+import { requireAdmin } from "@/app/data/require-user";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { upsertSetting } from "@/lib/data/settings";
@@ -13,7 +13,7 @@ export async function createUserAction(data: {
   password: string;
 }) {
   try {
-    await requireUser();
+    await requireAdmin();
 
     const existingUser = await prisma.user.findUnique({
       where: { email: data.email },
@@ -52,7 +52,7 @@ export async function updateContactSettingsAction(settings: {
   whatsappMessage: string;
 }) {
   try {
-    await requireUser();
+    await requireAdmin();
 
     await upsertSetting("contact_phone", settings.contactPhone);
     await upsertSetting("delay_message", settings.delayMessage);

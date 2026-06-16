@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { requireUser } from "@/app/data/require-user";
+import { requireAdmin } from "@/app/data/require-user";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 };
 
 export default async function ConfiguracoesPage() {
-  await requireUser();
+  await requireAdmin();
 
   const users = await prisma.user.findMany({
     orderBy: { createdAt: "desc" },

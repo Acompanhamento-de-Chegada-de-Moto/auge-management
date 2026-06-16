@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { requireUser } from "@/app/data/require-user";
+import { requireAdmin } from "@/app/data/require-user";
 import { getSetting } from "@/lib/data/settings";
 import { ContactSettingsForm } from "../_components/contact-settings-form";
 
@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 };
 
 export default async function SistemaPage() {
-  await requireUser();
+  await requireAdmin();
 
   const contactPhone = (await getSetting("contact_phone")) ?? "";
   const delayMessage = (await getSetting("delay_message")) ?? "";
