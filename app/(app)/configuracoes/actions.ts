@@ -26,12 +26,11 @@ export async function createUserAction(data: {
       };
     }
 
-    await auth.api.signUpEmail({
+    await auth.api.createUser({
       body: {
         name: data.name,
         email: data.email,
         password: data.password,
-        role: "USER",
       },
       headers: await headers(),
     });

@@ -15,7 +15,10 @@ model User {
   image         String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  role          UserRole  @default(USER)
+  role          String    @default("USER")
+  banned        Boolean   @default(false)
+  banReason     String?
+  banExpires    DateTime?
   accounts      Account[]
   sessions      Session[]
 
@@ -23,15 +26,16 @@ model User {
 }
 
 model Session {
-  id        String   @id
-  expiresAt DateTime
-  token     String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  ipAddress String?
-  userAgent String?
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id              String    @id
+  expiresAt       DateTime
+  token           String    @unique
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  ipAddress       String?
+  userAgent       String?
+  userId          String
+  impersonatedBy  String?
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("session")
@@ -102,11 +106,6 @@ model Motorcycle {
   @@index([createdAt])
   @@index([updatedAt])
   @@map("motorcycle")
-}
-
-enum UserRole {
-  USER
-  ADMIN
 }
 
 enum RegistrationStatus {
