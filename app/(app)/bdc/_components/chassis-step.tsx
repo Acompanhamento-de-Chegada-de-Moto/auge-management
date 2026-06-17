@@ -3,7 +3,6 @@
 import { SearchIcon } from "lucide-react";
 import { useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
-import { searchChassisAction } from "@/app/(app)/bdc/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,31 +31,31 @@ export function ChassisStep({ form, onSearchResult }: ChassisStepProps) {
     setLoading(true);
     setError(null);
 
-    try {
-      const motorcycle = await searchChassisAction(chassisValue);
+    // try {
+    //   const motorcycle = await searchChassisAction(chassisValue);
 
-      if (motorcycle) {
-        form.setValue("model", motorcycle.model);
-        form.setValue("city", "");
-        form.setValue("forecastDate", motorcycle.forecastDate ?? undefined);
+    //   if (motorcycle) {
+    //     form.setValue("model", motorcycle.model);
+    //     form.setValue("city", "");
+    //     form.setValue("forecastDate", motorcycle.forecastDate ?? undefined);
 
-        onSearchResult(true, {
-          model: motorcycle.model,
-          city: "",
-          forecastDate: motorcycle.forecastDate,
-        });
-      } else {
-        form.setValue("model", "");
-        form.setValue("city", "");
-        form.setValue("forecastDate", undefined);
+    //     onSearchResult(true, {
+    //       model: motorcycle.model,
+    //       city: "",
+    //       forecastDate: motorcycle.forecastDate,
+    //     });
+    //   } else {
+    //     form.setValue("model", "");
+    //     form.setValue("city", "");
+    //     form.setValue("forecastDate", undefined);
 
-        onSearchResult(false);
-      }
-    } catch {
-      setError("Erro ao consultar chassi.");
-    } finally {
-      setLoading(false);
-    }
+    //     onSearchResult(false);
+    //   }
+    // } catch {
+    //   setError("Erro ao consultar chassi.");
+    // } finally {
+    //   setLoading(false);
+    // }
   };
 
   return (

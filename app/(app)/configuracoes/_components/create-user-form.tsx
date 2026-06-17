@@ -10,7 +10,6 @@ import {
   type CreateUserInput,
   createUserSchema,
 } from "@/validators/create-user-schema";
-import { createUserAction } from "../actions";
 
 export function CreateUserForm() {
   const [success, setSuccess] = useState(false);
@@ -25,15 +24,14 @@ export function CreateUserForm() {
   });
 
   const onSubmit = async (data: CreateUserInput) => {
-    const result = await createUserAction(data);
-
-    if (result.success) {
-      setSuccess(true);
-      reset();
-      setTimeout(() => setSuccess(false), 3000);
-    } else {
-      setError("root", { message: result.error || "Erro desconhecido" });
-    }
+    // const result = await createUserAction(data);
+    // if (result.success) {
+    //   setSuccess(true);
+    //   reset();
+    //   setTimeout(() => setSuccess(false), 3000);
+    // } else {
+    //   setError("root", { message: result.error || "Erro desconhecido" });
+    // }
   };
 
   return (

@@ -5,7 +5,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { maskPhone } from "@/lib/utils";
-import { updateContactSettingsAction } from "../actions";
 
 interface ContactSettingsFormProps {
   initialPhone: string;
@@ -33,23 +32,6 @@ export function ContactSettingsForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSaving(true);
-    setError(null);
-
-    const result = await updateContactSettingsAction({
-      contactPhone: phone,
-      delayMessage: message,
-      whatsappMessage,
-    });
-
-    setSaving(false);
-
-    if (result.success) {
-      setSuccess(true);
-      setTimeout(() => setSuccess(false), 3000);
-    } else {
-      setError(result.error || "Erro ao salvar");
-    }
   };
 
   return (

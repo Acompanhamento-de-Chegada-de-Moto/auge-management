@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { userGetMotorcycleById } from "@/app/data/user/user-get-moto";
 import { MotorcycleEditForm } from "@/components/estoque/motorcycle-edit-form";
 
 export const metadata: Metadata = {

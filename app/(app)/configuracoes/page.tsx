@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { adminGetUsers } from "@/app/data/admin/admin-get-users";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -16,13 +15,15 @@ export const metadata: Metadata = {
 };
 
 export default async function ConfiguracoesPage() {
-  const users = await adminGetUsers();
+  // const users = await adminGetUsers();
 
   return (
     <>
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Usuários</h1>
-        <p className="text-muted-foreground">Gerencie os usuários do sistema.</p>
+        <p className="text-muted-foreground">
+          Gerencie os usuários do sistema.
+        </p>
       </div>
 
       <div className="mb-10 max-w-sm">
@@ -40,7 +41,7 @@ export default async function ConfiguracoesPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {users.length === 0 ? (
+            {/* {users.length === 0 ? (
               <TableRow>
                 <TableCell
                   colSpan={4}
@@ -71,7 +72,7 @@ export default async function ConfiguracoesPage() {
                   </TableCell>
                 </TableRow>
               ))
-            )}
+            )} */}
           </TableBody>
         </Table>
       </div>

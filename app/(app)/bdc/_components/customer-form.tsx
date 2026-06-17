@@ -178,11 +178,3 @@ export function CustomerForm({
     </div>
   );
 }
-      )}
-    </div>
-  );
-}
-      )}
-    </div>
-  );
-}
