@@ -1,11 +1,10 @@
 "use client";
 
 import { FileSpreadsheet, Loader2, Upload, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
-import { importSpreadsheetAction } from "@/app/(app)/bdc/actions";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -61,31 +60,31 @@ export function SpreadsheetUploadDialog() {
 
     setIsUploading(true);
 
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
+    // try {
+    //   const formData = new FormData();
+    //   formData.append("file", file);
 
-      const result = await importSpreadsheetAction(formData);
+    //   let result;
 
-      if (result.success) {
-        toast.success("Importação concluída", {
-          description: result.message,
-        });
-        setFile(null);
-        setOpen(false);
-        router.refresh();
-      } else {
-        toast.error("Erro na importação", {
-          description: result.error,
-        });
-      }
-    } catch {
-      toast.error("Erro na importação", {
-        description: "Não foi possível processar o arquivo. Tente novamente.",
-      });
-    } finally {
-      setIsUploading(false);
-    }
+    //   if (result.success) {
+    //     toast.success("Importação concluída", {
+    //       description: result.message,
+    //     });
+    //     setFile(null);
+    //     setOpen(false);
+    //     router.refresh();
+    //   } else {
+    //     toast.error("Erro na importação", {
+    //       description: result.error,
+    //     });
+    //   }
+    // } catch {
+    //   toast.error("Erro na importação", {
+    //     description: "Não foi possível processar o arquivo. Tente novamente.",
+    //   });
+    // } finally {
+    //   setIsUploading(false);
+    // }
   };
 
   return (

@@ -1,34 +1,34 @@
-import "server-only";
+import { prisma } from "@/lib/db";
+import { requireAuth } from "./require-auth";
 
-import { notFound } from "next/navigation";
-import { requireAuth } from "../require-auth";
-import {
-  getClientsPaginated as dalGetClientsPaginated,
-  getBDCFilterOptions as dalGetFilterOptions,
-} from "@/lib/data/client";
-
-export async function userGetClientsPaginated(params: {
-  page: number;
-  pageSize: number;
-  sellerName?: string;
-  city?: string;
-  model?: string;
-  search?: string;
-}) {
+export async function userGetClients() {
   await requireAuth();
 
-  return dalGetClientsPaginated(params);
+  const data = await prisma.client.findMany({
+    select: {
+      id: true,
+      cpf: true,
+      name: true,
+      sellerName: true,
+      city: true,
+      billingDate: true,
+      motorcycles: {
+        select: {
+          id: true,
+          chassis: true,
+          model: true,
+          forecastDate: true,
+          registrationStatus: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    take: 500,
+  });
+
+  return data;
 }
 
-export async function userGetFilterOptions() {
-  await requireAuth();
-
-  return dalGetFilterOptions();
-}
-
-export type UserGetClientsPaginatedType = Awaited<
-  ReturnType<typeof userGetClientsPaginated>
->;
-export type UserGetFilterOptionsType = Awaited<
-  ReturnType<typeof userGetFilterOptions>
->;
+export type UserGetClientsType = Awaited<ReturnType<typeof userGetClients>>[0];

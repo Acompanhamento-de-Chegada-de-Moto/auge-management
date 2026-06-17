@@ -1,9 +1,15 @@
 "use client";
 
-import { CheckIcon, CopyIcon, PencilIcon, SearchIcon, Trash2Icon } from "lucide-react";
+import dayjs from "dayjs";
+import {
+  CheckIcon,
+  CopyIcon,
+  PencilIcon,
+  SearchIcon,
+  Trash2Icon,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { deleteMotorcycleAction } from "@/app/(app)/estoque/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -30,7 +36,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import dayjs from "dayjs";
 
 function getArrivalStatus(forecastDate: Date | null) {
   if (!forecastDate) {
@@ -111,7 +116,6 @@ export default function MotorcycleTable({
   };
 
   const handleDelete = async (id: string) => {
-    await deleteMotorcycleAction(id);
     router.refresh();
   };
 
@@ -136,7 +140,9 @@ export default function MotorcycleTable({
           <SelectContent>
             <SelectItem value=" ">Todos</SelectItem>
             {filterOptions.models.map((m) => (
-              <SelectItem key={m} value={m}>{m}</SelectItem>
+              <SelectItem key={m} value={m}>
+                {m}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -151,7 +157,9 @@ export default function MotorcycleTable({
           <SelectContent>
             <SelectItem value=" ">Todos</SelectItem>
             {statusOptions.map((s) => (
-              <SelectItem key={s} value={s}>{s}</SelectItem>
+              <SelectItem key={s} value={s}>
+                {s}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -308,19 +316,17 @@ export default function MotorcycleTable({
               </PaginationItem>
 
               {totalPages <= 7 ? (
-                Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                  (p) => (
-                    <PaginationItem key={p}>
-                      <PaginationLink
-                        onClick={() => onPageChange(p)}
-                        isActive={page === p}
-                        className="cursor-pointer"
-                      >
-                        {p}
-                      </PaginationLink>
-                    </PaginationItem>
-                  ),
-                )
+                Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                  <PaginationItem key={p}>
+                    <PaginationLink
+                      onClick={() => onPageChange(p)}
+                      isActive={page === p}
+                      className="cursor-pointer"
+                    >
+                      {p}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))
               ) : (
                 <>
                   {page > 3 && (
@@ -328,20 +334,17 @@ export default function MotorcycleTable({
                       <PaginationEllipsis />
                     </PaginationItem>
                   )}
-                  {Array.from(
-                    { length: Math.min(5, totalPages) },
-                    (_, i) => {
-                      let p: number;
-                      if (page <= 3) {
-                        p = i + 1;
-                      } else if (page >= totalPages - 2) {
-                        p = totalPages - 4 + i;
-                      } else {
-                        p = page - 2 + i;
-                      }
-                      return p;
-                    },
-                  )
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let p: number;
+                    if (page <= 3) {
+                      p = i + 1;
+                    } else if (page >= totalPages - 2) {
+                      p = totalPages - 4 + i;
+                    } else {
+                      p = page - 2 + i;
+                    }
+                    return p;
+                  })
                     .filter((p) => p >= 1 && p <= totalPages)
                     .map((p) => (
                       <PaginationItem key={p}>

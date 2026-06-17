@@ -20,7 +20,9 @@ export function ContactSettingsForm({
 }: ContactSettingsFormProps) {
   const [phone, setPhone] = useState(initialPhone);
   const [message, setMessage] = useState(initialMessage);
-  const [whatsappMessage, setWhatsappMessage] = useState(initialWhatsAppMessage);
+  const [whatsappMessage, setWhatsappMessage] = useState(
+    initialWhatsAppMessage,
+  );
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -59,9 +61,7 @@ export function ContactSettingsForm({
         </div>
       )}
 
-      {error && (
-        <p className="text-sm font-medium text-red-600">{error}</p>
-      )}
+      {error && <p className="text-sm font-medium text-red-600">{error}</p>}
 
       <div className="space-y-1.5">
         <label className="text-sm font-medium">Telefone de contato</label>

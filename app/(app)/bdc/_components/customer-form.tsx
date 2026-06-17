@@ -1,9 +1,9 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
-import { useRouter } from "next/navigation";
 import { Form } from "@/components/ui/form";
 import {
   type CustomerFormData,
@@ -97,7 +97,12 @@ export function CustomerForm({
   const handleSubmit = (data: CustomerFormData) => {
     startTransition(async () => {
       const result = await action(data);
-      if (result && typeof result === "object" && "success" in result && result.success) {
+      if (
+        result &&
+        typeof result === "object" &&
+        "success" in result &&
+        result.success
+      ) {
         router.push("/bdc");
       }
     });
@@ -169,6 +174,14 @@ export function CustomerForm({
           registrationStatus={watchedValues.registrationStatus}
           forecastDate={sidebarData.forecastDate}
         />
+      )}
+    </div>
+  );
+}
+      )}
+    </div>
+  );
+}
       )}
     </div>
   );
