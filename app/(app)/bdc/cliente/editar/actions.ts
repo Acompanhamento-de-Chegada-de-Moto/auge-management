@@ -1,11 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireAuth } from "@/app/data/require-user";
-import {
-  getClientById as dalGetClientById,
-  updateClient as dalUpdateClient,
-} from "@/lib/data/client";
+import { requireAuth } from "@/app/data/require-auth";
+import { updateClient as dalUpdateClient } from "@/lib/data/client";
 import {
   getMotorcycleByChassis,
   updateMotorcycleByChassis,
@@ -21,11 +18,6 @@ function mapRegistrationStatus(
     Emplacado: "PLATED",
   } as const;
   return map[status];
-}
-
-export async function getClientByIdAction(id: string) {
-  await requireAuth();
-  return dalGetClientById(id);
 }
 
 export async function updateClientAction(clientId: string, formData: unknown) {

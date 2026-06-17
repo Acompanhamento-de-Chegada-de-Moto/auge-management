@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { requireAdmin } from "@/app/data/require-user";
+import { adminGetUsers } from "@/app/data/admin/admin-get-users";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -9,7 +9,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { prisma } from "@/lib/db";
 import { CreateUserForm } from "./_components/create-user-form";
 
 export const metadata: Metadata = {
@@ -17,18 +16,7 @@ export const metadata: Metadata = {
 };
 
 export default async function ConfiguracoesPage() {
-  await requireAdmin();
-
-  const users = await prisma.user.findMany({
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      createdAt: true,
-    },
-  });
+  const users = await adminGetUsers();
 
   return (
     <>

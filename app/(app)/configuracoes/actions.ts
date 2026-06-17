@@ -2,7 +2,7 @@
 
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
-import { requireAdmin } from "@/app/data/require-user";
+import { requireAdmin } from "@/app/data/require-admin";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { upsertSetting } from "@/lib/data/settings";

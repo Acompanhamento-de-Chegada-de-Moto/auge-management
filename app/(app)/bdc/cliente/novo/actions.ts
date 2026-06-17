@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireAuth } from "@/app/data/require-user";
+import { requireAuth } from "@/app/data/require-auth";
 import { createClient as dalCreateClient } from "@/lib/data/client";
 import {
   createMotorcycle,

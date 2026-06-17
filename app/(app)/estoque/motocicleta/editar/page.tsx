@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { MotorcycleEditForm } from "@/components/estoque/motorcycle-edit-form";
-import { getMotorcycleByIdAction, updateMotorcycleAction } from "./actions";
+import { userGetMotorcycleById } from "@/app/data/user/user-get-moto";
+import { updateMotorcycleAction } from "./actions";
 
 export const metadata: Metadata = {
   title: "Editar Motocicleta",
@@ -20,11 +21,7 @@ export default async function EditarMotocicletaPage({
     notFound();
   }
 
-  const motorcycle = await getMotorcycleByIdAction(id);
-
-  if (!motorcycle) {
-    notFound();
-  }
+  const motorcycle = await userGetMotorcycleById(id);
 
   const initialData = {
     chassis: motorcycle.chassis,

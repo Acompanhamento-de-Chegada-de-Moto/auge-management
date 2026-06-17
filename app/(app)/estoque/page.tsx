@@ -2,13 +2,44 @@ import { PlusIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import {
+  userGetMotorcyclesPaginated,
+  userGetEstoqueFilterOptions,
+} from "@/app/data/user/user-get-motos";
 import { EstoquePageClient } from "./_components/estoque-page-client";
 
 export const metadata: Metadata = {
   title: "Estoque",
 };
 
-export default function EstoquePage() {
+interface PageProps {
+  searchParams: Promise<{
+    page?: string;
+    model?: string;
+    status?: string;
+    chassis?: string;
+  }>;
+}
+
+export default async function EstoquePage({ searchParams }: PageProps) {
+  const params = await searchParams;
+
+  const page = Number(params.page) || 1;
+  const model = params.model;
+  const status = params.status as "Em Trânsito" | "Chegou" | "Atrasada" | undefined;
+  const chassisSearch = params.chassis;
+
+  const [data, filterOptions] = await Promise.all([
+    userGetMotorcyclesPaginated({
+      page,
+      pageSize: 50,
+      model,
+      status,
+      chassisSearch,
+    }),
+    userGetEstoqueFilterOptions(),
+  ]);
+
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="flex justify-between items-center mb-4">
@@ -25,7 +56,7 @@ export default function EstoquePage() {
           </Link>
         </Button>
       </div>
-      <EstoquePageClient />
+      <EstoquePageClient data={data} filterOptions={filterOptions} />
     </div>
   );
 }

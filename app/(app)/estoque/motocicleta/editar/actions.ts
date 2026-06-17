@@ -1,18 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireAuth } from "@/app/data/require-user";
+import { requireAuth } from "@/app/data/require-auth";
 import {
-  getMotorcycleById as dalGetMotorcycleById,
   updateMotorcycle as dalUpdateMotorcycle,
   getMotorcycleByChassis,
 } from "@/lib/data/motorcycle";
 import { motorcycleSchema } from "@/validators/motorcycle-schema";
-
-export async function getMotorcycleByIdAction(id: string) {
-  await requireAuth();
-  return dalGetMotorcycleById(id);
-}
 
 export async function updateMotorcycleAction(id: string, data: unknown) {
   await requireAuth();

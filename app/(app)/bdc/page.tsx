@@ -2,8 +2,10 @@ import { PlusIcon } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
-import { requireAuth } from '@/app/data/require-user';
-import { getBDCFilterOptions, getClientsPaginated } from '@/lib/data/client';
+import {
+  userGetClientsPaginated,
+  userGetFilterOptions,
+} from '@/app/data/user/user-get-clients';
 
 import { SpreadsheetUploadDialog } from '@/components/bdc/spreadsheet-upload-dialog';
 import { Button } from '@/components/ui/button';
@@ -25,11 +27,7 @@ interface PageProps {
 }
 
 export default async function BDCPage({ searchParams }: PageProps) {
-  await requireAuth();
-
   const params = await searchParams;
-
-  
 
   const page = Number(params.page) || 1;
   const sellerName = params.sellerName;
@@ -38,7 +36,7 @@ export default async function BDCPage({ searchParams }: PageProps) {
   const q = params.q;
 
   const [data, filterOptions] = await Promise.all([
-    getClientsPaginated({
+    userGetClientsPaginated({
       page,
       pageSize: 20,
       sellerName,
@@ -46,7 +44,7 @@ export default async function BDCPage({ searchParams }: PageProps) {
       model,
       search: q,
     }),
-    getBDCFilterOptions(),
+    userGetFilterOptions(),
   ]);
 
   return (

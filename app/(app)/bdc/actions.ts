@@ -2,23 +2,20 @@
 
 import { revalidatePath } from "next/cache";
 import * as XLSX from "xlsx";
-import { requireAuth } from "@/app/data/require-user";
+import { requireAuth } from "@/app/data/require-auth";
 import { parseExcelDate } from "@/lib/bdc-data";
+
 import {
   createClientsBatch,
   deleteClient as dalDeleteClient,
-  getClients as dalGetClients,
-  getBDCFilterOptions as dalGetBDCFilterOptions,
-  getClientsPaginated as dalGetClientsPaginated,
-  searchClients as dalSearchClients,
   getAllClientsForImport,
 } from "@/lib/data/client";
 import {
   createMotorcyclesBatch,
-  getMotorcycleByChassis,
   linkMotorcyclesBatch,
   updateMotorcyclesBatch,
 } from "@/lib/data/motorcycle";
+import { getMotorcycleByChassis } from "@/lib/data/motorcycle";
 
 function findSheet(
   workbook: XLSX.WorkBook,
@@ -70,36 +67,9 @@ const ARRIVAL_DATE_KEYS = [
   "DATA DE CHEGADA NA MATRIZ",
 ];
 
-export async function getClientsAction() {
-  await requireAuth();
-  return dalGetClients();
-}
-
-export async function getBDCFilterOptionsAction() {
-  await requireAuth();
-  return dalGetBDCFilterOptions();
-}
-
-export async function getClientsPaginatedAction(params: {
-  page: number;
-  pageSize: number;
-  sellerName?: string;
-  city?: string;
-  model?: string;
-  search?: string;
-}) {
-  await requireAuth();
-  return dalGetClientsPaginated(params);
-}
-
 export async function searchChassisAction(chassis: string) {
   await requireAuth();
   return getMotorcycleByChassis(chassis);
-}
-
-export async function searchClientsAction(query: string) {
-  await requireAuth();
-  return dalSearchClients(query);
 }
 
 export async function deleteClientAction(id: string) {

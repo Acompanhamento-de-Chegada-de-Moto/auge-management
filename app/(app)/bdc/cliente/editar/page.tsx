@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CustomerForm } from "@/components/bdc/customer-form";
 import { formatCPF } from "@/lib/cpf";
-import { getClientByIdAction, updateClientAction } from "./actions";
+import { userGetClientById } from "@/app/data/user/user-get-client";
+import { updateClientAction } from "./actions";
 import type { CustomerFormData } from "@/validators/customer-schema";
 
 export const metadata: Metadata = {
@@ -21,11 +22,7 @@ export default async function EditarClientePage({
     notFound();
   }
 
-  const client = await getClientByIdAction(id);
-
-  if (!client) {
-    notFound();
-  }
+  const client = await userGetClientById(id);
 
   const motorcycle = client.motorcycles[0];
 

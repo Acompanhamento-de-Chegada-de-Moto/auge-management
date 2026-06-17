@@ -1,4 +1,4 @@
-import { requireAuth } from "@/app/data/require-user";
+import { requireAuth } from "@/app/data/require-auth";
 import Navbar from "@/components/layout/navbar";
 
 export default async function AppLayout({

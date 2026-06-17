@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { requireAdmin } from "@/app/data/require-user";
+import { requireAdmin } from "@/app/data/require-admin";
 import { getSetting } from "@/lib/data/settings";
 import { ContactSettingsForm } from "../_components/contact-settings-form";
 
