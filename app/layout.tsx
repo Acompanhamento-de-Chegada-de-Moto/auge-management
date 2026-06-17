@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import { CookieConsentBanner } from "@/components/cookie-consent-banner";
+import { GlobalLoadingBar } from "@/components/ui/global-loading-bar";
 import { ThemeProvider } from "@/components/theme-provider";
 import { cn } from "@/lib/utils";
 
@@ -45,6 +46,7 @@ export default function RootLayout({
       )}
     >
       <body className="min-h-full flex flex-col">
+        <GlobalLoadingBar />
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
