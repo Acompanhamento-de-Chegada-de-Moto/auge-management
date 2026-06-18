@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useTransition } from "react";
-import MotorcycleTable from "@/components/estoque/motorcycle-table";
+import MotorcycleTable from "@/app/(app)/estoque/_components/motorcycle-table";
 
 interface MotorcycleRow {
   id: string;
@@ -28,10 +28,7 @@ interface EstoquePageClientProps {
   filterOptions: FilterOptions;
 }
 
-export function EstoquePageClient({
-  data,
-  filterOptions,
-}: EstoquePageClientProps) {
+export function EstoquePage({ data, filterOptions }: EstoquePageClientProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();

@@ -1,0 +1,173 @@
+"use client";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { CalendarIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useCallback, useTransition } from "react";
+import { useForm } from "react-hook-form";
+import { EditMotorcycleAction } from "@/app/(app)/bdc/cliente/[clientId]/editar/actions";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import {
+  type CreateMotorcycleType,
+  createMotorcycleSchema,
+} from "@/lib/zod-schemas/motorcycle-schema";
+
+interface EditMotorcycleFormProps {
+  // Recebe o ID e os dados atuais da moto para popular os inputs
+  motorcycleId: string;
+  initialData: {
+    chassi: string;
+    model: string;
+    forecastArrival: Date | string | null | undefined;
+  };
+}
+
+export function EditMotorcycleForm({
+  motorcycleId,
+  initialData,
+}: EditMotorcycleFormProps) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+
+  const form = useForm<CreateMotorcycleType>({
+    resolver: zodResolver(createMotorcycleSchema),
+    defaultValues: {
+      chassi: initialData.chassi,
+      model: initialData.model,
+      forecastArrival: initialData.forecastArrival
+        ? new Date(initialData.forecastArrival)
+        : undefined,
+    },
+  });
+
+  const handleSubmit = useCallback(
+    async (data: CreateMotorcycleType) => {
+      startTransition(async () => {
+        // Envia o ID da rota + os dados atualizados do formulário
+        const result = await EditMotorcycleAction(motorcycleId, data);
+
+        if (result.status === "success") {
+          router.push("/estoque");
+        } else {
+          form.setError("chassi", {
+            type: "manual",
+            message: result.message,
+          });
+        }
+      });
+    },
+    [router, form, motorcycleId],
+  );
+
+  return (
+    <Form {...form}>
+      <form
+        onSubmit={form.handleSubmit(handleSubmit)}
+        className="space-y-6 max-w-xl"
+      >
+        <FormField
+          control={form.control}
+          name="chassi"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Chassi</FormLabel>
+              <FormControl>
+                <Input placeholder="Ex: 9BWHE21JX24060961" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="model"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Modelo</FormLabel>
+              <FormControl>
+                <Input placeholder="Ex: Honda CG 160" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="forecastArrival"
+          render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel>Previsão de Chegada</FormLabel>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !field.value && "text-muted-foreground",
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 size-4" />
+                      {field.value ? (
+                        format(new Date(field.value), "dd/MM/yyyy", {
+                          locale: ptBR,
+                        })
+                      ) : (
+                        <span>Selecione a previsão (opcional)</span>
+                      )}
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={field.value ? new Date(field.value) : undefined}
+                    onSelect={field.onChange}
+                    disabled={(date) =>
+                      date < new Date(new Date().setHours(0, 0, 0, 0))
+                    }
+                  />
+                </PopoverContent>
+              </Popover>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="flex gap-3 pt-2">
+          <Button type="submit" disabled={isPending} className="min-w-[120px]">
+            {isPending ? "Atualizando..." : "Salvar Alterações"}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={isPending}
+            onClick={() => router.push("/estoque")}
+          >
+            Cancelar
+          </Button>
+        </div>
+      </form>
+    </Form>
+  );
+}
