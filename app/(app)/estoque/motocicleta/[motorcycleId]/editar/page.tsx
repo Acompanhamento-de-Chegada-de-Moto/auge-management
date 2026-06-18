@@ -18,7 +18,7 @@ export default async function EditarMotocicletaPage({
   const { motorcycleId } = await params;
   const data = await userGetMotorcycleById(motorcycleId);
 
-  if (!motorcycleId) {
+  if (!data) {
     notFound();
   }
 

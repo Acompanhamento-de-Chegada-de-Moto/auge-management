@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireAuth } from "@/app/data/user/require-auth";
 import { prisma } from "@/lib/db";
 import type { ApiResponse } from "@/lib/types";
+import type { ArrivalStatus, RegistrationStatus } from "@/generated/prisma/enums";
 import {
   type CreateMotorcycleType,
   createMotorcycleSchema,
@@ -50,8 +51,8 @@ export async function CreateMotorcycleAction(
         chassi,
         model,
         forecastArrival: forecastArrival ?? null,
-        forecastArrivalStatus,
-        registrationStatus: registrationStatus ?? null,
+        forecastArrivalStatus: forecastArrivalStatus as ArrivalStatus,
+        registrationStatus: (registrationStatus as RegistrationStatus | null) ?? null,
         registrationDate: registrationDate ?? null,
         clientId: clientId ?? null,
       },

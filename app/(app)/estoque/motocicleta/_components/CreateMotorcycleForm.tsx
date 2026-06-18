@@ -35,12 +35,13 @@ export function CreateMotorcycleForm() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  const form = useForm<CreateMotorcycleType>({
+  const form = useForm({
     resolver: zodResolver(createMotorcycleSchema),
     defaultValues: {
       chassi: "",
       model: "",
       forecastArrival: undefined,
+      forecastArrivalStatus: "NO_INFORMATION",
     },
   });
 

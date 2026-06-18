@@ -47,7 +47,7 @@ export function EditMotorcycleForm({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  const form = useForm<CreateMotorcycleType>({
+  const form = useForm({
     resolver: zodResolver(createMotorcycleSchema),
     defaultValues: {
       chassi: initialData.chassi,
@@ -55,6 +55,7 @@ export function EditMotorcycleForm({
       forecastArrival: initialData.forecastArrival
         ? new Date(initialData.forecastArrival)
         : undefined,
+      forecastArrivalStatus: "NO_INFORMATION",
     },
   });
 
