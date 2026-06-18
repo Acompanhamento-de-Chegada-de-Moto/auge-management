@@ -6,22 +6,21 @@ export async function createClient(data: {
   name: string;
   sellerName: string;
   city: string;
-  billingDate?: Date;
+  billingDate?: Date | null;
   motorcycles?: Array<{
-    chassis: string;
+    chassi: string;
     model: string;
-    forecastDate?: Date | null;
+    forecastArrival?: Date | null;
     registrationStatus?: "NO_PLATE" | "PLATING" | "PLATED";
-    registrationStatusDate?: Date | null;
   }>;
 }) {
   return prisma.client.create({
     data: {
       cpf: stripCPF(data.cpf),
       name: data.name,
-      sellerName: data.sellerName,
+      sellersName: data.sellerName,
       city: data.city,
-      billingDate: data.billingDate,
+      billingDate: data.billingDate ?? null,
       motorcycles: data.motorcycles ? { create: data.motorcycles } : undefined,
     },
     include: {
@@ -36,15 +35,15 @@ export async function getClients() {
       id: true,
       cpf: true,
       name: true,
-      sellerName: true,
+      sellersName: true,
       city: true,
       billingDate: true,
       motorcycles: {
         select: {
           id: true,
-          chassis: true,
+          chassi: true,
           model: true,
-          forecastDate: true,
+          forecastArrival: true,
           registrationStatus: true,
         },
       },
@@ -62,7 +61,7 @@ export async function getAllClientsForImport() {
       id: true,
       cpf: true,
       name: true,
-      sellerName: true,
+      sellersName: true,
     },
   });
 }
@@ -73,7 +72,6 @@ export async function createClientsBatch(
     name: string;
     sellerName: string;
     city: string;
-    billingDate?: Date | null;
   }>,
 ) {
   if (clients.length === 0) return [];
@@ -85,16 +83,15 @@ export async function createClientsBatch(
       return {
         cpf,
         name: c.name,
-        sellerName: c.sellerName,
+        sellersName: c.sellerName,
         city: c.city,
-        billingDate: c.billingDate ?? null,
       };
     }),
     select: {
       id: true,
       cpf: true,
       name: true,
-      sellerName: true,
+      sellersName: true,
     },
   });
 }
@@ -123,7 +120,7 @@ export async function updateClient(
     data: {
       cpf: data.cpf ? stripCPF(data.cpf) : undefined,
       name: data.name,
-      sellerName: data.sellerName,
+      sellersName: data.sellerName,
       city: data.city,
       billingDate: data.billingDate,
     },
@@ -159,10 +156,10 @@ export async function searchClientsByName(name: string) {
 export async function getBDCFilterOptions() {
   const [sellers, cities, models] = await Promise.all([
     prisma.client.findMany({
-      select: { sellerName: true },
-      distinct: ["sellerName"],
-      where: { sellerName: { not: "" } },
-      orderBy: { sellerName: "asc" },
+      select: { sellersName: true },
+      distinct: ["sellersName"],
+      where: { sellersName: { not: "" } },
+      orderBy: { sellersName: "asc" },
     }),
     prisma.client.findMany({
       select: { city: true },
@@ -179,7 +176,7 @@ export async function getBDCFilterOptions() {
   ]);
 
   return {
-    sellers: sellers.map((s) => s.sellerName),
+    sellers: sellers.map((s) => s.sellersName),
     cities: cities.map((c) => c.city),
     models: models.map((m) => m.model),
   };
@@ -217,15 +214,15 @@ export async function getClientsPaginated(params: {
         id: true,
         cpf: true,
         name: true,
-        sellerName: true,
+        sellersName: true,
         city: true,
         billingDate: true,
         motorcycles: {
           select: {
             id: true,
-            chassis: true,
+            chassi: true,
             model: true,
-            forecastDate: true,
+            forecastArrival: true,
             registrationStatus: true,
           },
         },
@@ -256,15 +253,15 @@ export async function searchClients(query: string) {
       id: true,
       cpf: true,
       name: true,
-      sellerName: true,
+      sellersName: true,
       city: true,
       billingDate: true,
       motorcycles: {
         select: {
           id: true,
-          chassis: true,
+          chassi: true,
           model: true,
-          forecastDate: true,
+          forecastArrival: true,
           registrationStatus: true,
         },
       },
@@ -286,7 +283,7 @@ export async function getClientByNameAndSeller(
         equals: name,
         mode: "insensitive",
       },
-      sellerName: {
+      sellersName: {
         equals: sellerName,
         mode: "insensitive",
       },

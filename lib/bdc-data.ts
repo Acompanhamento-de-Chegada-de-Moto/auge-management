@@ -123,14 +123,14 @@ export function getForecastStatus(forecastDate: Date | null | undefined) {
 }
 
 export function mapRegistrationStatusLabel(
-  status: "NO_PLATE" | "PLATING" | "PLATED",
+  status: string | null | undefined,
 ) {
-  const map = {
+  const map: Record<string, string> = {
     NO_PLATE: "Sem Emplacamento",
     PLATING: "Emplacando",
     PLATED: "Emplacado",
-  } as const;
-  return map[status];
+  };
+  return map[status ?? ""] ?? "Sem Emplacamento";
 }
 
 export function getStatusColor(status: string) {

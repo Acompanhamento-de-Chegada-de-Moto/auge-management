@@ -1,30 +1,69 @@
+import "server-only";
+
 import { prisma } from "@/lib/db";
 import { requireAuth } from "./require-auth";
 
-export async function userGetClients() {
+interface UserGetClientsFilters {
+  sellerName?: string;
+  city?: string;
+  model?: string;
+}
+
+export async function userGetClients(filters?: UserGetClientsFilters) {
   await requireAuth();
 
   const data = await prisma.client.findMany({
+    where: {
+      ...(filters?.sellerName && {
+        sellersName: {
+          contains: filters.sellerName,
+          mode: "insensitive",
+        },
+      }),
+
+      ...(filters?.city && {
+        city: {
+          contains: filters.city,
+          mode: "insensitive",
+        },
+      }),
+
+      ...(filters?.model && {
+        motorcycles: {
+          some: {
+            model: {
+              contains: filters.model,
+              mode: "insensitive",
+            },
+          },
+        },
+      }),
+    },
+
     select: {
       id: true,
       cpf: true,
       name: true,
-      sellerName: true,
+      sellersName: true,
       city: true,
       billingDate: true,
+
       motorcycles: {
         select: {
           id: true,
-          chassis: true,
+          chassi: true,
           model: true,
-          forecastDate: true,
+          forecastArrival: true,
           registrationStatus: true,
+          forecastArrivalStatus: true,
         },
       },
     },
+
     orderBy: {
       createdAt: "desc",
     },
+
     take: 500,
   });
 

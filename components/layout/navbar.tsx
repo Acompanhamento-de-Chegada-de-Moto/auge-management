@@ -4,7 +4,6 @@ import { Bike, LogOut, Settings, TextAlignJustify, User } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { BreadcrumbNav } from "@/components/layout/breadcrumb-nav";
 import { ModeToggle } from "@/components/mode-toggle";
 import { Button } from "@/components/ui/button";
 import {
@@ -67,7 +66,10 @@ const Navbar = () => {
         {/* ─── Top Row ─── */}
         <div className="flex items-center h-14 justify-between gap-4">
           {/* Logo */}
-          <Link href="/acompanhamento" className="flex items-center gap-3 shrink-0">
+          <Link
+            href="/acompanhamento"
+            className="flex items-center gap-3 shrink-0"
+          >
             <div className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
               <Bike className="size-5" />
             </div>
@@ -84,7 +86,10 @@ const Navbar = () => {
           {/* Center Nav — Desktop */}
           <nav className="hidden md:flex items-center gap-1">
             {navigationData.map((item) => {
-              const isActive = pathname === item.href;
+              // Verifica se a rota atual começa com o href do item (para pegar as rotas filhas)
+              const isActive =
+                pathname === item.href || pathname.startsWith(`${item.href}/`);
+
               return (
                 <Link
                   key={item.title}
@@ -168,25 +173,31 @@ const Navbar = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56 mt-1">
-                  {navigationData.map((item) => (
-                    <DropdownMenuItem key={item.title} asChild>
-                      <Link
-                        href={item.href}
-                        className={cn(
-                          "w-full cursor-pointer text-sm font-medium",
-                          pathname === item.href && "font-semibold",
-                        )}
-                      >
-                        {item.title}
-                      </Link>
-                    </DropdownMenuItem>
-                  ))}
+                  {navigationData.map((item) => {
+                    const isActive =
+                      pathname === item.href ||
+                      pathname.startsWith(`${item.href}/`);
+
+                    return (
+                      <DropdownMenuItem key={item.title} asChild>
+                        <Link
+                          href={item.href}
+                          className={cn(
+                            "w-full cursor-pointer text-sm font-medium",
+                            isActive &&
+                              "font-semibold bg-muted text-foreground",
+                          )}
+                        >
+                          {item.title}
+                        </Link>
+                      </DropdownMenuItem>
+                    );
+                  })}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
           </div>
         </div>
-
       </div>
     </header>
   );

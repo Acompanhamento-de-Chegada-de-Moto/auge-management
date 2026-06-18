@@ -1,5 +1,13 @@
+"use client";
+
 import { format } from "date-fns";
+import { PencilIcon, Trash2Icon } from "lucide-react";
+import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useMemo, useTransition } from "react";
 import type { UserGetClientsType } from "@/app/data/user/user-get-clients";
+import { CopyText } from "@/components/general/CopyText";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -15,28 +23,86 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { mapRegistrationStatusLabel } from "@/lib/bdc-data";
+import { formatCPF } from "@/lib/cpf";
 
 interface IBDCTableProps {
   data: UserGetClientsType[];
+  filters: {
+    sellerName: string;
+    city: string;
+    model: string;
+  };
 }
 
-export function BDCTable({ data }: IBDCTableProps) {
+export function BDCTable({ data, filters }: IBDCTableProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const [isPending, startTransition] = useTransition();
+
+  const sellers = useMemo(
+    () => [...new Set(data.map((item) => item.sellersName).filter(Boolean))],
+    [data],
+  );
+
+  const cities = useMemo(
+    () => [...new Set(data.map((item) => item.city).filter(Boolean))],
+    [data],
+  );
+
+  const models = useMemo(
+    () => [
+      ...new Set(
+        data.flatMap((item) =>
+          item.motorcycles
+            .map((motorcycle) => motorcycle.model)
+            .filter(Boolean),
+        ),
+      ),
+    ],
+    [data],
+  );
+
+  const updateFilter = (
+    key: "sellerName" | "city" | "model",
+    value: string,
+  ) => {
+    const params = new URLSearchParams(searchParams);
+
+    if (!value || value === "all") {
+      params.delete(key);
+    } else {
+      params.set(key, value);
+    }
+
+    startTransition(() => {
+      router.replace(`${pathname}?${params.toString()}`);
+    });
+  };
+
+  const clearFilters = () => {
+    startTransition(() => {
+      router.replace(pathname);
+    });
+  };
+
   return (
     <div className="w-full">
-      {/* Filtros */}
-      {/* <div className="flex flex-wrap items-center gap-2 mb-4">
+      <div className="mb-4 flex flex-wrap items-center gap-2">
         <Select
-          value={filters.sellerName}
-          onValueChange={(v) =>
-            onFilterChange("sellerName", v === " " ? "" : v)
-          }
+          value={filters.sellerName || "all"}
+          onValueChange={(value) => updateFilter("sellerName", value)}
         >
-          <SelectTrigger className="w-[160px]">
+          <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Vendedor" />
           </SelectTrigger>
+
           <SelectContent>
-            <SelectItem value=" ">Todos</SelectItem>
-            {filterOptions.sellers.map((seller) => (
+            <SelectItem value="all">Todos os vendedores</SelectItem>
+
+            {sellers.map((seller) => (
               <SelectItem key={seller} value={seller}>
                 {seller}
               </SelectItem>
@@ -45,15 +111,17 @@ export function BDCTable({ data }: IBDCTableProps) {
         </Select>
 
         <Select
-          value={filters.city}
-          onValueChange={(v) => onFilterChange("city", v === " " ? "" : v)}
+          value={filters.city || "all"}
+          onValueChange={(value) => updateFilter("city", value)}
         >
-          <SelectTrigger className="w-[160px]">
+          <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Cidade" />
           </SelectTrigger>
+
           <SelectContent>
-            <SelectItem value=" ">Todos</SelectItem>
-            {filterOptions.cities.map((city) => (
+            <SelectItem value="all">Todas as cidades</SelectItem>
+
+            {cities.map((city) => (
               <SelectItem key={city} value={city}>
                 {city}
               </SelectItem>
@@ -62,76 +130,144 @@ export function BDCTable({ data }: IBDCTableProps) {
         </Select>
 
         <Select
-          value={filters.model}
-          onValueChange={(v) => onFilterChange("model", v === " " ? "" : v)}
+          value={filters.model || "all"}
+          onValueChange={(value) => updateFilter("model", value)}
         >
-          <SelectTrigger className="w-[160px]">
+          <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Modelo" />
           </SelectTrigger>
+
           <SelectContent>
-            <SelectItem value=" ">Todos</SelectItem>
-            {filterOptions.models.map((model) => (
+            <SelectItem value="all">Todos os modelos</SelectItem>
+
+            {models.map((model) => (
               <SelectItem key={model} value={model}>
                 {model}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
-      </div> */}
 
-      {/* Tabela */}
-      <div className="rounded-sm border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Cliente</TableHead>
-              <TableHead>CPF</TableHead>
-              <TableHead>Vendedor</TableHead>
-              <TableHead>Cidade</TableHead>
-              <TableHead>Modelo</TableHead>
-              <TableHead>Chassi</TableHead>
-              <TableHead>Data Faturamento</TableHead>
-              <TableHead>Previsão Chegada</TableHead>
-              <TableHead>Situação</TableHead>
-            </TableRow>
-          </TableHeader>
+        <Button variant="outline" onClick={clearFilters} disabled={isPending}>
+          Limpar filtros
+        </Button>
+      </div>
 
-          <TableBody>
-            {data.length === 0 ? (
+      <div
+        className={
+          isPending ? "pointer-events-none opacity-60 transition-opacity" : ""
+        }
+      >
+        <div className="rounded-sm border">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell
-                  colSpan={9}
-                  className="text-center text-muted-foreground py-8"
-                >
-                  Nenhum registro encontrado.
-                </TableCell>
+                <TableHead>Cliente</TableHead>
+                <TableHead>CPF</TableHead>
+                <TableHead>Vendedor</TableHead>
+                <TableHead>Cidade</TableHead>
+                <TableHead>Modelo</TableHead>
+                <TableHead>Chassi</TableHead>
+                <TableHead>Data Faturamento</TableHead>
+                <TableHead>Previsão Chegada</TableHead>
+                <TableHead>Situação</TableHead>
+                <TableHead>Ações</TableHead>
               </TableRow>
-            ) : (
-              data.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell>{item.name}</TableCell>
-                  <TableCell>{item.cpf}</TableCell>
-                  <TableCell>{item.sellerName}</TableCell>
-                  <TableCell>{item.city}</TableCell>
-                  <TableCell>{item.motorcycles[0].model}</TableCell>
-                  <TableCell>{item.motorcycles[0].chassis}</TableCell>
-                  <TableCell>
-                    {format(new Date(item.billingDate as Date), "dd/MM/yyyy")}
-                  </TableCell>
-                  <TableCell>
-                    {format(
-                      new Date(item.motorcycles[0].forecastDate as Date),
-                      "dd/MM/yyyy",
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {item.motorcycles[0].registrationStatus}
+            </TableHeader>
+
+            <TableBody>
+              {data.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={10} // Ajustado colSpan para bater com o número correto de colunas
+                    className="py-8 text-center text-muted-foreground"
+                  >
+                    Nenhum registro encontrado.
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+              ) : (
+                data.map((item) => {
+                  const motorcycle = item.motorcycles[0];
+
+                  return (
+                    <TableRow key={item.id}>
+                      <TableCell>{item.name}</TableCell>
+
+                      <TableCell>
+                        <CopyText text={item.cpf}>
+                          <span>{formatCPF(item.cpf)}</span>
+                        </CopyText>
+                      </TableCell>
+
+                      <TableCell>{item.sellersName}</TableCell>
+
+                      <TableCell>{item.city}</TableCell>
+
+                      <TableCell>{motorcycle?.model ?? "—"}</TableCell>
+
+                      <TableCell>
+                        {motorcycle?.chassi ? (
+                          <CopyText text={motorcycle.chassi}>
+                            <span>{motorcycle.chassi}</span>
+                          </CopyText>
+                        ) : (
+                          "—"
+                        )}
+                      </TableCell>
+
+                      <TableCell>
+                        {item.billingDate
+                          ? format(item.billingDate, "dd/MM/yyyy")
+                          : "—"}
+                      </TableCell>
+
+                      <TableCell>
+                        {motorcycle?.forecastArrival
+                          ? format(motorcycle.forecastArrival, "dd/MM/yyyy")
+                          : "—"}
+                      </TableCell>
+
+                      <TableCell>
+                        {motorcycle?.registrationStatus
+                          ? mapRegistrationStatusLabel(
+                              motorcycle.registrationStatus,
+                            )
+                          : "—"}
+                      </TableCell>
+
+                      <TableCell>
+                        <div className="flex h-full items-center gap-1">
+                          <Link
+                            href={`/bdc/cliente/${item.id}/editar`}
+                            aria-label={`editar-${item.id}`}
+                            className={buttonVariants({
+                              variant: "ghost",
+                              size: "icon",
+                              className: "rounded-full",
+                            })}
+                          >
+                            <PencilIcon className="size-4" />
+                          </Link>
+                          <Link
+                            href={`/bdc/cliente/${item.id}/deletar`}
+                            aria-label={`deletar-${item.id}`}
+                            className={buttonVariants({
+                              variant: "ghost",
+                              size: "icon",
+                              className: "rounded-full",
+                            })}
+                          >
+                            <Trash2Icon className="size-4 text-red-500" />
+                          </Link>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
     </div>
   );

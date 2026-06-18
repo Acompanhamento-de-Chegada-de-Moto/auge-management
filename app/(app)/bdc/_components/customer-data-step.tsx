@@ -1,5 +1,6 @@
 "use client";
 
+import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
@@ -26,7 +27,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
 import type { CustomerFormData } from "@/validators/customer-schema";
 
 interface CustomerDataStepProps {
@@ -35,7 +35,11 @@ interface CustomerDataStepProps {
   isPending?: boolean;
 }
 
-export function CustomerDataStep({ form, onBack, isPending }: CustomerDataStepProps) {
+export function CustomerDataStep({
+  form,
+  onBack,
+  isPending,
+}: CustomerDataStepProps) {
   const [registrationStatus, setRegistrationStatus] = useState(
     form.getValues("registrationStatus") || "Sem Emplacamento",
   );
@@ -242,7 +246,9 @@ export function CustomerDataStep({ form, onBack, isPending }: CustomerDataStepPr
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                <SelectItem value="Sem Emplacamento">Sem Emplacamento</SelectItem>
+                <SelectItem value="Sem Emplacamento">
+                  Sem Emplacamento
+                </SelectItem>
                 <SelectItem value="Emplacando">Emplacando</SelectItem>
                 <SelectItem value="Emplacado">Emplacado</SelectItem>
               </SelectContent>
@@ -255,7 +261,7 @@ export function CustomerDataStep({ form, onBack, isPending }: CustomerDataStepPr
       {registrationStatus !== "Sem Emplacamento" && (
         <FormField
           control={form.control}
-          name="plateDate"
+                name="registrationDate"
           render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel>Data de Emplacamento</FormLabel>

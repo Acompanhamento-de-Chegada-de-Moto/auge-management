@@ -3,12 +3,12 @@
 import {
   AlertTriangleIcon,
   CalendarIcon,
-  Motorbike,
   ChevronLeftIcon,
   ChevronRightIcon,
   Clock,
   FileText,
   MapPin,
+  Motorbike,
   Tag,
   User,
 } from "lucide-react";
@@ -151,7 +151,7 @@ export function SidebarSummary({
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <User className="size-3" />
-                      <span>Vendedor</span>
+                      <span>Vendedor (a)</span>
                     </div>
                     <p className="text-sm font-medium">{sellerName}</p>
                   </div>

@@ -31,7 +31,7 @@ export function ClientCard({ client }: ClientCardProps) {
     <Card className="w-full">
       <CardHeader>
         <CardTitle>{client.name}</CardTitle>
-        <CardDescription>Vendedor: {client.sellerName}</CardDescription>
+        <CardDescription>Vendedor: {client.sellersName}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {client.motorcycles.length === 0 && (
@@ -40,7 +40,7 @@ export function ClientCard({ client }: ClientCardProps) {
           </p>
         )}
         {client.motorcycles.map((motorcycle) => {
-          const arrivalStatus = getArrivalStatus(motorcycle.forecastDate);
+          const arrivalStatus = getArrivalStatus(motorcycle.forecastArrival);
           const statusLabel = mapRegistrationStatusLabel(
             motorcycle.registrationStatus,
           );
@@ -58,7 +58,7 @@ export function ClientCard({ client }: ClientCardProps) {
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Chassi</span>
                 <span className="font-mono text-sm tracking-wide">
-                  {maskChassis(motorcycle.chassis)}
+                  {maskChassis(motorcycle.chassi)}
                 </span>
               </div>
               <div className="flex items-center justify-between">
@@ -66,8 +66,8 @@ export function ClientCard({ client }: ClientCardProps) {
                   Previsão de Chegada
                 </span>
                 <span className="text-sm font-medium">
-                  {motorcycle.forecastDate
-                    ? new Date(motorcycle.forecastDate).toLocaleDateString("pt-BR")
+                  {motorcycle.forecastArrival
+                    ? new Date(motorcycle.forecastArrival).toLocaleDateString("pt-BR")
                     : "—"}
                 </span>
               </div>

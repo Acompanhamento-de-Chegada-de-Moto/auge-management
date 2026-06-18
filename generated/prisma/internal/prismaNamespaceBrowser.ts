@@ -142,13 +142,11 @@ export type VerificationScalarFieldEnum = (typeof VerificationScalarFieldEnum)[k
 export const ClientScalarFieldEnum = {
   id: 'id',
   name: 'name',
-  sellerName: 'sellerName',
-  city: 'city',
-  billingDate: 'billingDate',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt',
   cpf: 'cpf',
-  deliveryForecast: 'deliveryForecast'
+  city: 'city',
+  sellersName: 'sellersName',
+  billingDate: 'billingDate',
+  createdAt: 'createdAt'
 } as const
 
 export type ClientScalarFieldEnum = (typeof ClientScalarFieldEnum)[keyof typeof ClientScalarFieldEnum]
@@ -156,14 +154,14 @@ export type ClientScalarFieldEnum = (typeof ClientScalarFieldEnum)[keyof typeof 
 
 export const MotorcycleScalarFieldEnum = {
   id: 'id',
-  chassis: 'chassis',
+  chassi: 'chassi',
   model: 'model',
-  forecastDate: 'forecastDate',
+  forecastArrival: 'forecastArrival',
+  forecastArrivalStatus: 'forecastArrivalStatus',
   registrationStatus: 'registrationStatus',
-  registrationStatusDate: 'registrationStatusDate',
+  registrationDate: 'registrationDate',
   clientId: 'clientId',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  createdAt: 'createdAt'
 } as const
 
 export type MotorcycleScalarFieldEnum = (typeof MotorcycleScalarFieldEnum)[keyof typeof MotorcycleScalarFieldEnum]

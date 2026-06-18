@@ -2,9 +2,11 @@ import { PlusIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
+
 import { BDCTable } from "@/app/(app)/bdc/_components/bdc-table";
 import { SpreadsheetUploadDialog } from "@/app/(app)/bdc/_components/spreadsheet-upload-dialog";
 import { userGetClients } from "@/app/data/user/user-get-clients";
+
 import { EmptyState } from "@/components/general/EmptyState";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -21,7 +23,17 @@ export const metadata: Metadata = {
   title: "BDC",
 };
 
-export default function BDCPage() {
+interface BDCPageProps {
+  searchParams: Promise<{
+    sellerName?: string;
+    city?: string;
+    model?: string;
+  }>;
+}
+
+export default async function BDCPage({ searchParams }: BDCPageProps) {
+  const filters = await searchParams;
+
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="mb-4 flex items-center justify-between">
@@ -40,34 +52,62 @@ export default function BDCPage() {
       </div>
 
       <Suspense fallback={<BDCPageSkeletonLayout />}>
-        <RenderClients />
+        <RenderClients filters={filters} />
       </Suspense>
     </div>
   );
 }
 
-async function RenderClients() {
-  const data = await userGetClients();
+async function RenderClients({
+  filters,
+}: {
+  filters: {
+    sellerName?: string;
+    city?: string;
+    model?: string;
+  };
+}) {
+  const data = await userGetClients({
+    sellerName: filters.sellerName,
+    city: filters.city,
+    model: filters.model,
+  });
+
+  if (data.length === 0) {
+    return (
+      <EmptyState
+        title="Nenhum cliente encontrado"
+        description="Para começar adicione um novo cliente"
+        buttonText="Adicionar Cliente"
+        href="/bdc/cliente/novo"
+      />
+    );
+  }
 
   return (
-    <>
-      {data.length === 0 ? (
-        <EmptyState
-          title="Nenhum cliente econtrado"
-          description="Para começar comece adicionando um novo cliente"
-          buttonText="Adicionar Cliente"
-          href="/bdc/cliente/novo"
-        />
-      ) : (
-        <BDCTable data={data} />
-      )}
-    </>
+    <BDCTable
+      data={data}
+      filters={{
+        sellerName: filters.sellerName ?? "",
+        city: filters.city ?? "",
+        model: filters.model ?? "",
+      }}
+    />
   );
 }
 
 function BDCPageSkeletonLayout() {
   return (
     <div className="w-full">
+      {/* Filtros */}
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <Skeleton className="h-10 w-[180px]" />
+        <Skeleton className="h-10 w-[180px]" />
+        <Skeleton className="h-10 w-[180px]" />
+        <Skeleton className="h-10 w-[120px]" />
+      </div>
+
+      {/* Tabela */}
       <div className="rounded-sm border">
         <Table>
           <TableHeader>
@@ -85,26 +125,14 @@ function BDCPageSkeletonLayout() {
           </TableHeader>
 
           <TableBody>
-            {Array.from({ length: 8 }).map((_, index) => (
+            {Array.from({ length: 10 }).map((_, index) => (
               <TableRow key={index}>
                 <TableCell>
-                  <Skeleton className="h-4 w-40" />
-                </TableCell>
-
-                <TableCell>
-                  <Skeleton className="h-4 w-28" />
+                  <Skeleton className="h-4 w-44" />
                 </TableCell>
 
                 <TableCell>
                   <Skeleton className="h-4 w-32" />
-                </TableCell>
-
-                <TableCell>
-                  <Skeleton className="h-4 w-24" />
-                </TableCell>
-
-                <TableCell>
-                  <Skeleton className="h-4 w-24" />
                 </TableCell>
 
                 <TableCell>
@@ -116,11 +144,23 @@ function BDCPageSkeletonLayout() {
                 </TableCell>
 
                 <TableCell>
+                  <Skeleton className="h-4 w-28" />
+                </TableCell>
+
+                <TableCell>
+                  <Skeleton className="h-4 w-40" />
+                </TableCell>
+
+                <TableCell>
                   <Skeleton className="h-4 w-24" />
                 </TableCell>
 
                 <TableCell>
-                  <Skeleton className="h-6 w-28 rounded-full" />
+                  <Skeleton className="h-4 w-24" />
+                </TableCell>
+
+                <TableCell>
+                  <Skeleton className="h-6 w-24 rounded-full" />
                 </TableCell>
               </TableRow>
             ))}

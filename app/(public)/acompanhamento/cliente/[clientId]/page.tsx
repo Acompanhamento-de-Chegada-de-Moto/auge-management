@@ -47,7 +47,6 @@ export default async function ClienteDetalhePage({
             </h1>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <LastUpdated updatedAt={client.updatedAt} />
             <ReloadButton />
           </div>
         </div>
@@ -60,7 +59,7 @@ export default async function ClienteDetalhePage({
             </p>
           )}
           <p className="text-sm text-muted-foreground">
-            Vendedor: {client.sellerName} | Cidade: {client.city}
+            Vendedor: {client.sellersName} | Cidade: {client.city}
           </p>
 
           <hr className="my-4" />
@@ -73,7 +72,7 @@ export default async function ClienteDetalhePage({
 
           <div className="space-y-4">
             {client.motorcycles.map((moto) => {
-              const arrivalStatus = getArrivalStatus(moto.forecastDate);
+              const arrivalStatus = getArrivalStatus(moto.forecastArrival);
               const statusLabel = mapRegistrationStatusLabel(
                 moto.registrationStatus,
               );
@@ -81,15 +80,15 @@ export default async function ClienteDetalhePage({
 
               return (
                 <div key={moto.id} className="space-y-3">
-                  {moto.forecastDate && (
+                  {moto.forecastArrival && (
                     <DelayAlert
-                      forecastDate={moto.forecastDate}
+                      forecastDate={moto.forecastArrival}
                       contactPhone={contactPhone}
                       delayMessage={delayMessage}
                       whatsappMessage={whatsappMessage}
                       clientName={client.name}
                       model={moto.model}
-                      chassis={moto.chassis}
+                      chassis={moto.chassi}
                     />
                   )}
 
@@ -102,7 +101,7 @@ export default async function ClienteDetalhePage({
                     <div>
                       <span className="text-muted-foreground">Chassi</span>
                       <p className="font-mono tracking-wide">
-                        {maskChassis(moto.chassis)}
+                        {maskChassis(moto.chassi)}
                       </p>
                     </div>
                     {client.billingDate && (
@@ -111,9 +110,7 @@ export default async function ClienteDetalhePage({
                           Data de Faturamento
                         </span>
                         <p className="font-medium">
-                          {new Date(client.billingDate).toLocaleDateString(
-                            "pt-BR",
-                          )}
+                          {new Date(client.billingDate).toLocaleDateString("pt-BR")}
                         </p>
                       </div>
                     )}
@@ -122,8 +119,8 @@ export default async function ClienteDetalhePage({
                         Previsão de Chegada
                       </span>
                       <p className="font-medium">
-                        {moto.forecastDate
-                          ? new Date(moto.forecastDate).toLocaleDateString(
+                        {moto.forecastArrival
+                          ? new Date(moto.forecastArrival).toLocaleDateString(
                               "pt-BR",
                             )
                           : "—"}

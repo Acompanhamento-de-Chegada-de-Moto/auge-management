@@ -16,3 +16,12 @@ export const RegistrationStatus = {
 } as const
 
 export type RegistrationStatus = (typeof RegistrationStatus)[keyof typeof RegistrationStatus]
+
+
+export const ArrivalStatus = {
+  DELAYED: 'DELAYED',
+  ARRIVED: 'ARRIVED',
+  NO_INFORMATION: 'NO_INFORMATION'
+} as const
+
+export type ArrivalStatus = (typeof ArrivalStatus)[keyof typeof ArrivalStatus]

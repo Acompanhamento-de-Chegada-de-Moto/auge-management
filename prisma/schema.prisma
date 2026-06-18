@@ -26,16 +26,16 @@ model User {
 }
 
 model Session {
-  id              String    @id
-  expiresAt       DateTime
-  token           String    @unique
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  ipAddress       String?
-  userAgent       String?
-  userId          String
-  impersonatedBy  String?
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id             String   @id
+  expiresAt      DateTime
+  token          String   @unique
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  ipAddress      String?
+  userAgent      String?
+  userId         String
+  impersonatedBy String?
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("session")
@@ -74,44 +74,45 @@ model Verification {
 }
 
 model Client {
-  id               String       @id @default(uuid())
-  name             String
-  sellerName       String
-  city             String
-  billingDate      DateTime?
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
-  cpf              String       @unique
-  deliveryForecast DateTime?
-  motorcycles      Motorcycle[]
+  id          String       @id @default(uuid()) @db.Uuid
+  name        String
+  cpf         String       @unique
+  city        String
+  sellersName String
+  billingDate DateTime?
+  motorcycles Motorcycle[]
+  createdAt   DateTime     @default(now())
 
-  @@index([sellerName])
-  @@index([city])
-  @@index([createdAt])
-  @@map("client")
+  @@map("clients")
 }
 
 model Motorcycle {
-  id                     String             @id @default(uuid())
-  chassis                String             @unique
-  model                  String
-  forecastDate           DateTime?
-  registrationStatus     RegistrationStatus @default(NO_PLATE)
-  registrationStatusDate DateTime?
-  clientId               String?
-  createdAt              DateTime           @default(now())
-  updatedAt              DateTime           @updatedAt
-  client                 Client?            @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  id                    String              @id @default(uuid()) @db.Uuid
+  chassi                String              @unique
+  model                 String
+  forecastArrival       DateTime?
+  forecastArrivalStatus ArrivalStatus       @default(NO_INFORMATION)
+  registrationStatus    RegistrationStatus?
+  registrationDate      DateTime?
 
-  @@index([createdAt])
-  @@index([updatedAt])
-  @@map("motorcycle")
+  clientId String? @db.Uuid
+  client   Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@map("motorcycles")
 }
 
 enum RegistrationStatus {
   NO_PLATE
   PLATING
   PLATED
+}
+
+enum ArrivalStatus {
+  DELAYED
+  ARRIVED
+  NO_INFORMATION
 }
 
 model Setting {

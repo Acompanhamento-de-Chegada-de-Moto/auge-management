@@ -4,19 +4,30 @@ import { SearchIcon } from "lucide-react";
 import { useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import { Button } from "@/components/ui/button";
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import type { CustomerFormData } from "@/validators/customer-schema";
 
 interface ChassisStepProps {
   form: UseFormReturn<CustomerFormData>;
+  searchChassisAction: (chassis: string) => Promise<any>;
   onSearchResult: (
     found: boolean,
-    data?: { model: string; city: string; forecastDate?: Date | null },
+    data?: { model: string; forecastDate?: Date | null },
   ) => void;
 }
 
-export function ChassisStep({ form, onSearchResult }: ChassisStepProps) {
+export function ChassisStep({
+  form,
+  onSearchResult,
+  searchChassisAction,
+}: ChassisStepProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,55 +42,73 @@ export function ChassisStep({ form, onSearchResult }: ChassisStepProps) {
     setLoading(true);
     setError(null);
 
-    // try {
-    //   const motorcycle = await searchChassisAction(chassisValue);
+    try {
+      const motorcycle = await searchChassisAction(chassisValue);
 
-    //   if (motorcycle) {
-    //     form.setValue("model", motorcycle.model);
-    //     form.setValue("city", "");
-    //     form.setValue("forecastDate", motorcycle.forecastDate ?? undefined);
+      if (motorcycle) {
+        // Alimenta o formulário central com o que veio do banco
+        form.setValue("model", motorcycle.model);
+        form.setValue(
+          "forecastDate",
+          motorcycle.forecastDate
+            ? new Date(motorcycle.forecastDate)
+            : undefined,
+        );
 
-    //     onSearchResult(true, {
-    //       model: motorcycle.model,
-    //       city: "",
-    //       forecastDate: motorcycle.forecastDate,
-    //     });
-    //   } else {
-    //     form.setValue("model", "");
-    //     form.setValue("city", "");
-    //     form.setValue("forecastDate", undefined);
+        // Limpa erros prévios de validação do chassi se existirem
+        form.clearErrors("chassis");
 
-    //     onSearchResult(false);
-    //   }
-    // } catch {
-    //   setError("Erro ao consultar chassi.");
-    // } finally {
-    //   setLoading(false);
-    // }
+        onSearchResult(true, {
+          model: motorcycle.model,
+          forecastDate: motorcycle.forecastDate,
+        });
+      } else {
+        setError("Chassi não encontrado na base de dados de motocicletas.");
+        onSearchResult(false);
+      }
+    } catch (err) {
+      setError("Erro ao consultar chassi. Tente novamente.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="chassis">Chassi</Label>
-        <div className="flex gap-2">
-          <Input
-            id="chassis"
-            placeholder="Digite o número do chassi"
-            {...form.register("chassis")}
-          />
-          <Button
-            type="button"
-            onClick={handleSearch}
-            disabled={loading}
-            className="shrink-0"
-          >
-            <SearchIcon className="mr-2 size-4" />
-            {loading ? "Consultando..." : "Consultar"}
-          </Button>
-        </div>
-        {error && <p className="text-sm text-red-600">{error}</p>}
-      </div>
+      <FormField
+        control={form.control}
+        name="chassis"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Chassi</FormLabel>
+            <div className="flex gap-2">
+              <FormControl>
+                <Input
+                  placeholder="Digite o número do chassi"
+                  {...field}
+                  onChange={(e) => {
+                    setError(null);
+                    field.onChange(e.target.value.toUpperCase()); // Força o padrão uppercase
+                  }}
+                />
+              </FormControl>
+              <Button
+                type="button"
+                onClick={handleSearch}
+                disabled={loading}
+                className="shrink-0"
+              >
+                <SearchIcon className="mr-2 size-4" />
+                {loading ? "Consultando..." : "Consultar"}
+              </Button>
+            </div>
+            {error && (
+              <p className="text-sm font-medium text-destructive">{error}</p>
+            )}
+            <FormMessage />
+          </FormItem>
+        )}
+      />
     </div>
   );
 }
