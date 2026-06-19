@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CreateUserForm } from "./_components/create-user-form";
+import { CreateUserForm } from "./_components/CreateUserForm";
 
 export const metadata: Metadata = {
   title: "Configurações",

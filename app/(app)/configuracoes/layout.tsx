@@ -1,4 +1,4 @@
-import { SidebarNav } from "./_components/sidebar-nav";
+import { SidebarNav } from "./_components/SidebarNav";
 
 export default function ConfiguracoesLayout({
   children,

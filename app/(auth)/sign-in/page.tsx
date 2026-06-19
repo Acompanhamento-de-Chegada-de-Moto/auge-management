@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import LoginForm from "./_components/login-form";
+import LoginForm from "./_components/LoginForm";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";

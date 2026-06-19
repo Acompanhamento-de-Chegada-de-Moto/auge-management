@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 
-import { BDCTable } from "@/app/(app)/bdc/_components/bdc-table";
-import { SpreadsheetUploadDialog } from "@/app/(app)/bdc/_components/spreadsheet-upload-dialog";
+import { BDCTable } from "@/app/(app)/bdc/_components/BdcTable";
+import { SpreadsheetUploadDialog } from "@/app/(app)/bdc/_components/SpreadsheetUploadDialog";
 import { userGetClients } from "@/app/data/user/user-get-clients";
 
 import { EmptyState } from "@/components/general/EmptyState";

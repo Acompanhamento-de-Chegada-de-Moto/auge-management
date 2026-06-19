@@ -6,7 +6,7 @@ import { CalendarIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { useForm } from "react-hook-form";
-import { SidebarSummary } from "@/app/(app)/bdc/_components/sidebar-summary";
+import { SidebarSummary } from "@/app/(app)/bdc/_components/SidebarSummary";
 import type { UserGetClientType } from "@/app/data/user/user-get-client";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";

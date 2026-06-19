@@ -1,8 +1,8 @@
 import { PackageSearch } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ClientCard } from "@/components/home/client-card";
-import { SearchForm } from "@/components/home/search-form";
+import { ClientCard } from "@/components/home/ClientCard";
+import { SearchForm } from "@/components/home/SearchForm";
 import { searchClients } from "@/lib/data/client";
 
 export const metadata: Metadata = {

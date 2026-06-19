@@ -13,7 +13,7 @@ import {
 } from "@/lib/bdc-data";
 import type { searchClients } from "@/lib/data/client";
 import { maskChassis } from "@/lib/utils";
-import { CopyLinkButton } from "./copy-link-button";
+import { CopyLinkButton } from "./CopyLinkButton";
 import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";

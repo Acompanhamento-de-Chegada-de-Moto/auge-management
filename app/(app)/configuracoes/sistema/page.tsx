@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { requireAdmin } from "@/app/data/admin/require-admin";
 import { getSetting } from "@/lib/data/settings";
-import { ContactSettingsForm } from "../_components/contact-settings-form";
+import { ContactSettingsForm } from "../_components/ContactSettingsForm";
 
 export const metadata: Metadata = {
   title: "Configurações do Sistema",

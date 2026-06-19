@@ -2,8 +2,8 @@ import { Bike } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { publicGetMotorcycleById } from "@/app/data/public/public-get-motorcycle";
-import { DelayAlert } from "@/components/home/delay-alert";
-import { ReloadButton } from "@/components/home/reload-button";
+import { DelayAlert } from "@/components/home/DelayAlert";
+import { ReloadButton } from "@/components/home/ReloadButton";
 import {
   getArrivalStatus,
   getStatusColor,

@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import MotorcycleTable from "./_components/motorcycle-table";
+import MotorcycleTable from "./_components/MotorcycleTable";
 
 export const metadata: Metadata = {
   title: "Estoque",

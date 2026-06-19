@@ -1,7 +1,7 @@
 "use client";
 
 import { Bike } from "lucide-react";
-import { ModeToggle } from "@/components/mode-toggle";
+import { ModeToggle } from "@/components/ModeToggle";
 import { Badge } from "@/components/ui/badge";
 import { authClient } from "@/lib/auth-client";
 
