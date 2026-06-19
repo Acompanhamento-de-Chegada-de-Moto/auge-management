@@ -1,6 +1,6 @@
 import { Bike } from "lucide-react";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 import { publicGetMotorcycleById } from "@/app/data/public/public-get-motorcycle";
 import { DelayAlert } from "@/components/home/DelayAlert";
 import { ReloadButton } from "@/components/home/ReloadButton";
@@ -31,7 +31,7 @@ export default async function MotocicletaDetalhePage({
   const motorcycle = await publicGetMotorcycleById(motorcycleId);
 
   if (!motorcycle || !motorcycle.client) {
-    notFound();
+    redirect("/acompanhamento/indisponivel");
   }
 
   const client = motorcycle.client;

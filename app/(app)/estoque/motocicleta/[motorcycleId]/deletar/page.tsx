@@ -14,10 +14,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { tryCatch } from "@/lib/try-catch";
-import { DeleteClientAction } from "./actions";
+import { DeleteMotorcycleAction } from "./actions";
 
-export default function DeleteClientPage() {
-  const { clientId } = useParams<{ clientId: string }>();
+export default function DeleteMotorcyclePage() {
+  const { motorcycleId } = useParams<{ motorcycleId: string }>();
   const router = useRouter();
 
   const [pending, startTransition] = useTransition();
@@ -25,7 +25,7 @@ export default function DeleteClientPage() {
   function onSubmit() {
     startTransition(async () => {
       const { data: result, error } = await tryCatch(
-        DeleteClientAction(clientId),
+        DeleteMotorcycleAction(motorcycleId),
       );
 
       if (error) {
@@ -35,7 +35,7 @@ export default function DeleteClientPage() {
 
       if (result.status === "success") {
         toast.success(result.message);
-        router.push("/bdc");
+        router.push("/estoque");
       } else if (result.status === "error") {
         toast.error(result.message);
       }
@@ -46,15 +46,17 @@ export default function DeleteClientPage() {
     <div className="max-w-xl mx-auto w-full">
       <Card className="mt-32">
         <CardHeader>
-          <CardTitle>Tem certeza que deseja excluir este cliente?</CardTitle>
+          <CardTitle>
+            Tem certeza que deseja excluir esta motocicleta?
+          </CardTitle>
           <CardDescription>
-            Esta ação não poderá ser desfeita. O vínculo com as motocicletas no
-            estoque será removido.
+            Esta ação não poderá ser desfeita. O registro do veículo será
+            removido permanentemente do estoque do sistema.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex items-center justify-between">
           <Link
-            href="/bdc"
+            href="/estoque"
             className={buttonVariants({
               variant: "outline",
             })}
@@ -71,7 +73,7 @@ export default function DeleteClientPage() {
             ) : (
               <>
                 <Trash2 className="size-4" />
-                Excluir Cliente
+                Excluir Motocicleta
               </>
             )}
           </Button>

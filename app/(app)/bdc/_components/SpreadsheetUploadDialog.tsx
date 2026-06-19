@@ -1,7 +1,6 @@
 "use client";
 
 import { FileSpreadsheet, Loader2, Upload, X } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { toast } from "sonner";
@@ -26,7 +25,6 @@ const ACCEPTED_TYPES = {
 };
 
 export function SpreadsheetUploadDialog() {
-  const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
   const [open, setOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
