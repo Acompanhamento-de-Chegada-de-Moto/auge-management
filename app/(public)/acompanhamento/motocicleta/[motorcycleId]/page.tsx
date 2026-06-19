@@ -1,18 +1,21 @@
 import { Bike } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getMotorcycleByIdWithClient } from "@/lib/data/motorcycle";
-import { getContactPhone, getDelayMessage, getWhatsAppMessage } from "@/lib/data/settings";
+import { publicGetMotorcycleById } from "@/app/data/public/public-get-motorcycle";
+import { DelayAlert } from "@/components/home/delay-alert";
+import { ReloadButton } from "@/components/home/reload-button";
 import {
   getArrivalStatus,
   getStatusColor,
   mapRegistrationStatusLabel,
 } from "@/lib/bdc-data";
 import { formatCPF } from "@/lib/cpf";
+import {
+  getContactPhone,
+  getDelayMessage,
+  getWhatsAppMessage,
+} from "@/lib/data/settings";
 import { maskChassis } from "@/lib/utils";
-import { LastUpdated } from "@/components/home/last-updated";
-import { ReloadButton } from "@/components/home/reload-button";
-import { DelayAlert } from "@/components/home/delay-alert";
 
 export const metadata: Metadata = {
   title: "Detalhes da Motocicleta",
@@ -24,7 +27,8 @@ export default async function MotocicletaDetalhePage({
   params: Promise<{ motorcycleId: string }>;
 }) {
   const { motorcycleId } = await params;
-  const motorcycle = await getMotorcycleByIdWithClient(motorcycleId);
+
+  const motorcycle = await publicGetMotorcycleById(motorcycleId);
 
   if (!motorcycle || !motorcycle.client) {
     notFound();
@@ -36,9 +40,7 @@ export default async function MotocicletaDetalhePage({
   const whatsappMessage = await getWhatsAppMessage();
 
   const arrivalStatus = getArrivalStatus(motorcycle.forecastArrival);
-  const statusLabel = mapRegistrationStatusLabel(
-    motorcycle.registrationStatus,
-  );
+  const statusLabel = mapRegistrationStatusLabel(motorcycle.registrationStatus);
   const statusColor = getStatusColor(statusLabel);
 
   return (
@@ -49,9 +51,7 @@ export default async function MotocicletaDetalhePage({
             <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10">
               <Bike className="size-5 text-primary" />
             </div>
-            <h1 className="text-xl font-bold">
-              Acompanhamento de Motocicleta
-            </h1>
+            <h1 className="text-xl font-bold">Acompanhamento de Motocicleta</h1>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <ReloadButton />
@@ -118,9 +118,7 @@ export default async function MotocicletaDetalhePage({
                 </p>
               </div>
               <div>
-                <span className="text-muted-foreground">
-                  Status Chegada
-                </span>
+                <span className="text-muted-foreground">Status Chegada</span>
                 <p>
                   <span
                     className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${arrivalStatus.color}`}
