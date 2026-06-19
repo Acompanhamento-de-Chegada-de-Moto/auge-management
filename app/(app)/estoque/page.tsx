@@ -22,14 +22,14 @@ export const metadata: Metadata = {
 export default async function EstoquePage() {
   return (
     <div className="p-4 sm:p-6 lg:p-8">
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
         <div>
           <h1 className="text-2xl font-bold">Estoque</h1>
           <p className="text-muted-foreground mt-1">
             Controle de motocicletas em estoque.
           </p>
         </div>
-        <Button asChild>
+        <Button asChild className="shrink-0">
           <Link href="/estoque/motocicleta/novo">
             <PlusIcon className="mr-2 size-4" />
             Adicionar Motocicleta
@@ -72,7 +72,7 @@ export function EstoquePageSkeletonLayout() {
             <TableRow className="hover:bg-transparent">
               <TableHead>Modelo</TableHead>
               <TableHead>Chassi</TableHead>
-              <TableHead>Previsão de Chegada</TableHead>
+              <TableHead className="hidden md:table-cell">Previsão de Chegada</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="w-0 pr-4 text-end">Ações</TableHead>
             </TableRow>
@@ -91,7 +91,7 @@ export function EstoquePageSkeletonLayout() {
                 </TableCell>
 
                 {/* Coluna: Previsão de Chegada */}
-                <TableCell className="py-4">
+                <TableCell className="hidden md:table-cell py-4">
                   <div className="h-4 w-24 rounded bg-muted/60" />
                 </TableCell>
 

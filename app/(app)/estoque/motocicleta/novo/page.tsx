@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default function NovaMotocicletaPage() {
   return (
     <div className="p-4 sm:p-6 lg:p-8">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-2">
         <div>
           <h1 className="text-2xl font-bold">Cadastro de Motocicleta</h1>
           <p className="text-muted-foreground">

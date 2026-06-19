@@ -95,7 +95,7 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
           value={filters.sellerName || "all"}
           onValueChange={(value) => updateFilter("sellerName", value)}
         >
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-full sm:w-[180px]">
             <SelectValue placeholder="Vendedor" />
           </SelectTrigger>
 
@@ -114,7 +114,7 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
           value={filters.city || "all"}
           onValueChange={(value) => updateFilter("city", value)}
         >
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-full sm:w-[180px]">
             <SelectValue placeholder="Cidade" />
           </SelectTrigger>
 
@@ -133,7 +133,7 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
           value={filters.model || "all"}
           onValueChange={(value) => updateFilter("model", value)}
         >
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-full sm:w-[180px]">
             <SelectValue placeholder="Modelo" />
           </SelectTrigger>
 
@@ -165,10 +165,10 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
                 <TableHead>Cliente</TableHead>
                 <TableHead>CPF</TableHead>
                 <TableHead>Vendedor</TableHead>
-                <TableHead>Cidade</TableHead>
+                <TableHead className="hidden md:table-cell">Cidade</TableHead>
                 <TableHead>Modelo</TableHead>
                 <TableHead>Chassi</TableHead>
-                <TableHead>Data Faturamento</TableHead>
+                <TableHead className="hidden md:table-cell">Data Faturamento</TableHead>
                 <TableHead>Previsão Chegada</TableHead>
                 <TableHead>Situação</TableHead>
                 <TableHead>Ações</TableHead>
@@ -201,7 +201,7 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
 
                       <TableCell>{item.sellersName}</TableCell>
 
-                      <TableCell>{item.city}</TableCell>
+                      <TableCell className="hidden md:table-cell">{item.city}</TableCell>
 
                       <TableCell>{motorcycle?.model ?? "—"}</TableCell>
 
@@ -215,7 +215,7 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
                         )}
                       </TableCell>
 
-                      <TableCell>
+                      <TableCell className="hidden md:table-cell">
                         {item.billingDate
                           ? format(item.billingDate, "dd/MM/yyyy")
                           : "—"}
@@ -243,7 +243,7 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
                             className={buttonVariants({
                               variant: "ghost",
                               size: "icon",
-                              className: "rounded-full",
+                              className: "rounded-full min-h-[44px] min-w-[44px]",
                             })}
                           >
                             <PencilIcon className="size-4" />
@@ -254,7 +254,7 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
                             className={buttonVariants({
                               variant: "ghost",
                               size: "icon",
-                              className: "rounded-full",
+                              className: "rounded-full min-h-[44px] min-w-[44px]",
                             })}
                           >
                             <Trash2Icon className="size-4 text-red-500" />

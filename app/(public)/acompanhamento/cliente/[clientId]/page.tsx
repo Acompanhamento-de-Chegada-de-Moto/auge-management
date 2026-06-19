@@ -93,7 +93,7 @@ export default async function ClienteDetalhePage({
                   )}
 
                   <div className="rounded-lg border bg-muted/20 p-4">
-                  <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                     <div>
                       <span className="text-muted-foreground">Modelo</span>
                       <p className="font-medium">{moto.model}</p>

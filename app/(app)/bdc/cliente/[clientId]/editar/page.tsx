@@ -24,7 +24,7 @@ export default async function EditarClientePage({
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
         <h1 className="text-2xl font-bold">Editar Cliente</h1>
         <Link
           title="voltar"

@@ -77,9 +77,9 @@ export default function MotorcycleTable({ motorcycles }: MotorcycleTableProps) {
             <TableRow className="hover:bg-transparent">
               <TableHead>Modelo</TableHead>
               <TableHead>Chassi</TableHead>
-              <TableHead>Previsão de Chegada</TableHead>
+              <TableHead className="hidden md:table-cell">Previsão de Chegada</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="w-0 pr-4 text-end">Ações</TableHead>
+              <TableHead className="hidden md:table-cell w-0 pr-4 text-end">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -96,7 +96,7 @@ export default function MotorcycleTable({ motorcycles }: MotorcycleTableProps) {
               motorcycles.map((motorcycle) => {
                 const status = getArrivalStatus(motorcycle.forecastArrival);
                 return (
-                  <TableRow key={motorcycle.id}>
+                    <TableRow key={motorcycle.id}>
                     <TableCell className="font-medium">
                       {motorcycle.model}
                     </TableCell>
@@ -106,7 +106,7 @@ export default function MotorcycleTable({ motorcycles }: MotorcycleTableProps) {
                         onClick={() =>
                           handleCopy(motorcycle.chassi, motorcycle.id)
                         }
-                        className="group inline-flex cursor-pointer items-center gap-1.5 font-mono text-xs transition-colors"
+                        className="group inline-flex items-center gap-1.5 font-mono text-xs transition-colors min-h-[44px]"
                         title="Clique para copiar o chassi"
                       >
                         {copiedId === motorcycle.id ? (
@@ -127,7 +127,7 @@ export default function MotorcycleTable({ motorcycles }: MotorcycleTableProps) {
                         )}
                       </button>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden md:table-cell">
                       {motorcycle.forecastArrival
                         ? new Date(
                             motorcycle.forecastArrival,
@@ -149,7 +149,7 @@ export default function MotorcycleTable({ motorcycles }: MotorcycleTableProps) {
                           className={buttonVariants({
                             variant: "ghost",
                             size: "icon",
-                            className: "rounded-full",
+                            className: "rounded-full min-h-[44px] min-w-[44px]",
                           })}
                         >
                           <PencilIcon className="size-4" />
@@ -160,7 +160,7 @@ export default function MotorcycleTable({ motorcycles }: MotorcycleTableProps) {
                           className={buttonVariants({
                             variant: "ghost",
                             size: "icon",
-                            className: "rounded-full",
+                            className: "rounded-full min-h-[44px] min-w-[44px]",
                           })}
                         >
                           <Trash2Icon className="size-4 text-red-500" />

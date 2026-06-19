@@ -20,7 +20,7 @@ export function Header() {
             <h1 className="text-lg font-bold text-foreground leading-tight text-balance">
               Acompanhamento de Chegada de Moto
             </h1>
-            <p className="text-xs text-muted-foreground font-medium">
+            <p className="hidden sm:block text-xs text-muted-foreground font-medium">
               Controle de chegada e status de motos da concessionária
             </p>
           </div>
@@ -30,7 +30,7 @@ export function Header() {
           {session?.user.name && (
             <Badge
               variant="secondary"
-              className="flex items-center gap-1.5 border border-border px-3 py-1 bg-secondary text-secondary-foreground"
+              className="hidden sm:flex items-center gap-1.5 border border-border px-3 py-1 bg-secondary text-secondary-foreground"
             >
               <div className="size-1.5 rounded-full bg-emerald-500" />
               {session?.user.name}

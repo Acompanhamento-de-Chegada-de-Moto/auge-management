@@ -44,7 +44,7 @@ export default function LoginForm() {
 
   return (
     <div>
-      <Card className="w-full min-w-md border-none bg-secondary/50">
+      <Card className="w-full max-w-md border-none bg-secondary/50">
         <CardHeader>
           <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-primary/10">
             <Lock className="size-5 text-primary" />

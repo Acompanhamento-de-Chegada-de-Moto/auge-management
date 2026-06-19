@@ -14,7 +14,7 @@ export function SidebarNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="flex flex-col gap-1 w-44 shrink-0">
+    <nav className="flex flex-row md:flex-col gap-1 w-full md:w-44 shrink-0 overflow-x-auto">
       {links.map(({ href, label, icon: Icon }) => {
         const active =
           href === "/configuracoes"

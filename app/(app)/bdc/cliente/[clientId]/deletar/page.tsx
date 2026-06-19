@@ -44,7 +44,7 @@ export default function DeleteClientPage() {
 
   return (
     <div className="max-w-xl mx-auto w-full">
-      <Card className="mt-32">
+      <Card className="mt-8 md:mt-32">
         <CardHeader>
           <CardTitle>Tem certeza que deseja excluir este cliente?</CardTitle>
           <CardDescription>
@@ -52,17 +52,18 @@ export default function DeleteClientPage() {
             estoque será removido.
           </CardDescription>
         </CardHeader>
-        <CardContent className="flex items-center justify-between">
+        <CardContent className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
           <Link
             href="/bdc"
             className={buttonVariants({
               variant: "outline",
+              className: "w-full sm:w-auto",
             })}
           >
             Cancelar
           </Link>
 
-          <Button variant="destructive" disabled={pending} onClick={onSubmit}>
+          <Button variant="destructive" disabled={pending} onClick={onSubmit} className="w-full sm:w-auto">
             {pending ? (
               <>
                 <Loader2 className="size-4 animate-spin" />

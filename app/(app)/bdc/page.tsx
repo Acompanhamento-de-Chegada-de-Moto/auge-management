@@ -36,10 +36,10 @@ export default async function BDCPage({ searchParams }: BDCPageProps) {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
         <p className="text-muted-foreground">Acompanhamento de Clientes.</p>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <SpreadsheetUploadDialog />
 
           <Button asChild>
@@ -101,9 +101,9 @@ function BDCPageSkeletonLayout() {
     <div className="w-full">
       {/* Filtros */}
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <Skeleton className="h-10 w-[180px]" />
-        <Skeleton className="h-10 w-[180px]" />
-        <Skeleton className="h-10 w-[180px]" />
+        <Skeleton className="h-10 w-full sm:w-[180px]" />
+        <Skeleton className="h-10 w-full sm:w-[180px]" />
+        <Skeleton className="h-10 w-full sm:w-[180px]" />
         <Skeleton className="h-10 w-[120px]" />
       </div>
 
@@ -115,10 +115,10 @@ function BDCPageSkeletonLayout() {
               <TableHead>Cliente</TableHead>
               <TableHead>CPF</TableHead>
               <TableHead>Vendedor</TableHead>
-              <TableHead>Cidade</TableHead>
+              <TableHead className="hidden md:table-cell">Cidade</TableHead>
               <TableHead>Modelo</TableHead>
               <TableHead>Chassi</TableHead>
-              <TableHead>Data Faturamento</TableHead>
+              <TableHead className="hidden md:table-cell">Data Faturamento</TableHead>
               <TableHead>Previsão Chegada</TableHead>
               <TableHead>Situação</TableHead>
             </TableRow>
@@ -139,7 +139,7 @@ function BDCPageSkeletonLayout() {
                   <Skeleton className="h-4 w-36" />
                 </TableCell>
 
-                <TableCell>
+                <TableCell className="hidden md:table-cell">
                   <Skeleton className="h-4 w-24" />
                 </TableCell>
 
@@ -151,7 +151,7 @@ function BDCPageSkeletonLayout() {
                   <Skeleton className="h-4 w-40" />
                 </TableCell>
 
-                <TableCell>
+                <TableCell className="hidden md:table-cell">
                   <Skeleton className="h-4 w-24" />
                 </TableCell>
 
