@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import { CookieConsentBanner } from "@/components/CookieConsentBanner";
+import { ThemeColorSync } from "@/components/ThemeColorSync";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { cn } from "@/lib/utils";
 
@@ -51,6 +52,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <ThemeColorSync />
           {children}
           <Toaster />
         </ThemeProvider>
