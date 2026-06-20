@@ -26,10 +26,10 @@ export async function EditClientAction(
 
   const parsed = customerSchema.safeParse(values);
   if (!parsed.success) {
-    const firstError = parsed.error.errors[0];
+    const firstIssue = parsed.error.issues[0];
     return {
       status: "error",
-      message: firstError?.message ?? "Dados do formulário inválidos.",
+      message: firstIssue?.message ?? "Dados do formulário inválidos.",
     };
   }
 
