@@ -9,7 +9,12 @@ export function ThemeColorSync() {
 
   useEffect(() => {
     const meta = document.querySelector('meta[name="theme-color"]');
-    const color = resolvedTheme === "dark" ? "#1e293b" : "#0f172a";
+
+    const temp = document.createElement("div");
+    temp.style.color = "var(--primary)";
+    document.body.appendChild(temp);
+    const color = getComputedStyle(temp).color;
+    document.body.removeChild(temp);
 
     if (meta) {
       meta.setAttribute("content", color);
