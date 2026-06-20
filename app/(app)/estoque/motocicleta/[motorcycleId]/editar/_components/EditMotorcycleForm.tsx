@@ -1,13 +1,16 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useTransition } from "react";
 import { useForm } from "react-hook-form";
-import { EditMotorcycleAction } from "@/app/(app)/bdc/cliente/[clientId]/editar/actions";
+import { toast } from "sonner";
+import { EditMotorcycleAction } from "@/app/(app)/estoque/actions";
+import { useMotorcycle } from "@/app/(app)/estoque/_hooks/use-motorcycle";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -31,43 +34,44 @@ import {
 } from "@/lib/zod-schemas/motorcycle-schema";
 
 interface EditMotorcycleFormProps {
-  // Recebe o ID e os dados atuais da moto para popular os inputs
   motorcycleId: string;
-  initialData: {
-    chassi: string;
-    model: string;
-    forecastArrival: Date | string | null | undefined;
-  };
 }
 
 export function EditMotorcycleForm({
   motorcycleId,
-  initialData,
 }: EditMotorcycleFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const queryClient = useQueryClient();
+  const { data, isLoading, isError } = useMotorcycle(motorcycleId);
 
   const form = useForm({
     resolver: zodResolver(createMotorcycleSchema),
-    defaultValues: {
-      chassi: initialData.chassi,
-      model: initialData.model,
-      forecastArrival: initialData.forecastArrival
-        ? new Date(initialData.forecastArrival)
-        : undefined,
-      forecastArrivalStatus: "NO_INFORMATION",
-    },
+    values: data
+      ? {
+          chassi: data.chassi,
+          model: data.model,
+          forecastArrival: data.forecastArrival
+            ? new Date(data.forecastArrival)
+            : undefined,
+          forecastArrivalStatus: "NO_INFORMATION",
+        }
+      : undefined,
   });
 
   const handleSubmit = useCallback(
-    async (data: CreateMotorcycleType) => {
+    async (formData: CreateMotorcycleType) => {
       startTransition(async () => {
-        // Envia o ID da rota + os dados atualizados do formulário
-        const result = await EditMotorcycleAction(motorcycleId, data);
+        const result = await EditMotorcycleAction(motorcycleId, formData);
 
         if (result.status === "success") {
+          queryClient.invalidateQueries({
+            queryKey: ["motorcycle", motorcycleId],
+          });
+          toast.success(result.message);
           router.push("/estoque");
         } else {
+          toast.error(result.message);
           form.setError("chassi", {
             type: "manual",
             message: result.message,
@@ -75,8 +79,24 @@ export function EditMotorcycleForm({
         }
       });
     },
-    [router, form, motorcycleId],
+    [router, form, queryClient, motorcycleId],
   );
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="size-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (isError || !data) {
+    return (
+      <div className="py-12 text-center text-muted-foreground">
+        Erro ao carregar dados da motocicleta.
+      </div>
+    );
+  }
 
   return (
     <Form {...form}>

@@ -1,10 +1,13 @@
 "use client";
 
 import dayjs from "dayjs";
+import { useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { CheckIcon, CopyIcon, PencilIcon, Trash2Icon } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import type { UserGetMotorcyclesType } from "@/app/data/user/user-get-motorcycles";
+import { getMotorcycleByIdAction } from "@/app/(app)/estoque/actions";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Table,
@@ -55,6 +58,18 @@ interface MotorcycleTableProps {
 
 export default function MotorcycleTable({ motorcycles }: MotorcycleTableProps) {
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+
+  const prefetchMotorcycle = useCallback(
+    (id: string) => {
+      queryClient.prefetchQuery({
+        queryKey: ["motorcycle", id],
+        queryFn: () => getMotorcycleByIdAction(id),
+        staleTime: 1000 * 60 * 10,
+      });
+    },
+    [queryClient],
+  );
 
   const handleCopy = (text: string, id: string) => {
     navigator.clipboard.writeText(text).then(() => {
@@ -78,7 +93,11 @@ export default function MotorcycleTable({ motorcycles }: MotorcycleTableProps) {
         {motorcycles.map((motorcycle) => {
           const status = getArrivalStatus(motorcycle.forecastArrival);
           return (
-            <div key={motorcycle.id} className="rounded-lg border p-4">
+            <div
+              key={motorcycle.id}
+              className="rounded-lg border p-4"
+              onMouseEnter={() => prefetchMotorcycle(motorcycle.id)}
+            >
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <p className="font-medium">{motorcycle.model}</p>
@@ -167,7 +186,10 @@ export default function MotorcycleTable({ motorcycles }: MotorcycleTableProps) {
             {motorcycles.map((motorcycle) => {
               const status = getArrivalStatus(motorcycle.forecastArrival);
               return (
-                <TableRow key={motorcycle.id}>
+                <TableRow
+                  key={motorcycle.id}
+                  onMouseEnter={() => prefetchMotorcycle(motorcycle.id)}
+                >
                   <TableCell className="font-medium">
                     {motorcycle.model}
                   </TableCell>

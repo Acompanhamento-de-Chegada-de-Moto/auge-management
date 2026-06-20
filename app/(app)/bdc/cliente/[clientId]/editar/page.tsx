@@ -2,7 +2,6 @@ import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { userGetClient } from "@/app/data/user/user-get-client";
 import { buttonVariants } from "@/components/ui/button";
 import { EditClientForm } from "./_components/EditClientForm";
 
@@ -16,7 +15,6 @@ export default async function EditarClientePage({
   params: Promise<{ clientId: string }>;
 }) {
   const { clientId } = await params;
-  const data = await userGetClient(clientId);
 
   if (!clientId) {
     notFound();
@@ -36,7 +34,7 @@ export default async function EditarClientePage({
           <ArrowLeft className="size-4 mr-2" /> Voltar
         </Link>
       </div>
-      <EditClientForm data={data} clientId={clientId} />
+      <EditClientForm clientId={clientId} />
     </div>
   );
 }

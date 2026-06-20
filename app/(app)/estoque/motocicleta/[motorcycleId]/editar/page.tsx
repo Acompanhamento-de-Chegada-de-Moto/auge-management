@@ -2,7 +2,6 @@ import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { userGetMotorcycleById } from "@/app/data/user/user-get-motorcycle-by-id";
 import { buttonVariants } from "@/components/ui/button";
 import { EditMotorcycleForm } from "./_components/EditMotorcycleForm";
 
@@ -16,9 +15,8 @@ export default async function EditarMotocicletaPage({
   params: Promise<{ motorcycleId: string }>;
 }) {
   const { motorcycleId } = await params;
-  const data = await userGetMotorcycleById(motorcycleId);
 
-  if (!data) {
+  if (!motorcycleId) {
     notFound();
   }
 
@@ -37,7 +35,7 @@ export default async function EditarMotocicletaPage({
         </Link>
       </div>
 
-      <EditMotorcycleForm initialData={data} motorcycleId={motorcycleId} />
+      <EditMotorcycleForm motorcycleId={motorcycleId} />
     </div>
   );
 }

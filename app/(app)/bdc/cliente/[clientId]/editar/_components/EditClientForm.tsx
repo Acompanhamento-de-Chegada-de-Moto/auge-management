@@ -1,13 +1,16 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { SidebarSummary } from "@/app/(app)/bdc/_components/SidebarSummary";
-import type { UserGetClientType } from "@/app/data/user/user-get-client";
+import { useClient } from "@/app/(app)/bdc/_hooks/use-client";
+import { EditClientAction } from "@/app/(app)/bdc/actions";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -39,30 +42,68 @@ import {
 } from "@/validators/customer-schema";
 
 interface ICustomerFormProps {
-  data: UserGetClientType;
   clientId: string;
 }
 
-export function EditClientForm({ data, clientId }: ICustomerFormProps) {
+export function EditClientForm({ clientId }: ICustomerFormProps) {
   const [pending, startTransition] = useTransition();
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const { data, isLoading, isError } = useClient(clientId);
 
   const form = useForm<CustomerFormData>({
     resolver: zodResolver(customerSchema),
-    defaultValues: {
-      customerName: data?.name ?? "",
-      cpf: formatCPF(data?.cpf ?? ""),
-      sellerName: data?.sellersName ?? "",
-      city: data?.city ?? "",
-      model: data?.motorcycles[0]?.model ?? "",
-      chassis: data?.motorcycles[0]?.chassi ?? "",
-      forecastDate: data?.motorcycles[0]?.forecastArrival ?? undefined,
-    },
+    values: data
+      ? {
+          customerName: data.name ?? "",
+          cpf: formatCPF(data.cpf ?? ""),
+          sellerName: data.sellersName ?? "",
+          city: data.city ?? "",
+          model: data.motorcycles[0]?.model ?? "",
+          chassis: data.motorcycles[0]?.chassi ?? "",
+          billingDate: data.billingDate ?? undefined,
+          forecastDate: data.motorcycles[0]?.forecastArrival ?? undefined,
+          registrationStatus: data.motorcycles[0]?.registrationStatus === "PLATED"
+            ? "Emplacado"
+            : data.motorcycles[0]?.registrationStatus === "PLATING"
+              ? "Emplacando"
+              : "Sem Emplacamento",
+          registrationDate: data.motorcycles[0]?.registrationDate ?? undefined,
+        }
+      : undefined,
   });
 
   const watchedValues = form.watch();
 
-  const handleSubmit = () => {};
+  const handleSubmit = async (formData: CustomerFormData) => {
+    startTransition(async () => {
+      const result = await EditClientAction(clientId, formData);
+
+      if (result.status === "success") {
+        queryClient.invalidateQueries({ queryKey: ["client", clientId] });
+        toast.success(result.message);
+        router.push("/bdc");
+      } else {
+        toast.error(result.message);
+      }
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="size-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (isError || !data) {
+    return (
+      <div className="py-12 text-center text-muted-foreground">
+        Erro ao carregar dados do cliente.
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
@@ -329,7 +370,7 @@ export function EditClientForm({ data, clientId }: ICustomerFormProps) {
 
             <div className="flex gap-2">
               <Button type="submit" disabled={pending}>
-                {pending ? "Editando Cliente..." : "Editar Cliente"}
+                {pending ? "Salvando..." : "Salvar Alterações"}
               </Button>
             </div>
           </form>

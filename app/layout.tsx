@@ -5,6 +5,7 @@ import { Toaster } from "sonner";
 import { CookieConsentBanner } from "@/components/CookieConsentBanner";
 import { ThemeColorSync } from "@/components/ThemeColorSync";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { QueryProvider } from "@/components/providers/query-provider";
 import { cn } from "@/lib/utils";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
@@ -52,9 +53,11 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <ThemeColorSync />
-          {children}
-          <Toaster />
+          <QueryProvider>
+            <ThemeColorSync />
+            {children}
+            <Toaster />
+          </QueryProvider>
         </ThemeProvider>
         <CookieConsentBanner />
       </body>
