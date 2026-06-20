@@ -1,4 +1,4 @@
-import { Bike } from "lucide-react";
+import { Bike, Calendar, MapPin, User } from "lucide-react";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { publicGetMotorcycleById } from "@/app/data/public/public-get-motorcycle";
@@ -44,103 +44,137 @@ export default async function MotocicletaDetalhePage({
   const statusColor = getStatusColor(statusLabel);
 
   return (
-    <div className="flex min-h-full flex-col items-center bg-background px-4 py-12 sm:px-6 lg:px-8">
-      <div className="flex w-full max-w-2xl flex-col gap-6">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10">
+    <div className="flex min-h-full flex-col items-center bg-background px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
+      <main className="flex w-full max-w-2xl flex-col gap-5">
+        {/* Cabeçalho */}
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <div
+              aria-hidden="true"
+              className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10"
+            >
               <Bike className="size-5 text-primary" />
             </div>
-            <h1 className="text-xl font-bold">Acompanhamento de Motocicleta</h1>
+            <h1 className="truncate text-lg font-bold sm:text-xl">
+              Acompanhamento de Motocicleta
+            </h1>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <ReloadButton />
-          </div>
+          <ReloadButton />
         </div>
 
-        <div className="rounded-lg border bg-card p-6 shadow-sm">
-          <h2 className="text-lg font-semibold">{client.name}</h2>
-          {client.cpf && (
-            <p className="mt-1 text-sm text-muted-foreground">
-              CPF: {formatCPF(client.cpf)}
+        {/* Hero de status — primeira coisa que o cliente precisa ver */}
+        <div className="rounded-2xl border bg-card p-6 shadow-sm">
+          <div className="flex flex-col items-center gap-2 text-center">
+            <span
+              className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-semibold ${arrivalStatus.color}`}
+            >
+              <span
+                className="size-2 rounded-full bg-current"
+                aria-hidden="true"
+              />
+              {arrivalStatus.label}
+            </span>
+            <p className="text-2xl font-bold leading-tight">
+              {motorcycle.model}
             </p>
-          )}
-          <p className="text-sm text-muted-foreground">
-            Vendedor: {client.sellersName} | Cidade: {client.city}
-          </p>
-
-          <hr className="my-4" />
+            <p className="font-mono text-sm text-muted-foreground tracking-wide">
+              {maskChassis(motorcycle.chassi)}
+            </p>
+          </div>
 
           {motorcycle.forecastArrival && (
-            <DelayAlert
-              forecastDate={motorcycle.forecastArrival}
-              contactPhone={contactPhone}
-              delayMessage={delayMessage}
-              whatsappMessage={whatsappMessage}
-              clientName={client.name}
-              model={motorcycle.model}
-              chassis={motorcycle.chassi}
-            />
+            <div className="mt-5">
+              <DelayAlert
+                forecastDate={motorcycle.forecastArrival}
+                contactPhone={contactPhone}
+                delayMessage={delayMessage}
+                whatsappMessage={whatsappMessage}
+                clientName={client.name}
+                model={motorcycle.model}
+                chassis={motorcycle.chassi}
+              />
+            </div>
           )}
+        </div>
 
-          <div className="rounded-lg border bg-muted/20 p-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-              <div>
-                <span className="text-muted-foreground">Modelo</span>
-                <p className="font-medium">{motorcycle.model}</p>
+        {/* Dados do cliente */}
+        <section
+          aria-labelledby="dados-cliente"
+          className="rounded-2xl border bg-card p-6 shadow-sm"
+        >
+          <h2 id="dados-cliente" className="text-base font-semibold">
+            {client.name}
+          </h2>
+          <dl className="mt-3 space-y-2 text-sm">
+            {client.cpf && (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <dt className="sr-only">CPF</dt>
+                <dd>CPF: {formatCPF(client.cpf)}</dd>
               </div>
-              <div>
-                <span className="text-muted-foreground">Chassi</span>
-                <p className="font-mono tracking-wide">
-                  {maskChassis(motorcycle.chassi)}
-                </p>
+            )}
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-muted-foreground">
+              <div className="flex items-center gap-1.5">
+                <User className="size-3.5" aria-hidden="true" />
+                <dt className="sr-only">Vendedor</dt>
+                <dd>{client.sellersName}</dd>
               </div>
-              {client.billingDate && (
-                <div>
-                  <span className="text-muted-foreground">
-                    Data de Faturamento
-                  </span>
-                  <p className="font-medium">
-                    {new Date(client.billingDate).toLocaleDateString("pt-BR")}
-                  </p>
-                </div>
-              )}
-              <div>
-                <span className="text-muted-foreground">
-                  Previsão de Chegada
-                </span>
-                <p className="font-medium">
-                  {motorcycle.forecastArrival
-                    ? new Date(motorcycle.forecastArrival).toLocaleDateString(
-                        "pt-BR",
-                      )
-                    : "—"}
-                </p>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Status Chegada</span>
-                <p>
-                  <span
-                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${arrivalStatus.color}`}
-                  >
-                    {arrivalStatus.label}
-                  </span>
-                </p>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Situação</span>
-                <p>
-                  <span
-                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusColor}`}
-                  >
-                    {statusLabel}
-                  </span>
-                </p>
+              <div className="flex items-center gap-1.5">
+                <MapPin className="size-3.5" aria-hidden="true" />
+                <dt className="sr-only">Cidade</dt>
+                <dd>{client.city}</dd>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
+          </dl>
+        </section>
+
+        {/* Detalhes da moto */}
+        <section
+          aria-labelledby="detalhes-moto"
+          className="rounded-2xl border bg-muted/20 p-5"
+        >
+          <h2 id="detalhes-moto" className="sr-only">
+            Detalhes da motocicleta
+          </h2>
+          <dl className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
+            {client.billingDate && (
+              <div>
+                <dt className="flex items-center gap-1.5 text-muted-foreground">
+                  <Calendar className="size-3.5" aria-hidden="true" />
+                  Data de Faturamento
+                </dt>
+                <dd className="mt-1 font-medium">
+                  {new Date(client.billingDate).toLocaleDateString("pt-BR")}
+                </dd>
+              </div>
+            )}
+
+            <div>
+              <dt className="flex items-center gap-1.5 text-muted-foreground">
+                <Calendar className="size-3.5" aria-hidden="true" />
+                Previsão de Chegada
+              </dt>
+              <dd className="mt-1 font-medium">
+                {motorcycle.forecastArrival
+                  ? new Date(motorcycle.forecastArrival).toLocaleDateString(
+                      "pt-BR",
+                    )
+                  : "—"}
+              </dd>
+            </div>
+
+            <div>
+              <dt className="text-muted-foreground">Situação</dt>
+              <dd className="mt-1">
+                <span
+                  className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusColor}`}
+                >
+                  {statusLabel}
+                </span>
+              </dd>
+            </div>
+          </dl>
+        </section>
+      </main>
     </div>
   );
 }

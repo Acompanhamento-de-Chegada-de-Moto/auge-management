@@ -3,55 +3,86 @@
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import type * as React from "react";
 import { DayPicker } from "react-day-picker";
+import { ptBR } from "react-day-picker/locale";
 import { cn } from "@/lib/utils";
 
 function Calendar({
   className,
   classNames,
   showOutsideDays = true,
+  locale = ptBR,
   ...props
 }: React.ComponentProps<typeof DayPicker>) {
   return (
     <DayPicker
+      locale={locale}
       showOutsideDays={showOutsideDays}
       className={cn("p-3", className)}
-      classNames={
-        {
-          months:
-            "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
-          month: "space-y-4",
-          nav: "space-x-1 flex items-center",
-          table: "w-full border-collapse space-y-1",
-          head_row: "flex",
-          head_cell:
-            "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]",
-          row: "flex w-full mt-2",
-          cell: "h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-range-start)]:rounded-l-md first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md",
-          day: cn(
-            "h-9 w-9 p-0 font-normal aria-selected:opacity-100 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground",
-            "aria-selected:bg-primary aria-selected:text-primary-foreground aria-selected:hover:bg-primary aria-selected:hover:text-primary-foreground",
-          ),
-          day_selected:
-            "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-          day_today: "bg-accent text-accent-foreground",
-          day_outside: "text-muted-foreground opacity-50",
-          day_disabled: "text-muted-foreground opacity-50",
-          day_hidden: "invisible",
-          ...classNames,
-        } as any
-      }
+      classNames={{
+        months: "flex flex-col sm:flex-row gap-4 relative",
+        month: "flex flex-col gap-3",
+
+        // Cabeçalho (mês/ano + setas)
+        month_caption: "flex justify-center items-center h-9 relative px-9",
+        caption_label: "text-sm font-medium capitalize",
+        nav: "flex items-center justify-between absolute inset-x-0 top-0 h-9 px-1",
+        button_previous: cn(
+          "inline-flex items-center justify-center size-7 rounded-md",
+          "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+          "transition-colors disabled:opacity-30 disabled:pointer-events-none",
+        ),
+        button_next: cn(
+          "inline-flex items-center justify-center size-7 rounded-md",
+          "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+          "transition-colors disabled:opacity-30 disabled:pointer-events-none",
+        ),
+
+        // Grade
+        month_grid: "w-full border-collapse",
+        weekdays: "flex",
+        weekday:
+          "text-muted-foreground w-9 font-medium text-[0.75rem] uppercase tracking-wide pb-2",
+        week: "flex w-full mt-1",
+        weeks: "flex flex-col gap-1",
+
+        // Dias
+        day: "h-9 w-9 p-0 text-center text-sm relative [&:has([data-selected=true])]:rounded-md",
+        day_button: cn(
+          "h-9 w-9 p-0 font-normal inline-flex items-center justify-center rounded-md",
+          "text-sm transition-colors",
+          "hover:bg-accent hover:text-accent-foreground",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+        ),
+        selected:
+          "[&>button]:bg-primary [&>button]:text-primary-foreground [&>button]:hover:bg-primary [&>button]:hover:text-primary-foreground [&>button]:font-medium",
+        today:
+          "[&>button]:bg-accent [&>button]:text-accent-foreground [&>button]:font-semibold",
+        outside: "[&>button]:text-muted-foreground/40",
+        disabled:
+          "[&>button]:text-muted-foreground/40 [&>button]:pointer-events-none",
+        hidden: "invisible",
+
+        // Range (caso use mode="range" em algum lugar)
+        range_start: "[&>button]:rounded-l-md [&>button]:rounded-r-none",
+        range_end: "[&>button]:rounded-r-md [&>button]:rounded-l-none",
+        range_middle:
+          "[&>button]:rounded-none [&>button]:bg-accent [&>button]:text-accent-foreground",
+
+        ...classNames,
+      }}
       components={{
-        Chevron: ({ orientation, className, ...props }: any) => {
-          if (orientation === "left") {
-            return (
-              <ChevronLeftIcon
-                className={cn("h-4 w-4", className)}
-                {...props}
-              />
-            );
-          }
+        Chevron: ({
+          orientation,
+          className: chevronClassName,
+          ...chevronProps
+        }) => {
+          const Icon =
+            orientation === "left" ? ChevronLeftIcon : ChevronRightIcon;
           return (
-            <ChevronRightIcon className={cn("h-4 w-4", className)} {...props} />
+            <Icon
+              className={cn("size-4", chevronClassName)}
+              {...chevronProps}
+            />
           );
         },
       }}

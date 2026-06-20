@@ -2,7 +2,15 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { CalendarIcon, SearchIcon } from "lucide-react";
+import {
+  Bike,
+  CalendarIcon,
+  CheckCircle2,
+  Loader2,
+  SearchIcon,
+  ShieldCheck,
+  User,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
@@ -44,6 +52,32 @@ interface ICreateCustomerFormProps {
   searchChassisAction: (chassis: string) => Promise<any>;
 }
 
+// Pequeno cabeçalho de seção: número não decora, ajuda o vendedor a saber
+// em qual etapa lógica do cadastro ele está (moto -> cliente -> emplacamento)
+function SectionHeader({
+  icon: Icon,
+  title,
+  description,
+}: {
+  icon: React.ElementType;
+  title: string;
+  description?: string;
+}) {
+  return (
+    <div className="flex items-center gap-2.5 mb-4">
+      <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+        <Icon className="size-4" />
+      </div>
+      <div>
+        <h3 className="text-sm font-semibold leading-none">{title}</h3>
+        {description && (
+          <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function CreateClientForm({
   action,
   searchChassisAction,
@@ -52,6 +86,7 @@ export function CreateClientForm({
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [motorcycleFound, setMotorcycleFound] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
 
   const router = useRouter();
 
@@ -82,6 +117,7 @@ export function CreateClientForm({
 
     try {
       const motorcycle = await searchChassisAction(chassisValue);
+      setHasSearched(true);
 
       if (motorcycle) {
         form.setValue("model", motorcycle.model);
@@ -94,7 +130,6 @@ export function CreateClientForm({
         );
         setMotorcycleFound(true);
       } else {
-        // Moto não encontrada no estoque: avança permitindo criação manual de ambos
         setMotorcycleFound(false);
       }
     } catch {
@@ -117,9 +152,8 @@ export function CreateClientForm({
         toast.success(
           "message" in result
             ? String(result.message)
-            : "Operação realizada com sucesso!",
+            : "Cliente cadastrado com sucesso!",
         );
-
         router.push("/bdc");
       } else {
         toast.error(
@@ -138,296 +172,374 @@ export function CreateClientForm({
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-4"
+            className="space-y-6"
           >
-            {/* Chassi - Principal gatilho para a regra de negócio */}
-            <FormField
-              control={form.control}
-              name="chassis"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Chassi</FormLabel>
-                  <div className="flex gap-2">
-                    <FormControl>
-                      <Input
-                        placeholder="Número do chassi"
-                        {...field}
-                        onChange={(e) =>
-                          field.onChange(e.target.value.toUpperCase())
-                        }
-                      />
-                    </FormControl>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      onClick={handleBlurOrSearchChassis}
-                      disabled={searchLoading}
-                      className="shrink-0"
-                    >
-                      <SearchIcon className="size-4 mr-1" />
-                      {searchLoading ? "Buscando..." : "Checar Estoque"}
-                    </Button>
-                  </div>
-                  {searchError && (
-                    <p className="text-xs font-medium text-destructive">
-                      {searchError}
-                    </p>
-                  )}
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* SEÇÃO 1 — Motocicleta */}
+            <section className="rounded-xl border bg-card p-5">
+              <SectionHeader
+                icon={Bike}
+                title="Motocicleta"
+                description="Informe o chassi para localizar no estoque"
+              />
 
-            {/* Aviso dinâmico de nova moto */}
-            {watchedValues.chassis && !searchLoading && !motorcycleFound && (
-              <div className="rounded-lg bg-blue-50 p-3 text-sm text-blue-800 dark:bg-blue-950/40 dark:text-blue-400 border border-blue-200/60 dark:border-blue-900/40">
-                ℹ️ Esta moto não está no estoque. O modelo e a previsão
-                informados abaixo criarão um registro de previsão
-                automaticamente.
-              </div>
-            )}
-
-            <FormField
-              control={form.control}
-              name="customerName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Cliente</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Nome do cliente" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="cpf"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>CPF</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="000.000.000-00"
-                      {...field}
-                      onChange={(e) => {
-                        const raw = e.target.value
-                          .replace(/\D/g, "")
-                          .slice(0, 11);
-                        const formatted = raw.replace(
-                          /(\d{3})(\d{3})(\d{3})(\d{0,2})/,
-                          (_, a, b, c, d) => {
-                            let result = `${a}.${b}.${c}`;
-                            if (d) result += `-${d}`;
-                            return result;
-                          },
-                        );
-                        field.onChange(formatted);
-                      }}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="city"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Cidade</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Cidade" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="sellerName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Vendedor (a)</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Nome do vendedor" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="model"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Modelo</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Modelo da motocicleta"
-                      {...field}
-                      readOnly={motorcycleFound}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="billingDate"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Data de Faturamento</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full pl-3 text-left font-normal",
-                            !field.value && "text-muted-foreground",
-                          )}
-                        >
-                          {field.value ? (
-                            format(field.value, "dd/MM/yyyy")
-                          ) : (
-                            <span>Selecionar data</span>
-                          )}
-                          <CalendarIcon className="ml-auto size-4 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        autoFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="forecastDate"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Previsão de Chegada</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant="outline"
-                          disabled={motorcycleFound}
-                          className={cn(
-                            "w-full pl-3 text-left font-normal",
-                            !field.value && "text-muted-foreground",
-                          )}
-                        >
-                          {field.value ? (
-                            format(field.value, "dd/MM/yyyy")
-                          ) : (
-                            <span>Selecionar data</span>
-                          )}
-                          <CalendarIcon className="ml-auto size-4 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        autoFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="registrationStatus"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Status de Emplacamento</FormLabel>
-                  <Select
-                    onValueChange={(value) => field.onChange(value)}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o status" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Sem Emplacamento">
-                        Sem Emplacamento
-                      </SelectItem>
-                      <SelectItem value="Emplacando">Emplacando</SelectItem>
-                      <SelectItem value="Emplacado">Emplacado</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {watchedValues.registrationStatus !== "Sem Emplacamento" && (
               <FormField
                 control={form.control}
-                name="registrationDate"
+                name="chassis"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Data de Emplacamento</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
+                  <FormItem>
+                    <FormLabel>Chassi</FormLabel>
+                    <div className="flex gap-2">
+                      <FormControl>
+                        <div className="relative flex-1">
+                          <Input
+                            placeholder="Número do chassi"
                             className={cn(
-                              "w-full pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground",
+                              "font-mono uppercase pr-9",
+                              hasSearched &&
+                                motorcycleFound &&
+                                "border-green-500 focus-visible:ring-green-500/30",
                             )}
-                          >
-                            {field.value ? (
-                              format(field.value, "dd/MM/yyyy")
-                            ) : (
-                              <span>Selecionar data</span>
-                            )}
-                            <CalendarIcon className="ml-auto size-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          autoFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
+                            {...field}
+                            onChange={(e) => {
+                              field.onChange(e.target.value.toUpperCase());
+                              setHasSearched(false);
+                            }}
+                          />
+                          {hasSearched && motorcycleFound && (
+                            <CheckCircle2 className="absolute right-2.5 top-1/2 size-4 -translate-y-1/2 text-green-600 dark:text-green-400" />
+                          )}
+                        </div>
+                      </FormControl>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={handleBlurOrSearchChassis}
+                        disabled={searchLoading}
+                        className="shrink-0 min-w-[136px]"
+                      >
+                        {searchLoading ? (
+                          <Loader2 className="size-4 mr-1.5 animate-spin" />
+                        ) : (
+                          <SearchIcon className="size-4 mr-1.5" />
+                        )}
+                        {searchLoading ? "Buscando..." : "Checar Estoque"}
+                      </Button>
+                    </div>
+                    {searchError && (
+                      <p className="text-xs font-medium text-destructive">
+                        {searchError}
+                      </p>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            )}
 
-            <div className="flex gap-2">
-              <Button type="submit" disabled={pending}>
+              {hasSearched && motorcycleFound && (
+                <div
+                  role="status"
+                  className="mt-3 flex items-start gap-2 rounded-lg border border-green-200/60 bg-green-50 p-3 text-sm text-green-800 dark:border-green-900/40 dark:bg-green-950/30 dark:text-green-400"
+                >
+                  <CheckCircle2 className="mt-0.5 size-4 shrink-0" />
+                  <span>
+                    Moto localizada no estoque. Modelo, cidade e previsão
+                    preenchidos automaticamente.
+                  </span>
+                </div>
+              )}
+
+              {watchedValues.chassis && !searchLoading && !motorcycleFound && (
+                <div
+                  role="status"
+                  className="mt-3 flex items-start gap-2 rounded-lg border border-blue-200/60 bg-blue-50 p-3 text-sm text-blue-800 dark:border-blue-900/40 dark:bg-blue-950/40 dark:text-blue-400"
+                >
+                  <span aria-hidden className="mt-0.5">
+                    ℹ️
+                  </span>
+                  <span>
+                    Esta moto não está no estoque. O modelo e a previsão
+                    informados abaixo criarão um registro de previsão
+                    automaticamente.
+                  </span>
+                </div>
+              )}
+
+              <div className="mt-4">
+                <FormField
+                  control={form.control}
+                  name="model"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Modelo</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Modelo da motocicleta"
+                          {...field}
+                          readOnly={motorcycleFound}
+                          className={cn(
+                            motorcycleFound && "bg-muted text-muted-foreground",
+                          )}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </section>
+
+            {/* SEÇÃO 2 — Cliente */}
+            <section className="rounded-xl border bg-card p-5">
+              <SectionHeader icon={User} title="Dados do Cliente" />
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="customerName"
+                  render={({ field }) => (
+                    <FormItem className="sm:col-span-2">
+                      <FormLabel>Cliente</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Nome do cliente" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="cpf"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>CPF</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="000.000.000-00"
+                          inputMode="numeric"
+                          {...field}
+                          onChange={(e) => {
+                            const raw = e.target.value
+                              .replace(/\D/g, "")
+                              .slice(0, 11);
+                            const formatted = raw.replace(
+                              /(\d{3})(\d{3})(\d{3})(\d{0,2})/,
+                              (_, a, b, c, d) => {
+                                let result = `${a}.${b}.${c}`;
+                                if (d) result += `-${d}`;
+                                return result;
+                              },
+                            );
+                            field.onChange(formatted);
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="sellerName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Vendedor (a)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Nome do vendedor" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="city"
+                  render={({ field }) => (
+                    <FormItem className="sm:col-span-2">
+                      <FormLabel>Cidade</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Cidade" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </section>
+
+            {/* SEÇÃO 3 — Emplacamento */}
+            <section className="rounded-xl border bg-card p-5">
+              <SectionHeader
+                icon={ShieldCheck}
+                title="Faturamento e Emplacamento"
+              />
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="billingDate"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Data de Faturamento</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                "w-full pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground",
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, "dd/MM/yyyy")
+                              ) : (
+                                <span>Selecionar data</span>
+                              )}
+                              <CalendarIcon className="ml-auto size-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            autoFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="forecastDate"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Previsão de Chegada</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              disabled={motorcycleFound}
+                              className={cn(
+                                "w-full pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground",
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, "dd/MM/yyyy")
+                              ) : (
+                                <span>Selecionar data</span>
+                              )}
+                              <CalendarIcon className="ml-auto size-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            autoFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="registrationStatus"
+                  render={({ field }) => (
+                    <FormItem
+                      className={cn(
+                        watchedValues.registrationStatus ===
+                          "Sem Emplacamento" && "sm:col-span-2",
+                      )}
+                    >
+                      <FormLabel>Status de Emplacamento</FormLabel>
+                      <Select
+                        onValueChange={(value) => field.onChange(value)}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Sem Emplacamento">
+                            Sem Emplacamento
+                          </SelectItem>
+                          <SelectItem value="Emplacando">Emplacando</SelectItem>
+                          <SelectItem value="Emplacado">Emplacado</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {watchedValues.registrationStatus !== "Sem Emplacamento" && (
+                  <FormField
+                    control={form.control}
+                    name="registrationDate"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Data de Emplacamento</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                className={cn(
+                                  "w-full pl-3 text-left font-normal",
+                                  !field.value && "text-muted-foreground",
+                                )}
+                              >
+                                {field.value ? (
+                                  format(field.value, "dd/MM/yyyy")
+                                ) : (
+                                  <span>Selecionar data</span>
+                                )}
+                                <CalendarIcon className="ml-auto size-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={field.value}
+                              onSelect={field.onChange}
+                              autoFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+              </div>
+            </section>
+
+            <div className="sticky bottom-0 -mx-1 bg-gradient-to-t from-background via-background to-transparent px-1 pt-4 pb-1">
+              <Button
+                type="submit"
+                disabled={pending}
+                size="lg"
+                className="w-full sm:w-auto sm:min-w-[200px]"
+              >
+                {pending && <Loader2 className="size-4 mr-2 animate-spin" />}
                 {pending ? "Salvando..." : "Salvar Cliente"}
               </Button>
             </div>

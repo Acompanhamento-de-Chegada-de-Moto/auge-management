@@ -3,7 +3,6 @@
 import dayjs from "dayjs";
 import { CheckIcon, CopyIcon, PencilIcon, Trash2Icon } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { UserGetMotorcyclesType } from "@/app/data/user/user-get-motorcycles";
 import { buttonVariants } from "@/components/ui/button";
@@ -55,7 +54,6 @@ interface MotorcycleTableProps {
 }
 
 export default function MotorcycleTable({ motorcycles }: MotorcycleTableProps) {
-  const router = useRouter();
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const handleCopy = (text: string, id: string) => {
@@ -65,112 +63,186 @@ export default function MotorcycleTable({ motorcycles }: MotorcycleTableProps) {
     });
   };
 
-  const handleDelete = async (id: string) => {
-    router.refresh();
-  };
+  if (motorcycles.length === 0) {
+    return (
+      <div className="rounded-sm border py-8 text-center text-muted-foreground">
+        Nenhuma motocicleta cadastrada.
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">
-      <div className="rounded-sm border">
+      {/* MOBILE: cards (abaixo de md) */}
+      <div className="space-y-3 md:hidden">
+        {motorcycles.map((motorcycle) => {
+          const status = getArrivalStatus(motorcycle.forecastArrival);
+          return (
+            <div key={motorcycle.id} className="rounded-lg border p-4">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="font-medium">{motorcycle.model}</p>
+                  <button
+                    type="button"
+                    onClick={() => handleCopy(motorcycle.chassi, motorcycle.id)}
+                    aria-label={`Copiar chassi ${motorcycle.chassi}`}
+                    className="group mt-1 inline-flex items-center gap-1.5 font-mono text-xs text-muted-foreground"
+                  >
+                    {copiedId === motorcycle.id ? (
+                      <span
+                        role="status"
+                        className="flex items-center gap-1 text-green-600 dark:text-green-400"
+                      >
+                        <CheckIcon className="size-3.5" />
+                        Copiado!
+                      </span>
+                    ) : (
+                      <>
+                        <CopyIcon className="size-3.5" />
+                        <span className="underline">{motorcycle.chassi}</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                <div className="flex gap-1">
+                  <Link
+                    href={`/estoque/motocicleta/${motorcycle.id}/editar`}
+                    aria-label={`Editar motocicleta ${motorcycle.model}`}
+                    className={buttonVariants({
+                      variant: "ghost",
+                      size: "icon",
+                      className: "rounded-full min-h-[44px] min-w-[44px]",
+                    })}
+                  >
+                    <PencilIcon className="size-4" />
+                  </Link>
+                  <Link
+                    href={`/estoque/motocicleta/${motorcycle.id}/deletar`}
+                    aria-label={`Excluir motocicleta ${motorcycle.model}`}
+                    className={buttonVariants({
+                      variant: "ghost",
+                      size: "icon",
+                      className: "rounded-full min-h-[44px] min-w-[44px]",
+                    })}
+                  >
+                    <Trash2Icon className="size-4 text-red-500" />
+                  </Link>
+                </div>
+              </div>
+
+              <div className="mt-3 flex items-center justify-between border-t pt-2">
+                <span className="text-xs text-muted-foreground">
+                  Previsão:{" "}
+                  {motorcycle.forecastArrival
+                    ? new Date(motorcycle.forecastArrival).toLocaleDateString(
+                        "pt-BR",
+                      )
+                    : "—"}
+                </span>
+                <span
+                  className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${status.color}`}
+                >
+                  {status.label}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* DESKTOP: tabela (md e acima) */}
+      <div className="hidden rounded-sm border md:block">
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
               <TableHead>Modelo</TableHead>
               <TableHead>Chassi</TableHead>
-              <TableHead className="hidden md:table-cell">Previsão de Chegada</TableHead>
+              <TableHead>Previsão de Chegada</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="hidden md:table-cell w-0 pr-4 text-end">Ações</TableHead>
+              <TableHead className="w-0 pr-4 text-end">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {motorcycles.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={5}
-                  className="text-center text-muted-foreground py-8"
-                >
-                  Nenhuma motocicleta cadastrada.
-                </TableCell>
-              </TableRow>
-            ) : (
-              motorcycles.map((motorcycle) => {
-                const status = getArrivalStatus(motorcycle.forecastArrival);
-                return (
-                    <TableRow key={motorcycle.id}>
-                    <TableCell className="font-medium">
-                      {motorcycle.model}
-                    </TableCell>
-                    <TableCell>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleCopy(motorcycle.chassi, motorcycle.id)
-                        }
-                        className="group inline-flex items-center gap-1.5 font-mono text-xs transition-colors min-h-[44px]"
-                        title="Clique para copiar o chassi"
+            {motorcycles.map((motorcycle) => {
+              const status = getArrivalStatus(motorcycle.forecastArrival);
+              return (
+                <TableRow key={motorcycle.id}>
+                  <TableCell className="font-medium">
+                    {motorcycle.model}
+                  </TableCell>
+                  <TableCell>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleCopy(motorcycle.chassi, motorcycle.id)
+                      }
+                      className="group inline-flex items-center gap-1.5 font-mono text-xs transition-colors min-h-[44px]"
+                      title="Clique para copiar o chassi"
+                    >
+                      {copiedId === motorcycle.id ? (
+                        <>
+                          <CheckIcon className="size-3.5 text-green-600 dark:text-green-400" />
+                          <span
+                            role="status"
+                            className="text-green-600 dark:text-green-400"
+                          >
+                            Copiado!
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <CopyIcon className="size-3.5 opacity-0 transition-opacity group-hover:opacity-100" />
+                          <span className="hover:underline">
+                            {motorcycle.chassi}
+                          </span>
+                        </>
+                      )}
+                    </button>
+                  </TableCell>
+                  <TableCell>
+                    {motorcycle.forecastArrival
+                      ? new Date(motorcycle.forecastArrival).toLocaleDateString(
+                          "pt-BR",
+                        )
+                      : "—"}
+                  </TableCell>
+                  <TableCell>
+                    <span
+                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${status.color}`}
+                    >
+                      {status.label}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex h-full items-center gap-1 justify-end">
+                      <Link
+                        href={`/estoque/motocicleta/${motorcycle.id}/editar`}
+                        aria-label={`editar-${motorcycle.id}`}
+                        className={buttonVariants({
+                          variant: "ghost",
+                          size: "icon",
+                          className: "rounded-full min-h-[44px] min-w-[44px]",
+                        })}
                       >
-                        {copiedId === motorcycle.id ? (
-                          <>
-                            <CheckIcon className="size-3.5 text-green-600 dark:text-green-400" />
-                            <span className="text-green-600 dark:text-green-400">
-                              Copiado!
-                            </span>
-                          </>
-                        ) : (
-                          <>
-                            <CopyIcon className="size-3.5 opacity-0 transition-opacity group-hover:opacity-100" />
-                            <span className="hover:underline">
-                              {/* CORRIGIDO: de chassis para chassi */}
-                              {motorcycle.chassi}
-                            </span>
-                          </>
-                        )}
-                      </button>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      {motorcycle.forecastArrival
-                        ? new Date(
-                            motorcycle.forecastArrival,
-                          ).toLocaleDateString("pt-BR")
-                        : "—"}
-                    </TableCell>
-                    <TableCell>
-                      <span
-                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${status.color}`}
+                        <PencilIcon className="size-4" />
+                      </Link>
+                      <Link
+                        href={`/estoque/motocicleta/${motorcycle.id}/deletar`}
+                        aria-label={`deletar-${motorcycle.id}`}
+                        className={buttonVariants({
+                          variant: "ghost",
+                          size: "icon",
+                          className: "rounded-full min-h-[44px] min-w-[44px]",
+                        })}
                       >
-                        {status.label}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex h-full items-center gap-1 justify-end">
-                        <Link
-                          href={`/estoque/motocicleta/${motorcycle.id}/editar`}
-                          aria-label={`editar-${motorcycle.id}`}
-                          className={buttonVariants({
-                            variant: "ghost",
-                            size: "icon",
-                            className: "rounded-full min-h-[44px] min-w-[44px]",
-                          })}
-                        >
-                          <PencilIcon className="size-4" />
-                        </Link>
-                        <Link
-                          href={`/estoque/motocicleta/${motorcycle.id}/deletar`}
-                          aria-label={`deletar-${motorcycle.id}`}
-                          className={buttonVariants({
-                            variant: "ghost",
-                            size: "icon",
-                            className: "rounded-full min-h-[44px] min-w-[44px]",
-                          })}
-                        >
-                          <Trash2Icon className="size-4 text-red-500" />
-                        </Link>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
+                        <Trash2Icon className="size-4 text-red-500" />
+                      </Link>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>
