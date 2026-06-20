@@ -1,6 +1,7 @@
 "use client";
 
-import { Bike, LogOut, Settings, TextAlignJustify, User } from "lucide-react";
+import { LogOut, Settings, TextAlignJustify, User } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -67,9 +68,7 @@ const Navbar = () => {
         <div className="flex items-center h-14 justify-between gap-4">
           {/* Logo */}
           <Link href="/tracking" className="flex items-center gap-3 shrink-0">
-            <div className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
-              <Bike className="size-5" />
-            </div>
+            <Image src="/logo-auge.png" alt="Auge" width={36} height={36} className="rounded-lg object-contain" />
             <div className="hidden sm:block">
               <h1 className="text-base font-bold text-foreground leading-tight">
                 Acompanhamento

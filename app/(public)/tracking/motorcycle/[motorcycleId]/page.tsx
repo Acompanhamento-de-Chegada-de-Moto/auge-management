@@ -1,5 +1,6 @@
-import { Bike, Calendar, MapPin, User } from "lucide-react";
+import { Calendar, MapPin, User } from "lucide-react";
 import type { Metadata } from "next";
+import Image from "next/image";
 import { redirect } from "next/navigation";
 import { publicGetMotorcycleById } from "@/app/data/public/public-get-motorcycle";
 import { DelayAlert } from "@/components/home/DelayAlert";
@@ -49,12 +50,7 @@ export default async function MotocicletaDetalhePage({
         {/* Cabeçalho */}
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
-            <div
-              aria-hidden="true"
-              className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10"
-            >
-              <Bike className="size-5 text-primary" />
-            </div>
+            <Image src="/logo-auge.png" alt="" width={40} height={40} className="object-contain" aria-hidden="true" />
             <h1 className="truncate text-lg font-bold sm:text-xl">
               Acompanhamento de Motocicleta
             </h1>

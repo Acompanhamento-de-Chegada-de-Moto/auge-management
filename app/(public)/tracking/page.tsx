@@ -1,5 +1,5 @@
-import { PackageSearch } from "lucide-react";
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { ClientCard } from "@/components/home/ClientCard";
 import { SearchForm } from "@/components/home/SearchForm";
@@ -22,9 +22,7 @@ export default async function AcompanhamentoPage({
     <div className="flex min-h-full flex-col items-center bg-background px-4 py-12 sm:px-6 lg:px-8">
       <div className="flex w-full max-w-2xl flex-col items-center gap-8">
         <div className="flex flex-col items-center gap-2 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
-            <PackageSearch className="size-6 text-primary" />
-          </div>
+          <Image src="/logo-auge.png" alt="Auge" width={80} height={80} className="size-20 object-contain" />
           <h1 className="text-2xl font-bold tracking-tight">
             Acompanhamento de Motocicletas
           </h1>
