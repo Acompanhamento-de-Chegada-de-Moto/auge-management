@@ -19,7 +19,11 @@ export const metadata: Metadata = {
   title: "Estoque",
 };
 
-export default async function EstoquePage() {
+export default async function EstoquePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
@@ -38,14 +42,29 @@ export default async function EstoquePage() {
       </div>
 
       <Suspense fallback={<EstoquePageSkeletonLayout />}>
-        <RenderMotorcycles />
+        <RenderMotorcycles searchParams={searchParams} />
       </Suspense>
     </div>
   );
 }
 
-async function RenderMotorcycles() {
-  const data = await userGetMotorcycles();
+async function RenderMotorcycles({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const params = await searchParams;
+  const filters = {
+    model: typeof params.model === "string" ? params.model : "",
+    status: typeof params.status === "string" ? params.status : "",
+  };
+
+  const data = await userGetMotorcycles({
+    ...(filters.model && { model: filters.model }),
+    ...((filters.status === "Em Trânsito" ||
+      filters.status === "Chegou" ||
+      filters.status === "Atrasada") && { status: filters.status }),
+  });
 
   if (data.length === 0) {
     return (
@@ -58,7 +77,7 @@ async function RenderMotorcycles() {
     );
   }
 
-  return <MotorcycleTable motorcycles={data} />;
+  return <MotorcycleTable motorcycles={data} filters={filters} />;
 }
 
 export function EstoquePageSkeletonLayout() {
@@ -82,27 +101,22 @@ export function EstoquePageSkeletonLayout() {
           <TableBody>
             {skeletonRows.map((index) => (
               <TableRow key={index} className="hover:bg-transparent">
-                {/* Coluna: Modelo */}
                 <TableCell className="py-4">
                   <div className="h-4 w-32 rounded bg-muted" />
                 </TableCell>
 
-                {/* Coluna: Chassi */}
                 <TableCell className="py-4">
                   <div className="h-4 w-40 rounded bg-muted/80 font-mono" />
                 </TableCell>
 
-                {/* Coluna: Previsão de Chegada */}
                 <TableCell className="hidden md:table-cell py-4">
                   <div className="h-4 w-24 rounded bg-muted/60" />
                 </TableCell>
 
-                {/* Coluna: Status */}
                 <TableCell className="py-4">
                   <div className="h-5 w-24 rounded-full bg-muted/70" />
                 </TableCell>
 
-                {/* Coluna: Ações */}
                 <TableCell className="py-4">
                   <div className="flex items-center justify-end gap-2">
                     <div className="size-8 rounded-full bg-muted/80" />
