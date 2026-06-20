@@ -47,6 +47,7 @@ export async function EditClientAction(
       forecastDate,
       registrationStatus,
       registrationDate,
+      arrivalStatus,
       newChassis,
       newModel,
       newForecastDate,
@@ -90,10 +91,17 @@ export async function EditClientAction(
         }
       }
 
+      const arrivalStatusMap: Record<string, "NO_INFORMATION" | "ARRIVED" | "DELAYED"> = {
+        "Sem Informação": "NO_INFORMATION",
+        Chegou: "ARRIVED",
+        Atrasada: "DELAYED",
+      };
+
       await updateMotorcycle(motorcycle.id, {
         chassi: chassis,
         model,
         forecastArrival: forecastDate ?? null,
+        forecastArrivalStatus: arrivalStatusMap[arrivalStatus ?? ""] ?? "NO_INFORMATION",
         registrationStatus:
           registrationStatus === "Emplacado"
             ? "PLATED"

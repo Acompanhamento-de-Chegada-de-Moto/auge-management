@@ -17,6 +17,7 @@ export const clientSchema = z.object({
     .enum(["Sem Emplacamento", "Emplacando", "Emplacado"])
     .optional(),
   registrationDate: z.date().optional(),
+  arrivalStatus: z.enum(["Sem Informação", "Chegou", "Atrasada"]),
 });
 
 export type ClientSchemaType = z.infer<typeof clientSchema>;

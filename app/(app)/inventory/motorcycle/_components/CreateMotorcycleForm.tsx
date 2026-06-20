@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import dayjs from "dayjs";
 import { Bike, CalendarIcon, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useTransition } from "react";
@@ -24,6 +25,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
 import {
@@ -45,6 +53,8 @@ export function CreateMotorcycleForm() {
       forecastArrivalStatus: "NO_INFORMATION",
     },
   });
+
+  const watchedValues = form.watch();
 
   const handleSubmit = useCallback(
     async (data: CreateMotorcycleType) => {
@@ -158,6 +168,47 @@ export function CreateMotorcycleForm() {
               </FormItem>
             )}
           />
+
+          <FormField
+            control={form.control}
+            name="forecastArrivalStatus"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Status de Chegada</FormLabel>
+                <Select
+                  onValueChange={(value) => field.onChange(value)}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o status" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="NO_INFORMATION">Sem Informação</SelectItem>
+                    <SelectItem value="ARRIVED">Chegou</SelectItem>
+                    <SelectItem value="DELAYED">Atrasada</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {watchedValues.forecastArrival &&
+            dayjs(watchedValues.forecastArrival).startOf("day").isBefore(dayjs().startOf("day")) &&
+            watchedValues.forecastArrivalStatus === "NO_INFORMATION" && (
+              <div
+                role="alert"
+                className="flex items-start gap-2 rounded-lg border border-amber-200/60 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-400"
+              >
+                <span aria-hidden className="mt-0.5">⚠️</span>
+                <span>
+                  A data prevista para chegada já passou. Confirme se a moto
+                  chegou ou está atrasada.
+                </span>
+              </div>
+            )}
 
           <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
             <Button

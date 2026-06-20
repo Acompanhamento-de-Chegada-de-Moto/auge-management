@@ -20,6 +20,17 @@ function mapRegistrationStatus(
   return map[status] ?? "NO_PLATE";
 }
 
+function mapArrivalStatus(
+  status: string | undefined,
+): "NO_INFORMATION" | "ARRIVED" | "DELAYED" {
+  const map: Record<string, "NO_INFORMATION" | "ARRIVED" | "DELAYED"> = {
+    "Sem Informação": "NO_INFORMATION",
+    Chegou: "ARRIVED",
+    Atrasada: "DELAYED",
+  };
+  return map[status ?? ""] ?? "NO_INFORMATION";
+}
+
 export async function CreateClientAction(
   values: ClientSchemaType,
 ): Promise<ApiResponse> {
@@ -46,6 +57,7 @@ export async function CreateClientAction(
       registrationStatus,
       billingDate,
       registrationDate,
+      arrivalStatus,
     } = validation.data;
 
     await prisma.$transaction(async (tx) => {
@@ -82,6 +94,7 @@ export async function CreateClientAction(
           where: { id: existingMotorcycle.id },
           data: {
             clientId,
+            forecastArrivalStatus: mapArrivalStatus(arrivalStatus),
             registrationDate: registrationDate ?? null,
           },
         });
@@ -93,6 +106,7 @@ export async function CreateClientAction(
           chassi: chassis,
           model,
           forecastArrival: forecastDate ?? null,
+          forecastArrivalStatus: mapArrivalStatus(arrivalStatus),
           registrationStatus: mapRegistrationStatus(registrationStatus),
           registrationDate: registrationDate ?? null,
           clientId,

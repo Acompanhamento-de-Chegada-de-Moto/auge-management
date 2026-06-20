@@ -19,6 +19,7 @@ export const customerSchema = z
     forecastDate: z.date().optional(),
     registrationStatus: z.enum(["Sem Emplacamento", "Emplacando", "Emplacado"]),
     registrationDate: z.date().optional(),
+    arrivalStatus: z.enum(["Sem Informação", "Chegou", "Atrasada"]),
     newChassis: z.string().optional(),
     newModel: z.string().optional(),
     newForecastDate: z.date().optional(),

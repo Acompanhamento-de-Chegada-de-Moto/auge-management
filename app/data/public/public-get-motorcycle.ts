@@ -13,6 +13,7 @@ export async function publicGetMotorcycleById(id: string) {
       chassi: true,
       clientId: true,
       forecastArrival: true,
+      forecastArrivalStatus: true,
       model: true,
       registrationStatus: true,
       client: true,

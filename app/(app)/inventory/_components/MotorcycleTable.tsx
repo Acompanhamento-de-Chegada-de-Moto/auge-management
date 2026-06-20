@@ -15,7 +15,26 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-function getArrivalStatus(forecastDate: Date | null) {
+function getArrivalStatus(
+  forecastDate: Date | null,
+  arrivalStatus?: string | null,
+) {
+  if (arrivalStatus === "ARRIVED") {
+    return {
+      label: "Chegou",
+      color:
+        "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+    };
+  }
+
+  if (arrivalStatus === "DELAYED") {
+    return {
+      label: "Atrasada",
+      color:
+        "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
+    };
+  }
+
   if (!forecastDate) {
     return {
       label: "Em Trânsito",
@@ -69,7 +88,7 @@ export default function MotorcycleTable({ motorcycles }: MotorcycleTableProps) {
       {/* MOBILE: cards (abaixo de md) */}
       <div className="space-y-3 md:hidden">
         {motorcycles.map((motorcycle) => {
-          const status = getArrivalStatus(motorcycle.forecastArrival);
+          const status = getArrivalStatus(motorcycle.forecastArrival, motorcycle.forecastArrivalStatus);
           return (
             <div key={motorcycle.id} className="rounded-lg border p-4">
               <div className="flex items-start justify-between gap-2">
@@ -158,7 +177,7 @@ export default function MotorcycleTable({ motorcycles }: MotorcycleTableProps) {
           </TableHeader>
           <TableBody>
             {motorcycles.map((motorcycle) => {
-              const status = getArrivalStatus(motorcycle.forecastArrival);
+              const status = getArrivalStatus(motorcycle.forecastArrival, motorcycle.forecastArrivalStatus);
               return (
                 <TableRow key={motorcycle.id}>
                   <TableCell className="font-medium">

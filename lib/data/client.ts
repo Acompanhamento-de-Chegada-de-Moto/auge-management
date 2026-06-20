@@ -11,6 +11,7 @@ export async function createClient(data: {
     chassi: string;
     model: string;
     forecastArrival?: Date | null;
+    forecastArrivalStatus?: "NO_INFORMATION" | "ARRIVED" | "DELAYED";
     registrationStatus?: "NO_PLATE" | "PLATING" | "PLATED";
   }>;
 }) {
@@ -44,6 +45,7 @@ export async function getClients() {
           chassi: true,
           model: true,
           forecastArrival: true,
+          forecastArrivalStatus: true,
           registrationStatus: true,
         },
       },
@@ -225,6 +227,7 @@ export async function getClientsPaginated(params: {
             chassi: true,
             model: true,
             forecastArrival: true,
+            forecastArrivalStatus: true,
             registrationStatus: true,
             registrationDate: true,
           },
@@ -265,6 +268,7 @@ export async function searchClients(query: string) {
           chassi: true,
           model: true,
           forecastArrival: true,
+          forecastArrivalStatus: true,
           registrationStatus: true,
         },
       },

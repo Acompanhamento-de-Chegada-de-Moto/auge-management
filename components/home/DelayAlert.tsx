@@ -6,6 +6,7 @@ import { stripPhone } from "@/lib/utils";
 
 interface DelayAlertProps {
   forecastDate: Date;
+  forecastArrivalStatus?: string | null;
   contactPhone: string | null;
   delayMessage: string | null;
   whatsappMessage?: string | null;
@@ -16,6 +17,7 @@ interface DelayAlertProps {
 
 export function DelayAlert({
   forecastDate,
+  forecastArrivalStatus,
   contactPhone,
   delayMessage,
   whatsappMessage,
@@ -23,6 +25,8 @@ export function DelayAlert({
   model,
   chassis,
 }: DelayAlertProps) {
+  if (forecastArrivalStatus === "ARRIVED") return null;
+
   const hoje = dayjs().startOf("day");
   const prazo = dayjs(forecastDate).startOf("day");
 

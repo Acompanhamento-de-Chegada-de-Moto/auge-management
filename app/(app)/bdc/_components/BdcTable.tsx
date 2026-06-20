@@ -178,15 +178,17 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
                       <TooltipTrigger asChild>
                         <Badge
                           className={`px-3 py-1 ${
-                            getArrivalStatus(
-                              motorcycle?.forecastArrival ?? null,
-                            ).color
+                    getArrivalStatus(
+                      motorcycle?.forecastArrival ?? null,
+                      motorcycle?.forecastArrivalStatus,
+                    ).color
                           }`}
                         >
                           {
-                            getArrivalStatus(
-                              motorcycle?.forecastArrival ?? null,
-                            ).label
+                    getArrivalStatus(
+                      motorcycle?.forecastArrival ?? null,
+                      motorcycle?.forecastArrivalStatus,
+                    ).label
                           }
                         </Badge>
                       </TooltipTrigger>
@@ -380,12 +382,14 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
                                 className={`px-3 py-1 ${
                                   getArrivalStatus(
                                     motorcycle?.forecastArrival ?? null,
+                                    motorcycle?.forecastArrivalStatus,
                                   ).color
                                 }`}
                               >
                                 {
                                   getArrivalStatus(
                                     motorcycle?.forecastArrival ?? null,
+                                    motorcycle?.forecastArrivalStatus,
                                   ).label
                                 }
                               </Badge>

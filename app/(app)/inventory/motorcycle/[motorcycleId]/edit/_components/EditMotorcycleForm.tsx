@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CalendarIcon } from "lucide-react";
+import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
 import { useCallback, useTransition } from "react";
 import { useForm } from "react-hook-form";
@@ -25,6 +26,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import {
   type CreateMotorcycleType,
@@ -52,9 +60,11 @@ export function EditMotorcycleForm({ motorcycle }: EditMotorcycleFormProps) {
       forecastArrival: motorcycle.forecastArrival
         ? new Date(motorcycle.forecastArrival)
         : undefined,
-      forecastArrivalStatus: "NO_INFORMATION" as const,
+      forecastArrivalStatus: motorcycle.forecastArrivalStatus ?? "NO_INFORMATION",
     },
   });
+
+  const watchedValues = form.watch();
 
   const handleSubmit = useCallback(
     async (formData: CreateMotorcycleType) => {
@@ -148,10 +158,51 @@ export function EditMotorcycleForm({ motorcycle }: EditMotorcycleFormProps) {
           )}
         />
 
-        <div className="flex gap-3 pt-2">
-          <Button type="submit" disabled={isPending} className="min-w-[120px]">
-            {isPending ? "Atualizando..." : "Salvar Alterações"}
-          </Button>
+          <FormField
+            control={form.control}
+            name="forecastArrivalStatus"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Status de Chegada</FormLabel>
+                <Select
+                  onValueChange={(value) => field.onChange(value)}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o status" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="NO_INFORMATION">Sem Informação</SelectItem>
+                    <SelectItem value="ARRIVED">Chegou</SelectItem>
+                    <SelectItem value="DELAYED">Atrasada</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {watchedValues.forecastArrival &&
+            dayjs(watchedValues.forecastArrival).startOf("day").isBefore(dayjs().startOf("day")) &&
+            watchedValues.forecastArrivalStatus === "NO_INFORMATION" && (
+              <div
+                role="alert"
+                className="flex items-start gap-2 rounded-lg border border-amber-200/60 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-400"
+              >
+                <span aria-hidden className="mt-0.5">⚠️</span>
+                <span>
+                  A data prevista para chegada já passou. Confirme se a moto
+                  chegou ou está atrasada.
+                </span>
+              </div>
+            )}
+
+          <div className="flex gap-3 pt-2">
+            <Button type="submit" disabled={isPending} className="min-w-[120px]">
+              {isPending ? "Atualizando..." : "Salvar Alterações"}
+            </Button>
           <Button
             type="button"
             variant="outline"

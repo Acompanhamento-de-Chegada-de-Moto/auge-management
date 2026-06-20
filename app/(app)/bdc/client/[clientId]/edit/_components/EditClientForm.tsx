@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
+import dayjs from "dayjs";
 import {
   Bike,
   CalendarIcon,
@@ -75,6 +76,12 @@ export function EditClientForm({ client }: EditClientFormProps) {
             ? "Emplacando"
             : "Sem Emplacamento",
       registrationDate: client.motorcycles[0]?.registrationDate ?? undefined,
+      arrivalStatus:
+        client.motorcycles[0]?.forecastArrivalStatus === "ARRIVED"
+          ? "Chegou"
+          : client.motorcycles[0]?.forecastArrivalStatus === "DELAYED"
+            ? "Atrasada"
+            : "Sem Informação",
       newChassis: "",
       newModel: "",
       newForecastDate: undefined,
@@ -311,6 +318,49 @@ export function EditClientForm({ client }: EditClientFormProps) {
 
                 <FormField
                   control={form.control}
+                  name="arrivalStatus"
+                  render={({ field }) => (
+                    <FormItem className="sm:col-span-2">
+                      <FormLabel>Status de Chegada</FormLabel>
+                      <Select
+                        onValueChange={(value) => field.onChange(value)}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Sem Informação">
+                            Sem Informação
+                          </SelectItem>
+                          <SelectItem value="Chegou">Chegou</SelectItem>
+                          <SelectItem value="Atrasada">Atrasada</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {watchedValues.forecastDate &&
+                  dayjs(watchedValues.forecastDate).startOf("day").isBefore(dayjs().startOf("day")) &&
+                  watchedValues.arrivalStatus === "Sem Informação" && (
+                    <div
+                      role="alert"
+                      className="sm:col-span-2 flex items-start gap-2 rounded-lg border border-amber-200/60 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-400"
+                    >
+                      <span aria-hidden className="mt-0.5">⚠️</span>
+                      <span>
+                        A data prevista para chegada já passou. Confirme se a moto
+                        chegou ou está atrasada.
+                      </span>
+                    </div>
+                  )}
+
+                <FormField
+                  control={form.control}
                   name="registrationStatus"
                   render={({ field }) => (
                     <FormItem
@@ -504,6 +554,7 @@ export function EditClientForm({ client }: EditClientFormProps) {
         sellerName={watchedValues.sellerName}
         registrationStatus={watchedValues.registrationStatus}
         forecastDate={watchedValues.forecastDate}
+        arrivalStatus={watchedValues.arrivalStatus}
       />
     </div>
   );

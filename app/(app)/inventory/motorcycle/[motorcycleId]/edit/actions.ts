@@ -9,6 +9,7 @@ import {
   getMotorcycleByChassis,
 } from "@/lib/data/motorcycle";
 import type { ApiResponse } from "@/lib/types";
+import type { ArrivalStatus } from "@/generated/prisma/enums";
 import {
   type CreateMotorcycleType,
   createMotorcycleSchema,
@@ -29,7 +30,7 @@ export async function EditMotorcycleAction(
   }
 
   try {
-    const { chassi, model, forecastArrival } = parsed.data;
+    const { chassi, model, forecastArrival, forecastArrivalStatus } = parsed.data;
 
     if (!chassi || !model) {
       return {
@@ -62,6 +63,7 @@ export async function EditMotorcycleAction(
       chassi,
       model,
       forecastArrival: forecastArrival ?? null,
+      forecastArrivalStatus: (forecastArrivalStatus ?? "NO_INFORMATION") as ArrivalStatus,
     });
 
     revalidatePath("/inventory");

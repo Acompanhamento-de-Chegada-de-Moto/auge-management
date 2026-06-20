@@ -9,6 +9,7 @@ export async function getAllMotorcycles() {
       chassi: true,
       model: true,
       forecastArrival: true,
+      forecastArrivalStatus: true,
     },
     orderBy: {
       createdAt: "desc",
@@ -50,17 +51,27 @@ export async function getMotorcyclesPaginated(params: {
     switch (params.status) {
       case "Em Trânsito":
         where.OR = [
-          { forecastArrival: null },
-          { forecastArrival: { gt: hoje } },
+          { forecastArrival: null, forecastArrivalStatus: "NO_INFORMATION" },
+          { forecastArrival: { gt: hoje }, forecastArrivalStatus: "NO_INFORMATION" },
         ];
         break;
       case "Chegou":
-        where.forecastArrival = { lte: hoje };
-        where.NOT = { forecastArrival: null };
+        where.OR = [
+          { forecastArrivalStatus: "ARRIVED" },
+          {
+            forecastArrival: { lte: hoje },
+            forecastArrivalStatus: "NO_INFORMATION",
+          },
+        ];
         break;
       case "Atrasada":
-        where.forecastArrival = { lte: hoje };
-        where.NOT = { forecastArrival: null };
+        where.OR = [
+          { forecastArrivalStatus: "DELAYED" },
+          {
+            forecastArrival: { lt: hoje },
+            forecastArrivalStatus: "NO_INFORMATION",
+          },
+        ];
         break;
     }
   }
@@ -79,6 +90,7 @@ export async function getMotorcyclesPaginated(params: {
         chassi: true,
         model: true,
         forecastArrival: true,
+        forecastArrivalStatus: true,
       },
       orderBy: { createdAt: "desc" },
     }),
@@ -110,6 +122,7 @@ export async function createMotorcyclesBatch(
     chassi: string;
     model: string;
     forecastArrival?: Date | null;
+    forecastArrivalStatus?: "NO_INFORMATION" | "ARRIVED" | "DELAYED";
     registrationStatus?: RegistrationStatus;
     clientId?: string;
   }>,
@@ -120,6 +133,7 @@ export async function createMotorcyclesBatch(
       chassi: m.chassi,
       model: m.model,
       forecastArrival: m.forecastArrival ?? null,
+      forecastArrivalStatus: m.forecastArrivalStatus ?? "NO_INFORMATION",
       registrationStatus: m.registrationStatus ?? "NO_PLATE",
       clientId: m.clientId,
     })),
@@ -159,6 +173,7 @@ export async function createMotorcycle(data: {
   chassi: string;
   model: string;
   forecastArrival?: Date | null;
+  forecastArrivalStatus?: "NO_INFORMATION" | "ARRIVED" | "DELAYED";
   registrationStatus?: RegistrationStatus;
   registrationDate?: Date | null;
   clientId?: string;
@@ -168,6 +183,7 @@ export async function createMotorcycle(data: {
       chassi: data.chassi,
       model: data.model,
       forecastArrival: data.forecastArrival,
+      forecastArrivalStatus: data.forecastArrivalStatus ?? "NO_INFORMATION",
       registrationStatus: data.registrationStatus ?? "NO_PLATE",
       registrationDate: data.registrationDate ?? null,
       clientId: data.clientId,
@@ -202,6 +218,7 @@ export async function updateMotorcycle(
     chassi?: string;
     model?: string;
     forecastArrival?: Date | null;
+    forecastArrivalStatus?: "NO_INFORMATION" | "ARRIVED" | "DELAYED";
     registrationStatus?: RegistrationStatus;
     registrationDate?: Date | null;
     clientId?: string | null;
@@ -213,6 +230,7 @@ export async function updateMotorcycle(
       chassi: data.chassi,
       model: data.model,
       forecastArrival: data.forecastArrival,
+      forecastArrivalStatus: data.forecastArrivalStatus,
       registrationStatus: data.registrationStatus,
       registrationDate: data.registrationDate,
       clientId: data.clientId,
@@ -225,6 +243,7 @@ export async function updateMotorcycleByChassis(
   data: {
     model?: string;
     forecastArrival?: Date | null;
+    forecastArrivalStatus?: "NO_INFORMATION" | "ARRIVED" | "DELAYED";
     registrationStatus?: RegistrationStatus;
     registrationDate?: Date | null;
     clientId?: string | null;
@@ -235,6 +254,7 @@ export async function updateMotorcycleByChassis(
     data: {
       model: data.model,
       forecastArrival: data.forecastArrival,
+      forecastArrivalStatus: data.forecastArrivalStatus,
       registrationStatus: data.registrationStatus,
       registrationDate: data.registrationDate,
       clientId: data.clientId,

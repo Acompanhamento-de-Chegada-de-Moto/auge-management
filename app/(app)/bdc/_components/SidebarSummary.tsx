@@ -26,12 +26,31 @@ interface SidebarSummaryProps {
   sellerName?: string;
   registrationStatus?: string;
   forecastDate?: Date | null;
+  arrivalStatus?: string | null;
 }
 
-function getStatusBadge(found: boolean, forecastDate?: Date | null) {
+function getStatusBadge(found: boolean, forecastDate?: Date | null, arrivalStatus?: string | null) {
   if (!found) {
     return {
       label: "Não Encontrado",
+      color:
+        "bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400",
+      icon: AlertTriangleIcon,
+    };
+  }
+
+  if (arrivalStatus === "ARRIVED") {
+    return {
+      label: "Chegou",
+      color:
+        "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400",
+      icon: CalendarIcon,
+    };
+  }
+
+  if (arrivalStatus === "DELAYED") {
+    return {
+      label: "Atrasada",
       color:
         "bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400",
       icon: AlertTriangleIcon,
@@ -61,11 +80,12 @@ export function SidebarSummary({
   sellerName,
   registrationStatus,
   forecastDate,
+  arrivalStatus,
 }: SidebarSummaryProps) {
   const [collapsed, setCollapsed] = useState(false);
 
   const hasData = chassis || customerName || model;
-  const status = getStatusBadge(found, forecastDate);
+  const status = getStatusBadge(found, forecastDate, arrivalStatus);
   const StatusIcon = status.icon;
 
   return (

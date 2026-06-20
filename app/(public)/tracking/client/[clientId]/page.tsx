@@ -72,7 +72,7 @@ export default async function ClienteDetalhePage({
 
           <div className="space-y-4">
             {client.motorcycles.map((moto) => {
-              const arrivalStatus = getArrivalStatus(moto.forecastArrival);
+              const arrivalStatus = getArrivalStatus(moto.forecastArrival, moto.forecastArrivalStatus);
               const statusLabel = mapRegistrationStatusLabel(
                 moto.registrationStatus,
               );
@@ -83,6 +83,7 @@ export default async function ClienteDetalhePage({
                   {moto.forecastArrival && (
                     <DelayAlert
                       forecastDate={moto.forecastArrival}
+                      forecastArrivalStatus={moto.forecastArrivalStatus}
                       contactPhone={contactPhone}
                       delayMessage={delayMessage}
                       whatsappMessage={whatsappMessage}

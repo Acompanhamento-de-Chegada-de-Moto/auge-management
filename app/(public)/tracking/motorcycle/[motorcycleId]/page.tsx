@@ -40,7 +40,7 @@ export default async function MotocicletaDetalhePage({
   const delayMessage = await getDelayMessage();
   const whatsappMessage = await getWhatsAppMessage();
 
-  const arrivalStatus = getArrivalStatus(motorcycle.forecastArrival);
+  const arrivalStatus = getArrivalStatus(motorcycle.forecastArrival, motorcycle.forecastArrivalStatus);
   const statusLabel = mapRegistrationStatusLabel(motorcycle.registrationStatus);
   const statusColor = getStatusColor(statusLabel);
 
@@ -82,6 +82,7 @@ export default async function MotocicletaDetalhePage({
             <div className="mt-5">
               <DelayAlert
                 forecastDate={motorcycle.forecastArrival}
+                forecastArrivalStatus={motorcycle.forecastArrivalStatus}
                 contactPhone={contactPhone}
                 delayMessage={delayMessage}
                 whatsappMessage={whatsappMessage}

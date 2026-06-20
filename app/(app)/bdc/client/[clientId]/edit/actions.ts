@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireAuth } from "@/app/data/user/require-auth";
 import { prisma } from "@/lib/db";
 import type { ApiResponse } from "@/lib/types";
+import type { ArrivalStatus } from "@/generated/prisma/enums";
 import {
   type CreateMotorcycleType,
   createMotorcycleSchema,
@@ -25,7 +26,7 @@ export async function EditMotorcycleAction(
       };
     }
 
-    const { chassi, model, forecastArrival } = validation.data;
+    const { chassi, model, forecastArrival, forecastArrivalStatus } = validation.data;
 
     const currentMotorcycle = await prisma.motorcycle.findUnique({
       where: { id },
@@ -57,6 +58,7 @@ export async function EditMotorcycleAction(
         chassi,
         model,
         forecastArrival: forecastArrival ?? null,
+        forecastArrivalStatus: (forecastArrivalStatus ?? "NO_INFORMATION") as ArrivalStatus,
       },
     });
 
