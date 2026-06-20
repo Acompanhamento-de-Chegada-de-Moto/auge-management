@@ -25,7 +25,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { mapRegistrationStatusLabel } from "@/lib/bdc-data";
+import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  getArrivalStatus,
+  getStatusColor,
+  mapRegistrationStatusLabel,
+} from "@/lib/bdc-data";
 import { formatCPF } from "@/lib/cpf";
 
 interface IBDCTableProps {
@@ -103,7 +114,7 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
   };
 
   return (
-    <>
+    <TooltipProvider>
       <div className="md:hidden space-y-3">
         {data.map((item) => {
           const motorcycle = item.motorcycles[0];
@@ -122,7 +133,7 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
                 </div>
                 <div className="flex gap-1">
                   <Link
-                    href={`/bdc/cliente/${item.id}/editar`}
+                    href={`/bdc/client/${item.id}/edit`}
                     aria-label={`Editar cliente ${item.name}`}
                     className={buttonVariants({
                       variant: "ghost",
@@ -133,7 +144,7 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
                     <PencilIcon className="size-4" />
                   </Link>
                   <Link
-                    href={`/bdc/cliente/${item.id}/deletar`}
+                    href={`/bdc/client/${item.id}/delete`}
                     aria-label={`Excluir cliente ${item.name}`}
                     className={buttonVariants({
                       variant: "ghost",
@@ -162,9 +173,27 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
                 <div>
                   <dt className="text-muted-foreground">Previsão</dt>
                   <dd>
-                    {motorcycle?.forecastArrival
-                      ? format(motorcycle.forecastArrival, "dd/MM/yyyy")
-                      : "—"}
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Badge
+                          className={getArrivalStatus(
+                            motorcycle?.forecastArrival ?? null,
+                          ).color}
+                        >
+                          {getArrivalStatus(
+                            motorcycle?.forecastArrival ?? null,
+                          ).label}
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {motorcycle?.forecastArrival
+                          ? format(
+                              motorcycle.forecastArrival,
+                              "dd/MM/yyyy",
+                            )
+                          : "Sem previsão"}
+                      </TooltipContent>
+                    </Tooltip>
                   </dd>
                 </div>
               </dl>
@@ -173,11 +202,33 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
                 <span className="text-xs text-muted-foreground">
                   Chassi: {motorcycle?.chassi ?? "—"}
                 </span>
-                <span className="text-xs font-medium">
-                  {motorcycle?.registrationStatus
-                    ? mapRegistrationStatusLabel(motorcycle.registrationStatus)
-                    : "—"}
-                </span>
+                {motorcycle?.registrationStatus ? (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge
+                        className={getStatusColor(
+                          mapRegistrationStatusLabel(
+                            motorcycle.registrationStatus,
+                          ),
+                        )}
+                      >
+                        {mapRegistrationStatusLabel(
+                          motorcycle.registrationStatus,
+                        )}
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {motorcycle.registrationDate
+                        ? format(
+                            motorcycle.registrationDate,
+                            "dd/MM/yyyy",
+                          )
+                        : "Sem data de emplacamento"}
+                    </TooltipContent>
+                  </Tooltip>
+                ) : (
+                  <span className="text-xs text-muted-foreground">—</span>
+                )}
               </div>
             </div>
           );
@@ -324,23 +375,63 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
                         </TableCell>
 
                         <TableCell>
-                          {motorcycle?.forecastArrival
-                            ? format(motorcycle.forecastArrival, "dd/MM/yyyy")
-                            : "—"}
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Badge
+                                className={getArrivalStatus(
+                                  motorcycle?.forecastArrival ?? null,
+                                ).color}
+                              >
+                                {getArrivalStatus(
+                                  motorcycle?.forecastArrival ?? null,
+                                ).label}
+                              </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {motorcycle?.forecastArrival
+                                ? format(
+                                    motorcycle.forecastArrival,
+                                    "dd/MM/yyyy",
+                                  )
+                                : "Sem previsão"}
+                            </TooltipContent>
+                          </Tooltip>
                         </TableCell>
 
                         <TableCell>
-                          {motorcycle?.registrationStatus
-                            ? mapRegistrationStatusLabel(
-                                motorcycle.registrationStatus,
-                              )
-                            : "—"}
+                          {motorcycle?.registrationStatus ? (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Badge
+                                  className={getStatusColor(
+                                    mapRegistrationStatusLabel(
+                                      motorcycle.registrationStatus,
+                                    ),
+                                  )}
+                                >
+                                  {mapRegistrationStatusLabel(
+                                    motorcycle.registrationStatus,
+                                  )}
+                                </Badge>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {motorcycle.registrationDate
+                                  ? format(
+                                      motorcycle.registrationDate,
+                                      "dd/MM/yyyy",
+                                    )
+                                  : "Sem data de emplacamento"}
+                              </TooltipContent>
+                            </Tooltip>
+                          ) : (
+                            "—"
+                          )}
                         </TableCell>
 
                         <TableCell>
                           <div className="flex h-full items-center gap-1">
                             <Link
-                              href={`/bdc/cliente/${item.id}/editar`}
+                              href={`/bdc/client/${item.id}/edit`}
                               aria-label={`editar-${item.id}`}
                               className={buttonVariants({
                                 variant: "ghost",
@@ -352,7 +443,7 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
                               <PencilIcon className="size-4" />
                             </Link>
                             <Link
-                              href={`/bdc/cliente/${item.id}/deletar`}
+                              href={`/bdc/client/${item.id}/delete`}
                               aria-label={`deletar-${item.id}`}
                               className={buttonVariants({
                                 variant: "ghost",
@@ -374,6 +465,6 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
           </div>
         </div>
       </div>
-    </>
+    </TooltipProvider>
   );
 }

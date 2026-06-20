@@ -32,7 +32,7 @@ export function SearchForm({ defaultValue = "" }: SearchFormProps) {
     e.preventDefault();
     const trimmed = query.trim();
     if (trimmed) {
-      router.push(`/acompanhamento?q=${encodeURIComponent(trimmed)}`);
+      router.push(`/tracking?q=${encodeURIComponent(trimmed)}`);
     }
   };
 

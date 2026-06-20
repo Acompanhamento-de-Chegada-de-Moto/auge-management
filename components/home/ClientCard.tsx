@@ -87,12 +87,12 @@ export function ClientCard({ client }: ClientCardProps) {
               </div>
               <div className="flex items-center gap-2 pt-1 border-t border-border/40 mt-1">
                 <Button variant="ghost" size="sm" asChild className="gap-1.5 text-xs h-7 px-2">
-                  <Link href={`/acompanhamento/motocicleta/${motorcycle.id}`}>
+                  <Link href={`/tracking/motorcycle/${motorcycle.id}`}>
                     <ExternalLink className="size-3.5" />
                     Abrir
                   </Link>
                 </Button>
-                <CopyLinkButton url={`/acompanhamento/motocicleta/${motorcycle.id}`} />
+                <CopyLinkButton url={`/tracking/motorcycle/${motorcycle.id}`} />
               </div>
             </div>
           );

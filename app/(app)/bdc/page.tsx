@@ -43,7 +43,7 @@ export default async function BDCPage({ searchParams }: BDCPageProps) {
           <SpreadsheetUploadDialog />
 
           <Button asChild>
-            <Link href="/bdc/cliente/novo">
+            <Link href="/bdc/client/new">
               <PlusIcon className="mr-2 size-4" />
               Adicionar Cliente
             </Link>
@@ -79,7 +79,7 @@ async function RenderClients({
         title="Nenhum cliente encontrado"
         description="Para começar adicione um novo cliente"
         buttonText="Adicionar Cliente"
-        href="/bdc/cliente/novo"
+        href="/bdc/client/new"
       />
     );
   }

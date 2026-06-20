@@ -75,7 +75,7 @@ export async function EditClientAction(
     }
 
     revalidatePath("/bdc");
-    revalidatePath("/acompanhamento", "layout");
+    revalidatePath("/tracking", "layout");
 
     return {
       status: "success",

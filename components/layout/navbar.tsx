@@ -17,9 +17,9 @@ import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 
 const navigationData = [
-  { title: "Acompanhamento", href: "/acompanhamento" },
+  { title: "Acompanhamento", href: "/tracking" },
   { title: "BDC", href: "/bdc" },
-  { title: "Estoque", href: "/estoque" },
+  { title: "Estoque", href: "/inventory" },
 ];
 
 const Navbar = () => {
@@ -67,7 +67,7 @@ const Navbar = () => {
         <div className="flex items-center h-14 justify-between gap-4">
           {/* Logo */}
           <Link
-            href="/acompanhamento"
+            href="/tracking"
             className="flex items-center gap-3 shrink-0"
           >
             <div className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
@@ -139,7 +139,7 @@ const Navbar = () => {
                   </div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
-                    onClick={() => router.push("/configuracoes")}
+                    onClick={() => router.push("/settings")}
                     className="cursor-pointer"
                   >
                     <Settings className="mr-2 size-4" />

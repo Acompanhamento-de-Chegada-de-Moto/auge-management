@@ -55,6 +55,7 @@ export async function userGetClients(filters?: UserGetClientsFilters) {
           model: true,
           forecastArrival: true,
           registrationStatus: true,
+          registrationDate: true,
           forecastArrivalStatus: true,
         },
       },
