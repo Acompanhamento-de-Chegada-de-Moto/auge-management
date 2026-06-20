@@ -61,10 +61,7 @@ export function EditMotorcycleForm({ motorcycle }: EditMotorcycleFormProps) {
       startTransition(async () => {
         const result = await EditMotorcycleAction(motorcycle.id, formData);
 
-        if (result.status === "success") {
-          toast.success(result.message);
-          router.push("/inventory");
-        } else {
+        if (result.status === "error") {
           toast.error(result.message);
           form.setError("chassi", {
             type: "manual",
@@ -73,14 +70,15 @@ export function EditMotorcycleForm({ motorcycle }: EditMotorcycleFormProps) {
         }
       });
     },
-    [router, form, motorcycle.id],
+    [form, motorcycle.id],
   );
 
   return (
-    <Form {...form}>
+    <div className="max-w-xl rounded-xl border bg-card p-6 shadow-sm">
+      <Form {...form}>
       <form
         onSubmit={form.handleSubmit(handleSubmit)}
-        className="space-y-6 max-w-xl"
+        className="space-y-6"
       >
         <FormField
           control={form.control}
@@ -142,9 +140,6 @@ export function EditMotorcycleForm({ motorcycle }: EditMotorcycleFormProps) {
                     mode="single"
                     selected={field.value ? new Date(field.value) : undefined}
                     onSelect={field.onChange}
-                    disabled={(date) =>
-                      date < new Date(new Date().setHours(0, 0, 0, 0))
-                    }
                   />
                 </PopoverContent>
               </Popover>
@@ -168,5 +163,6 @@ export function EditMotorcycleForm({ motorcycle }: EditMotorcycleFormProps) {
         </div>
       </form>
     </Form>
+    </div>
   );
 }

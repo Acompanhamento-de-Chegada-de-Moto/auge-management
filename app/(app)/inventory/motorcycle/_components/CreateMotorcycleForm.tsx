@@ -65,7 +65,7 @@ export function CreateMotorcycleForm() {
   );
 
   return (
-    <div className="max-w-xl rounded-xl border bg-card p-6">
+    <div className="max-w-xl rounded-xl border bg-card p-6 shadow-sm">
       <div className="mb-6 flex items-center gap-3">
         <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
           <Bike className="size-5" />
@@ -150,9 +150,6 @@ export function CreateMotorcycleForm() {
                       mode="single"
                       selected={field.value ? new Date(field.value) : undefined}
                       onSelect={field.onChange}
-                      disabled={(date) =>
-                        date < new Date(new Date().setHours(0, 0, 0, 0))
-                      }
                       locale={ptBR}
                     />
                   </PopoverContent>

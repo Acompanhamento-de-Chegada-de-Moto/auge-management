@@ -45,22 +45,21 @@ export async function getMotorcyclesPaginated(params: {
 
   if (params.status) {
     const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0);
-    const amanha = new Date(hoje);
-    amanha.setDate(amanha.getDate() + 1);
+    hoje.setHours(23, 59, 59, 999);
 
     switch (params.status) {
       case "Em Trânsito":
         where.OR = [
           { forecastArrival: null },
-          { forecastArrival: { gte: amanha } },
+          { forecastArrival: { gt: hoje } },
         ];
         break;
       case "Chegou":
-        where.forecastArrival = { gte: hoje, lt: amanha };
+        where.forecastArrival = { lte: hoje };
+        where.NOT = { forecastArrival: null };
         break;
       case "Atrasada":
-        where.forecastArrival = { lt: hoje };
+        where.forecastArrival = { lte: hoje };
         where.NOT = { forecastArrival: null };
         break;
     }

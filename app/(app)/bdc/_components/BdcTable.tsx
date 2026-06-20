@@ -76,6 +76,25 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
     [data],
   );
 
+  const flatData = useMemo(() => {
+    return data.flatMap((client) => {
+      if (client.motorcycles.length === 0) {
+        return [
+          {
+            ...client,
+            motorcycle: null as (typeof client.motorcycles)[0] | null,
+            rowKey: `${client.id}-none`,
+          },
+        ];
+      }
+      return client.motorcycles.map((motorcycle) => ({
+        ...client,
+        motorcycle,
+        rowKey: `${client.id}-${motorcycle.id}`,
+      }));
+    });
+  }, [data]);
+
   const updateFilter = (
     key: "sellerName" | "city" | "model",
     value: string,
@@ -102,21 +121,21 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
   return (
     <TooltipProvider>
       <div className="md:hidden space-y-3">
-        {data.map((item) => {
-          const motorcycle = item.motorcycles[0];
+        {flatData.map((row) => {
+          const motorcycle = row.motorcycle;
           return (
-            <div key={item.id} className="rounded-lg border p-4">
+            <div key={row.rowKey} className="rounded-lg border p-4">
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <p className="font-medium">{item.name}</p>
+                  <p className="font-medium">{row.name}</p>
                   <p className="text-sm text-muted-foreground">
-                    {formatCPF(item.cpf)}
+                    {formatCPF(row.cpf)}
                   </p>
                 </div>
                 <div className="flex gap-1">
                   <Link
-                    href={`/bdc/client/${item.id}/edit`}
-                    aria-label={`Editar cliente ${item.name}`}
+                    href={`/bdc/client/${row.id}/edit`}
+                    aria-label={`Editar cliente ${row.name}`}
                     className={buttonVariants({
                       variant: "ghost",
                       size: "icon",
@@ -126,8 +145,8 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
                     <PencilIcon className="size-4" />
                   </Link>
                   <Link
-                    href={`/bdc/client/${item.id}/delete`}
-                    aria-label={`Excluir cliente ${item.name}`}
+                    href={`/bdc/client/${row.id}/delete`}
+                    aria-label={`Excluir cliente ${row.name}`}
                     className={buttonVariants({
                       variant: "ghost",
                       size: "icon",
@@ -142,7 +161,7 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
               <dl className="mt-3 grid grid-cols-2 gap-2 text-sm">
                 <div>
                   <dt className="text-muted-foreground">Vendedor</dt>
-                  <dd>{item.sellersName}</dd>
+                  <dd>{row.sellersName}</dd>
                 </div>
                 <div>
                   <dt className="text-muted-foreground">Modelo</dt>
@@ -150,7 +169,7 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
                 </div>
                 <div>
                   <dt className="text-muted-foreground">Cidade</dt>
-                  <dd>{item.city}</dd>
+                  <dd>{row.city}</dd>
                 </div>
                 <div>
                   <dt className="text-muted-foreground">Previsão</dt>
@@ -158,11 +177,11 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Badge
-                          className={
+                          className={`px-3 py-1 ${
                             getArrivalStatus(
                               motorcycle?.forecastArrival ?? null,
                             ).color
-                          }
+                          }`}
                         >
                           {
                             getArrivalStatus(
@@ -189,11 +208,11 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Badge
-                        className={getStatusColor(
+                        className={`px-3 py-1 ${getStatusColor(
                           mapRegistrationStatusLabel(
                             motorcycle.registrationStatus,
                           ),
-                        )}
+                        )}`}
                       >
                         {mapRegistrationStatusLabel(
                           motorcycle.registrationStatus,
@@ -284,7 +303,7 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
             isPending ? "pointer-events-none opacity-60 transition-opacity" : ""
           }
         >
-          <div className="rounded-sm border">
+          <div className="rounded-sm border shadow-sm">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -314,23 +333,26 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  data.map((item) => {
-                    const motorcycle = item.motorcycles[0];
+                  flatData.map((row, index) => {
+                    const motorcycle = row.motorcycle;
 
                     return (
-                      <TableRow key={item.id}>
-                        <TableCell>{item.name}</TableCell>
+                      <TableRow
+                        key={row.rowKey}
+                        className={index % 2 === 0 ? undefined : "bg-muted/20"}
+                      >
+                        <TableCell>{row.name}</TableCell>
 
                         <TableCell>
-                          <CopyText text={item.cpf}>
-                            <span>{formatCPF(item.cpf)}</span>
+                          <CopyText text={row.cpf}>
+                            <span>{formatCPF(row.cpf)}</span>
                           </CopyText>
                         </TableCell>
 
-                        <TableCell>{item.sellersName}</TableCell>
+                        <TableCell>{row.sellersName}</TableCell>
 
                         <TableCell className="hidden md:table-cell">
-                          {item.city}
+                          {row.city}
                         </TableCell>
 
                         <TableCell>{motorcycle?.model ?? "—"}</TableCell>
@@ -346,8 +368,8 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
                         </TableCell>
 
                         <TableCell className="hidden md:table-cell">
-                          {item.billingDate
-                            ? format(item.billingDate, "dd/MM/yyyy")
+                          {row.billingDate
+                            ? format(row.billingDate, "dd/MM/yyyy")
                             : "—"}
                         </TableCell>
 
@@ -355,11 +377,11 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Badge
-                                className={
+                                className={`px-3 py-1 ${
                                   getArrivalStatus(
                                     motorcycle?.forecastArrival ?? null,
                                   ).color
-                                }
+                                }`}
                               >
                                 {
                                   getArrivalStatus(
@@ -384,11 +406,11 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <Badge
-                                  className={getStatusColor(
+                                  className={`px-3 py-1 ${getStatusColor(
                                     mapRegistrationStatusLabel(
                                       motorcycle.registrationStatus,
                                     ),
-                                  )}
+                                  )}`}
                                 >
                                   {mapRegistrationStatusLabel(
                                     motorcycle.registrationStatus,
@@ -412,8 +434,8 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
                         <TableCell>
                           <div className="flex h-full items-center gap-1">
                             <Link
-                              href={`/bdc/client/${item.id}/edit`}
-                              aria-label={`editar-${item.id}`}
+                              href={`/bdc/client/${row.id}/edit`}
+                              aria-label={`editar-${row.id}`}
                               className={buttonVariants({
                                 variant: "ghost",
                                 size: "icon",
@@ -424,8 +446,8 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
                               <PencilIcon className="size-4" />
                             </Link>
                             <Link
-                              href={`/bdc/client/${item.id}/delete`}
-                              aria-label={`deletar-${item.id}`}
+                              href={`/bdc/client/${row.id}/delete`}
+                              aria-label={`deletar-${row.id}`}
                               className={buttonVariants({
                                 variant: "ghost",
                                 size: "icon",

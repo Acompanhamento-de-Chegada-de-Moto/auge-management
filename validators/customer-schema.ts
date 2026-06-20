@@ -19,6 +19,9 @@ export const customerSchema = z
     forecastDate: z.date().optional(),
     registrationStatus: z.enum(["Sem Emplacamento", "Emplacando", "Emplacado"]),
     registrationDate: z.date().optional(),
+    newChassis: z.string().optional(),
+    newModel: z.string().optional(),
+    newForecastDate: z.date().optional(),
   })
   .refine(
     (data) => {
@@ -34,6 +37,16 @@ export const customerSchema = z
       message:
         "Data do emplacamento é obrigatória quando o status não é Sem Emplacamento",
       path: ["registrationDate"],
+    },
+  )
+  .refine(
+    (data) => {
+      if (data.newChassis && !data.newModel) return false;
+      return true;
+    },
+    {
+      message: "Modelo é obrigatório quando um novo chassi é informado",
+      path: ["newModel"],
     },
   );
 

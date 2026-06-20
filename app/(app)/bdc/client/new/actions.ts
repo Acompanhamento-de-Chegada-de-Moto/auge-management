@@ -53,29 +53,35 @@ export async function CreateClientAction(
         where: { cpf },
       });
 
-      if (existingClient) {
-        throw new Error("Já existe um cliente cadastrado com este CPF.");
-      }
+      let clientId: string;
 
-      const client = await tx.client.create({
-        data: {
-          cpf,
-          name: customerName,
-          sellersName: sellerName,
-          city,
-          billingDate: billingDate ?? null,
-        },
-      });
+      if (existingClient) {
+        clientId = existingClient.id;
+      } else {
+        const client = await tx.client.create({
+          data: {
+            cpf,
+            name: customerName,
+            sellersName: sellerName,
+            city,
+            billingDate: billingDate ?? null,
+          },
+        });
+        clientId = client.id;
+      }
 
       const existingMotorcycle = await tx.motorcycle.findUnique({
         where: { chassi: chassis },
       });
 
       if (existingMotorcycle) {
+        if (existingMotorcycle.clientId && existingMotorcycle.clientId !== clientId) {
+          throw new Error("Este chassi já está vinculado a outro cliente.");
+        }
         await tx.motorcycle.update({
           where: { id: existingMotorcycle.id },
           data: {
-            clientId: client.id,
+            clientId,
             registrationDate: registrationDate ?? null,
           },
         });
@@ -89,7 +95,7 @@ export async function CreateClientAction(
           forecastArrival: forecastDate ?? null,
           registrationStatus: mapRegistrationStatus(registrationStatus),
           registrationDate: registrationDate ?? null,
-          clientId: client.id,
+          clientId,
         },
       });
     });

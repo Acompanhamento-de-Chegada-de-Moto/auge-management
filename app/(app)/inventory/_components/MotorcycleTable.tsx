@@ -35,17 +35,10 @@ function getArrivalStatus(forecastDate: Date | null) {
     };
   }
 
-  if (arrival.isSame(hoje, "day")) {
-    return {
-      label: "Chegou",
-      color:
-        "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
-    };
-  }
-
   return {
-    label: "Atrasada",
-    color: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
+    label: "Chegou",
+    color:
+      "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
   };
 }
 
@@ -141,7 +134,7 @@ export default function MotorcycleTable({ motorcycles }: MotorcycleTableProps) {
                     : "—"}
                 </span>
                 <span
-                  className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${status.color}`}
+                  className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${status.color}`}
                 >
                   {status.label}
                 </span>
@@ -152,7 +145,7 @@ export default function MotorcycleTable({ motorcycles }: MotorcycleTableProps) {
       </div>
 
       {/* DESKTOP: tabela (md e acima) */}
-      <div className="hidden rounded-sm border md:block">
+      <div className="hidden rounded-sm border shadow-sm md:block">
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
@@ -208,11 +201,11 @@ export default function MotorcycleTable({ motorcycles }: MotorcycleTableProps) {
                       : "—"}
                   </TableCell>
                   <TableCell>
-                    <span
-                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${status.color}`}
-                    >
-                      {status.label}
-                    </span>
+                  <span
+                    className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${status.color}`}
+                  >
+                    {status.label}
+                  </span>
                   </TableCell>
                   <TableCell>
                     <div className="flex h-full items-center gap-1 justify-end">

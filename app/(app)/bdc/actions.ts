@@ -1,13 +1,20 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { requireAuth } from "@/app/data/user/require-auth";
-import { getClientById, updateClient } from "@/lib/data/client";
+import {
+  getClientById,
+  updateClient,
+} from "@/lib/data/client";
+import { prisma } from "@/lib/db";
 import {
   updateMotorcycle,
   getMotorcycleByChassis,
+  createMotorcycle,
 } from "@/lib/data/motorcycle";
 import type { ApiResponse } from "@/lib/types";
+import { stripCPF } from "@/lib/cpf";
 import {
   type CustomerFormData,
   customerSchema,
@@ -40,11 +47,27 @@ export async function EditClientAction(
       forecastDate,
       registrationStatus,
       registrationDate,
+      newChassis,
+      newModel,
+      newForecastDate,
     } = parsed.data;
 
     const client = await getClientById(clientId);
     if (!client) {
       return { status: "error", message: "Cliente não encontrado." };
+    }
+
+    const strippedCpf = stripCPF(cpf);
+    if (strippedCpf !== client.cpf) {
+      const cpfExists = await prisma.client.findFirst({
+        where: { cpf: strippedCpf, NOT: { id: clientId } },
+      });
+      if (cpfExists) {
+        return {
+          status: "error",
+          message: "Este CPF já está cadastrado para outro cliente.",
+        };
+      }
     }
 
     await updateClient(clientId, {
@@ -81,13 +104,25 @@ export async function EditClientAction(
       });
     }
 
+    if (newChassis) {
+      const existingMotorcycle = await getMotorcycleByChassis(newChassis);
+      if (existingMotorcycle) {
+        await prisma.motorcycle.update({
+          where: { id: existingMotorcycle.id },
+          data: { clientId },
+        });
+      } else {
+        await createMotorcycle({
+          chassi: newChassis,
+          model: newModel ?? "",
+          forecastArrival: newForecastDate ?? null,
+          clientId,
+        });
+      }
+    }
+
     revalidatePath("/bdc");
     revalidatePath("/tracking", "layout");
-
-    return {
-      status: "success",
-      message: "Cliente atualizado com sucesso.",
-    };
   } catch (error) {
     console.error("Erro ao editar cliente:", error);
     return {
@@ -95,4 +130,6 @@ export async function EditClientAction(
       message: "Erro interno ao atualizar os dados do cliente.",
     };
   }
+
+  redirect("/bdc");
 }

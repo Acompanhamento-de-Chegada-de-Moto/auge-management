@@ -81,17 +81,10 @@ export function getArrivalStatus(forecastDate: Date | null | undefined) {
     };
   }
 
-  if (arrival.isSame(hoje, "day")) {
-    return {
-      label: "Chegou",
-      color:
-        "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
-    };
-  }
-
   return {
-    label: "Atrasada",
-    color: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
+    label: "Chegou",
+    color:
+      "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
   };
 }
 

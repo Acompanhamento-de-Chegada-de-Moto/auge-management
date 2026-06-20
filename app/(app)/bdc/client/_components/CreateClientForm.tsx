@@ -16,6 +16,7 @@ import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { SidebarSummary } from "@/app/(app)/bdc/_components/SidebarSummary";
+import { SectionHeader } from "@/components/bdc/section-header";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -50,32 +51,6 @@ interface ICreateCustomerFormProps {
     data: ClientSchemaType,
   ) => Promise<{ status: string; message: string }>;
   searchChassisAction: (chassis: string) => Promise<any>;
-}
-
-// Pequeno cabeçalho de seção: número não decora, ajuda o vendedor a saber
-// em qual etapa lógica do cadastro ele está (moto -> cliente -> emplacamento)
-function SectionHeader({
-  icon: Icon,
-  title,
-  description,
-}: {
-  icon: React.ElementType;
-  title: string;
-  description?: string;
-}) {
-  return (
-    <div className="flex items-center gap-2.5 mb-4">
-      <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-        <Icon className="size-4" />
-      </div>
-      <div>
-        <h3 className="text-sm font-semibold leading-none">{title}</h3>
-        {description && (
-          <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
-        )}
-      </div>
-    </div>
-  );
 }
 
 export function CreateClientForm({
@@ -175,7 +150,7 @@ export function CreateClientForm({
             className="space-y-6"
           >
             {/* SEÇÃO 1 — Motocicleta */}
-            <section className="rounded-xl border bg-card p-5">
+            <section className="rounded-xl border bg-card p-6 shadow-sm">
               <SectionHeader
                 icon={Bike}
                 title="Motocicleta"
@@ -289,7 +264,7 @@ export function CreateClientForm({
             </section>
 
             {/* SEÇÃO 2 — Cliente */}
-            <section className="rounded-xl border bg-card p-5">
+            <section className="rounded-xl border bg-card p-6 shadow-sm">
               <SectionHeader icon={User} title="Dados do Cliente" />
 
               <div className="grid gap-4 sm:grid-cols-2">
@@ -370,7 +345,7 @@ export function CreateClientForm({
             </section>
 
             {/* SEÇÃO 3 — Emplacamento */}
-            <section className="rounded-xl border bg-card p-5">
+            <section className="rounded-xl border bg-card p-6 shadow-sm">
               <SectionHeader
                 icon={ShieldCheck}
                 title="Faturamento e Emplacamento"
