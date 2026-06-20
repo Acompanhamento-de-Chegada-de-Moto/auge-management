@@ -30,6 +30,7 @@ export async function DeleteMotorcycleAction(
     });
 
     revalidatePath("/estoque");
+    revalidatePath("/acompanhamento", "layout");
 
     return {
       status: "success",

@@ -18,6 +18,7 @@ export async function DeleteClientAction(
     });
 
     revalidatePath("/bdc");
+    revalidatePath("/acompanhamento", "layout");
 
     return {
       status: "success",

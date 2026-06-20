@@ -69,6 +69,7 @@ export async function EditMotorcycleAction(
     });
 
     revalidatePath("/estoque");
+    revalidatePath("/acompanhamento", "layout");
 
     return {
       status: "success",
