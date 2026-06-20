@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
+import { getMotorcycleByIdWithClient } from "@/lib/data/motorcycle";
 import { EditMotorcycleForm } from "./_components/EditMotorcycleForm";
 
 export const metadata: Metadata = {
@@ -17,6 +18,12 @@ export default async function EditarMotocicletaPage({
   const { motorcycleId } = await params;
 
   if (!motorcycleId) {
+    notFound();
+  }
+
+  const motorcycle = await getMotorcycleByIdWithClient(motorcycleId);
+
+  if (!motorcycle) {
     notFound();
   }
 
@@ -35,7 +42,7 @@ export default async function EditarMotocicletaPage({
         </Link>
       </div>
 
-      <EditMotorcycleForm motorcycleId={motorcycleId} />
+      <EditMotorcycleForm motorcycle={motorcycle} />
     </div>
   );
 }

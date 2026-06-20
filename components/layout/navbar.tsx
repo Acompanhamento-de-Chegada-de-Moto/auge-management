@@ -66,10 +66,7 @@ const Navbar = () => {
         {/* ─── Top Row ─── */}
         <div className="flex items-center h-14 justify-between gap-4">
           {/* Logo */}
-          <Link
-            href="/tracking"
-            className="flex items-center gap-3 shrink-0"
-          >
+          <Link href="/tracking" className="flex items-center gap-3 shrink-0">
             <div className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
               <Bike className="size-5" />
             </div>

@@ -16,7 +16,11 @@ function LoadingBar() {
     const handler = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       const link = target.closest("a");
-      if (link?.href && !link.target && link.href.startsWith(window.location.origin)) {
+      if (
+        link?.href &&
+        !link.target &&
+        link.href.startsWith(window.location.origin)
+      ) {
         setLoading(true);
       }
     };

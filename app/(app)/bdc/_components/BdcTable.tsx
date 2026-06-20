@@ -4,10 +4,8 @@ import { format } from "date-fns";
 import { PencilIcon, Trash2Icon } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useMemo, useTransition } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMemo, useTransition } from "react";
 import type { UserGetClientsType } from "@/app/data/user/user-get-clients";
-import { getClientByIdAction } from "@/app/(app)/bdc/actions";
 import { CopyText } from "@/components/general/CopyText";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -54,18 +52,6 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
   const searchParams = useSearchParams();
 
   const [isPending, startTransition] = useTransition();
-  const queryClient = useQueryClient();
-
-  const prefetchClient = useCallback(
-    (id: string) => {
-      queryClient.prefetchQuery({
-        queryKey: ["client", id],
-        queryFn: () => getClientByIdAction(id),
-        staleTime: 1000 * 60 * 10,
-      });
-    },
-    [queryClient],
-  );
 
   const sellers = useMemo(
     () => [...new Set(data.map((item) => item.sellersName).filter(Boolean))],
@@ -119,11 +105,7 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
         {data.map((item) => {
           const motorcycle = item.motorcycles[0];
           return (
-            <div
-              key={item.id}
-              className="rounded-lg border p-4"
-              onMouseEnter={() => prefetchClient(item.id)}
-            >
+            <div key={item.id} className="rounded-lg border p-4">
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <p className="font-medium">{item.name}</p>
@@ -176,21 +158,22 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Badge
-                          className={getArrivalStatus(
-                            motorcycle?.forecastArrival ?? null,
-                          ).color}
+                          className={
+                            getArrivalStatus(
+                              motorcycle?.forecastArrival ?? null,
+                            ).color
+                          }
                         >
-                          {getArrivalStatus(
-                            motorcycle?.forecastArrival ?? null,
-                          ).label}
+                          {
+                            getArrivalStatus(
+                              motorcycle?.forecastArrival ?? null,
+                            ).label
+                          }
                         </Badge>
                       </TooltipTrigger>
                       <TooltipContent>
                         {motorcycle?.forecastArrival
-                          ? format(
-                              motorcycle.forecastArrival,
-                              "dd/MM/yyyy",
-                            )
+                          ? format(motorcycle.forecastArrival, "dd/MM/yyyy")
                           : "Sem previsão"}
                       </TooltipContent>
                     </Tooltip>
@@ -219,10 +202,7 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
                     </TooltipTrigger>
                     <TooltipContent>
                       {motorcycle.registrationDate
-                        ? format(
-                            motorcycle.registrationDate,
-                            "dd/MM/yyyy",
-                          )
+                        ? format(motorcycle.registrationDate, "dd/MM/yyyy")
                         : "Sem data de emplacamento"}
                     </TooltipContent>
                   </Tooltip>
@@ -338,10 +318,7 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
                     const motorcycle = item.motorcycles[0];
 
                     return (
-                      <TableRow
-                        key={item.id}
-                        onMouseEnter={() => prefetchClient(item.id)}
-                      >
+                      <TableRow key={item.id}>
                         <TableCell>{item.name}</TableCell>
 
                         <TableCell>
@@ -378,13 +355,17 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Badge
-                                className={getArrivalStatus(
-                                  motorcycle?.forecastArrival ?? null,
-                                ).color}
+                                className={
+                                  getArrivalStatus(
+                                    motorcycle?.forecastArrival ?? null,
+                                  ).color
+                                }
                               >
-                                {getArrivalStatus(
-                                  motorcycle?.forecastArrival ?? null,
-                                ).label}
+                                {
+                                  getArrivalStatus(
+                                    motorcycle?.forecastArrival ?? null,
+                                  ).label
+                                }
                               </Badge>
                             </TooltipTrigger>
                             <TooltipContent>

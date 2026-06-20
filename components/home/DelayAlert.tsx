@@ -32,9 +32,7 @@ export function DelayAlert({
   const phone = contactPhone || "(telefone não configurado)";
 
   const mensagem =
-    delayMessage
-      ?.replace("{data}", dataFormatada)
-      .replace("{phone}", phone) ??
+    delayMessage?.replace("{data}", dataFormatada).replace("{phone}", phone) ??
     `Sua moto atrasou! O prazo era ${dataFormatada}. Entre em contato: ${phone}`;
 
   const rawPhone = contactPhone ? stripPhone(contactPhone) : null;

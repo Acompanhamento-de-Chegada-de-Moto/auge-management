@@ -72,7 +72,9 @@ export function EstoquePageSkeletonLayout() {
             <TableRow className="hover:bg-transparent">
               <TableHead>Modelo</TableHead>
               <TableHead>Chassi</TableHead>
-              <TableHead className="hidden md:table-cell">Previsão de Chegada</TableHead>
+              <TableHead className="hidden md:table-cell">
+                Previsão de Chegada
+              </TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="w-0 pr-4 text-end">Ações</TableHead>
             </TableRow>

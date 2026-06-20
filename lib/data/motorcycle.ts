@@ -51,7 +51,10 @@ export async function getMotorcyclesPaginated(params: {
 
     switch (params.status) {
       case "Em Trânsito":
-        where.OR = [{ forecastArrival: null }, { forecastArrival: { gte: amanha } }];
+        where.OR = [
+          { forecastArrival: null },
+          { forecastArrival: { gte: amanha } },
+        ];
         break;
       case "Chegou":
         where.forecastArrival = { gte: hoje, lt: amanha };
@@ -246,10 +249,7 @@ export async function deleteMotorcycle(id: string) {
   });
 }
 
-export async function linkMotorcycleToClient(
-  chassi: string,
-  clientId: string,
-) {
+export async function linkMotorcycleToClient(chassi: string, clientId: string) {
   return prisma.motorcycle.update({
     where: { chassi },
     data: { clientId },

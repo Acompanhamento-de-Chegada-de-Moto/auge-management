@@ -18,9 +18,7 @@ import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-type ClientWithMotorcycles = Awaited<
-  ReturnType<typeof searchClients>
->[number];
+type ClientWithMotorcycles = Awaited<ReturnType<typeof searchClients>>[number];
 
 interface ClientCardProps {
   client: ClientWithMotorcycles;
@@ -67,7 +65,9 @@ export function ClientCard({ client }: ClientCardProps) {
                 </span>
                 <span className="text-sm font-medium">
                   {motorcycle.forecastArrival
-                    ? new Date(motorcycle.forecastArrival).toLocaleDateString("pt-BR")
+                    ? new Date(motorcycle.forecastArrival).toLocaleDateString(
+                        "pt-BR",
+                      )
                     : "—"}
                 </span>
               </div>
@@ -86,7 +86,12 @@ export function ClientCard({ client }: ClientCardProps) {
                 <Badge className={statusColor}>{statusLabel}</Badge>
               </div>
               <div className="flex items-center gap-2 pt-1 border-t border-border/40 mt-1">
-                <Button variant="ghost" size="sm" asChild className="gap-1.5 text-xs h-7 px-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  asChild
+                  className="gap-1.5 text-xs h-7 px-2"
+                >
                   <Link href={`/tracking/motorcycle/${motorcycle.id}`}>
                     <ExternalLink className="size-3.5" />
                     Abrir
@@ -98,7 +103,6 @@ export function ClientCard({ client }: ClientCardProps) {
           );
         })}
       </CardContent>
-
     </Card>
   );
 }

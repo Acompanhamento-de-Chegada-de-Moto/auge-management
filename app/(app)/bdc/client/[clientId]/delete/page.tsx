@@ -63,7 +63,12 @@ export default function DeleteClientPage() {
             Cancelar
           </Link>
 
-          <Button variant="destructive" disabled={pending} onClick={onSubmit} className="w-full sm:w-auto">
+          <Button
+            variant="destructive"
+            disabled={pending}
+            onClick={onSubmit}
+            className="w-full sm:w-auto"
+          >
             {pending ? (
               <>
                 <Loader2 className="size-4 animate-spin" />

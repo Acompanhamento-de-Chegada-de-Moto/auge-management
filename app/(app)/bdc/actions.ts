@@ -13,11 +13,6 @@ import {
   customerSchema,
 } from "@/validators/customer-schema";
 
-export async function getClientByIdAction(id: string) {
-  await requireAuth();
-  return getClientById(id);
-}
-
 export async function EditClientAction(
   clientId: string,
   values: CustomerFormData,
@@ -34,7 +29,18 @@ export async function EditClientAction(
   }
 
   try {
-    const { customerName, cpf, sellerName, city, billingDate, chassis, model, forecastDate, registrationStatus, registrationDate } = parsed.data;
+    const {
+      customerName,
+      cpf,
+      sellerName,
+      city,
+      billingDate,
+      chassis,
+      model,
+      forecastDate,
+      registrationStatus,
+      registrationDate,
+    } = parsed.data;
 
     const client = await getClientById(clientId);
     if (!client) {
@@ -65,11 +71,12 @@ export async function EditClientAction(
         chassi: chassis,
         model,
         forecastArrival: forecastDate ?? null,
-        registrationStatus: registrationStatus === "Emplacado"
-          ? "PLATED"
-          : registrationStatus === "Emplacando"
-            ? "PLATING"
-            : "NO_PLATE",
+        registrationStatus:
+          registrationStatus === "Emplacado"
+            ? "PLATED"
+            : registrationStatus === "Emplacando"
+              ? "PLATING"
+              : "NO_PLATE",
         registrationDate: registrationDate ?? null,
       });
     }

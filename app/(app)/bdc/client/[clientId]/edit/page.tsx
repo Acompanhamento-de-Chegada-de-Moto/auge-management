@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
+import { getClientById } from "@/lib/data/client";
 import { EditClientForm } from "./_components/EditClientForm";
 
 export const metadata: Metadata = {
@@ -20,6 +21,12 @@ export default async function EditarClientePage({
     notFound();
   }
 
+  const client = await getClientById(clientId);
+
+  if (!client) {
+    notFound();
+  }
+
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
@@ -34,7 +41,7 @@ export default async function EditarClientePage({
           <ArrowLeft className="size-4 mr-2" /> Voltar
         </Link>
       </div>
-      <EditClientForm clientId={clientId} />
+      <EditClientForm client={client} />
     </div>
   );
 }

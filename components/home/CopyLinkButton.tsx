@@ -13,9 +13,7 @@ export function CopyLinkButton({ url }: CopyLinkButtonProps) {
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(
-        `${window.location.origin}${url}`,
-      );
+      await navigator.clipboard.writeText(`${window.location.origin}${url}`);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {

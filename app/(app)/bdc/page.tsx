@@ -118,7 +118,9 @@ function BDCPageSkeletonLayout() {
               <TableHead className="hidden md:table-cell">Cidade</TableHead>
               <TableHead>Modelo</TableHead>
               <TableHead>Chassi</TableHead>
-              <TableHead className="hidden md:table-cell">Data Faturamento</TableHead>
+              <TableHead className="hidden md:table-cell">
+                Data Faturamento
+              </TableHead>
               <TableHead>Previsão Chegada</TableHead>
               <TableHead>Situação</TableHead>
             </TableRow>

@@ -22,7 +22,10 @@ export const customerSchema = z
   })
   .refine(
     (data) => {
-      if (data.registrationStatus !== "Sem Emplacamento" && !data.registrationDate) {
+      if (
+        data.registrationStatus !== "Sem Emplacamento" &&
+        !data.registrationDate
+      ) {
         return false;
       }
       return true;

@@ -1,4 +1,3 @@
-// ContactSettingsForm.tsx
 "use client";
 
 import {
@@ -19,6 +18,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { maskPhone } from "@/lib/utils";
+import { saveSettingAction } from "@/app/(app)/settings/actions";
 
 interface ContactSettingsFormProps {
   initialPhone: string;
@@ -54,6 +54,24 @@ export function ContactSettingsForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSaving(true);
+    setError(null);
+    setSuccess(false);
+
+    try {
+      await Promise.all([
+        saveSettingAction("contact_phone", phone),
+        saveSettingAction("delay_message", message),
+        saveSettingAction("whatsapp_message", whatsappMessage),
+      ]);
+
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
+    } catch {
+      setError("Erro ao salvar configurações. Tente novamente.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const delayPreview = renderPreview(message, {

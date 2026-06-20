@@ -1,4 +1,3 @@
-// CreateUserForm.tsx
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,6 +10,7 @@ import {
   type CreateUserInput,
   createUserSchema,
 } from "@/validators/create-user-schema";
+import { createUserAction } from "@/app/(app)/settings/actions";
 
 export function CreateUserForm() {
   const [success, setSuccess] = useState(false);
@@ -29,14 +29,15 @@ export function CreateUserForm() {
   });
 
   const onSubmit = async (data: CreateUserInput) => {
-    // const result = await createUserAction(data);
-    // if (result.success) {
-    //   setSuccess(true);
-    //   reset();
-    //   setTimeout(() => setSuccess(false), 3000);
-    // } else {
-    //   setError("root", { message: result.error || "Erro desconhecido" });
-    // }
+    const result = await createUserAction(data);
+
+    if (result.status === "success") {
+      setSuccess(true);
+      reset();
+      setTimeout(() => setSuccess(false), 3000);
+    } else {
+      setError("root", { message: result.message });
+    }
   };
 
   return (

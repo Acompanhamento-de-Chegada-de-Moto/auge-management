@@ -78,7 +78,9 @@ export async function createClientsBatch(
   let index = 0;
   return prisma.client.createManyAndReturn({
     data: clients.map((c) => {
-      const cpf = c.cpf ? stripCPF(c.cpf) : `TEMP-${index.toString().padStart(11, "0")}`;
+      const cpf = c.cpf
+        ? stripCPF(c.cpf)
+        : `TEMP-${index.toString().padStart(11, "0")}`;
       index++;
       return {
         cpf,
@@ -219,13 +221,13 @@ export async function getClientsPaginated(params: {
         billingDate: true,
         motorcycles: {
           select: {
-          id: true,
-          chassi: true,
-          model: true,
-          forecastArrival: true,
-          registrationStatus: true,
-          registrationDate: true,
-        },
+            id: true,
+            chassi: true,
+            model: true,
+            forecastArrival: true,
+            registrationStatus: true,
+            registrationDate: true,
+          },
         },
       },
       orderBy: { createdAt: "desc" },

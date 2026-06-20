@@ -2,7 +2,11 @@ import { Bike } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getClientById } from "@/lib/data/client";
-import { getContactPhone, getDelayMessage, getWhatsAppMessage } from "@/lib/data/settings";
+import {
+  getContactPhone,
+  getDelayMessage,
+  getWhatsAppMessage,
+} from "@/lib/data/settings";
 import {
   getArrivalStatus,
   getStatusColor,
@@ -42,9 +46,7 @@ export default async function ClienteDetalhePage({
             <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10">
               <Bike className="size-5 text-primary" />
             </div>
-            <h1 className="text-xl font-bold">
-              Acompanhamento de Motocicleta
-            </h1>
+            <h1 className="text-xl font-bold">Acompanhamento de Motocicleta</h1>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <ReloadButton />
@@ -93,64 +95,66 @@ export default async function ClienteDetalhePage({
                   )}
 
                   <div className="rounded-lg border bg-muted/20 p-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                    <div>
-                      <span className="text-muted-foreground">Modelo</span>
-                      <p className="font-medium">{moto.model}</p>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Chassi</span>
-                      <p className="font-mono tracking-wide">
-                        {maskChassis(moto.chassi)}
-                      </p>
-                    </div>
-                    {client.billingDate && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                       <div>
-                        <span className="text-muted-foreground">
-                          Data de Faturamento
-                        </span>
-                        <p className="font-medium">
-                          {new Date(client.billingDate).toLocaleDateString("pt-BR")}
+                        <span className="text-muted-foreground">Modelo</span>
+                        <p className="font-medium">{moto.model}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Chassi</span>
+                        <p className="font-mono tracking-wide">
+                          {maskChassis(moto.chassi)}
                         </p>
                       </div>
-                    )}
-                    <div>
-                      <span className="text-muted-foreground">
-                        Previsão de Chegada
-                      </span>
-                      <p className="font-medium">
-                        {moto.forecastArrival
-                          ? new Date(moto.forecastArrival).toLocaleDateString(
+                      {client.billingDate && (
+                        <div>
+                          <span className="text-muted-foreground">
+                            Data de Faturamento
+                          </span>
+                          <p className="font-medium">
+                            {new Date(client.billingDate).toLocaleDateString(
                               "pt-BR",
-                            )
-                          : "—"}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">
-                        Status Chegada
-                      </span>
-                      <p>
-                        <span
-                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${arrivalStatus.color}`}
-                        >
-                          {arrivalStatus.label}
+                            )}
+                          </p>
+                        </div>
+                      )}
+                      <div>
+                        <span className="text-muted-foreground">
+                          Previsão de Chegada
                         </span>
-                      </p>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Situação</span>
-                      <p>
-                        <span
-                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusColor}`}
-                        >
-                          {statusLabel}
+                        <p className="font-medium">
+                          {moto.forecastArrival
+                            ? new Date(moto.forecastArrival).toLocaleDateString(
+                                "pt-BR",
+                              )
+                            : "—"}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">
+                          Status Chegada
                         </span>
-                      </p>
+                        <p>
+                          <span
+                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${arrivalStatus.color}`}
+                          >
+                            {arrivalStatus.label}
+                          </span>
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Situação</span>
+                        <p>
+                          <span
+                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusColor}`}
+                          >
+                            {statusLabel}
+                          </span>
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
               );
             })}
           </div>

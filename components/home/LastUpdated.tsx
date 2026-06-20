@@ -23,8 +23,6 @@ export function LastUpdated({ updatedAt }: LastUpdatedProps) {
   }, [updatedAt]);
 
   return (
-    <span className="text-xs text-muted-foreground">
-      Atualizado {label}
-    </span>
+    <span className="text-xs text-muted-foreground">Atualizado {label}</span>
   );
 }

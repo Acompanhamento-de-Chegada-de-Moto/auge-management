@@ -122,9 +122,7 @@ export function getForecastStatus(forecastDate: Date | null | undefined) {
   };
 }
 
-export function mapRegistrationStatusLabel(
-  status: string | null | undefined,
-) {
+export function mapRegistrationStatusLabel(status: string | null | undefined) {
   const map: Record<string, string> = {
     NO_PLATE: "Sem Emplacamento",
     PLATING: "Emplacando",

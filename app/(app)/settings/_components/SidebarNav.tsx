@@ -31,9 +31,7 @@ export function SidebarNav() {
     >
       {links.map(({ href, label, description, icon: Icon }) => {
         const active =
-          href === "/settings"
-            ? pathname === href
-            : pathname.startsWith(href);
+          href === "/settings" ? pathname === href : pathname.startsWith(href);
 
         return (
           <Link
