@@ -134,7 +134,7 @@ export default async function ClienteDetalhePage({
                         </span>
                         <p>
                           <span
-                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${arrivalStatus.color}`}
+                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium animate-blink-status ${arrivalStatus.color}`}
                           >
                             {arrivalStatus.label}
                           </span>

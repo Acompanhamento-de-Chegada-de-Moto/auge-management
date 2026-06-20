@@ -62,7 +62,7 @@ export default async function MotocicletaDetalhePage({
         <div className="rounded-2xl border bg-card p-6 shadow-sm">
           <div className="flex flex-col items-center gap-2 text-center">
             <span
-              className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-semibold ${arrivalStatus.color}`}
+              className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-semibold animate-blink-status ${arrivalStatus.color}`}
             >
               <span
                 className="size-2 rounded-full bg-current"
