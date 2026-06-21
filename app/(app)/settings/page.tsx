@@ -1,8 +1,7 @@
-import { Users } from "lucide-react";
-import type { Metadata } from "next";
 import { Suspense } from "react";
+
 import { requireAdmin } from "@/app/data/admin/require-admin";
-import { getUsers } from "@/lib/data/user";
+import { adminGetUsers } from "@/app/data/admin/admin-get-users";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -12,20 +11,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { CreateUserForm } from "./_components/CreateUserForm";
 import { UsersTable } from "./_components/UsersTable";
-
-export const metadata: Metadata = {
-  title: "Configurações",
-};
 
 function SettingsSkeleton() {
   return (
@@ -39,36 +26,29 @@ function SettingsSkeleton() {
         </CardHeader>
         <CardContent>
           <div className="rounded-lg border">
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead>Usuário</TableHead>
-                  <TableHead>Função</TableHead>
-                  <TableHead>Criado em</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <TableRow key={i} className="hover:bg-transparent">
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <Skeleton className="size-8 rounded-full" />
-                        <div>
-                          <Skeleton className="h-4 w-32" />
-                          <Skeleton className="h-3 w-44 mt-1" />
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton className="h-5 w-16 rounded-full" />
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton className="h-4 w-24" />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <div className="border-b">
+              <div className="grid grid-cols-3 px-4 py-3">
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-4 w-12" />
+                <Skeleton className="h-4 w-16 justify-self-end" />
+              </div>
+            </div>
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div
+                key={i}
+                className="grid grid-cols-3 items-center px-4 py-3"
+              >
+                <div className="flex items-center gap-3">
+                  <Skeleton className="size-8 rounded-full" />
+                  <div>
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-3 w-44 mt-1" />
+                  </div>
+                </div>
+                <Skeleton className="h-5 w-16 rounded-full" />
+                <Skeleton className="h-4 w-24 justify-self-end" />
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>
@@ -94,7 +74,7 @@ function SettingsSkeleton() {
 }
 
 async function RenderUsers() {
-  const users = await getUsers();
+  const users = await adminGetUsers();
 
   return (
     <>
@@ -132,26 +112,12 @@ async function RenderUsers() {
   );
 }
 
-export default async function ConfiguracoesPage() {
+export default async function SettingsPage() {
   await requireAdmin();
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-          <Users className="size-5" />
-        </div>
-        <div>
-          <h1 className="text-xl font-bold leading-tight">Usuários</h1>
-          <p className="text-sm text-muted-foreground">
-            Gerencie os acessos ao sistema
-          </p>
-        </div>
-      </div>
-
-      <Suspense fallback={<SettingsSkeleton />}>
-        <RenderUsers />
-      </Suspense>
-    </div>
+    <Suspense fallback={<SettingsSkeleton />}>
+      <RenderUsers />
+    </Suspense>
   );
 }

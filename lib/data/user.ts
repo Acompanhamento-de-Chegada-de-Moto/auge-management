@@ -8,6 +8,7 @@ export async function getUsers() {
       name: true,
       email: true,
       role: true,
+      image: true,
       createdAt: true,
       banned: true,
     },
@@ -23,6 +24,7 @@ export async function getUserById(id: string) {
       name: true,
       email: true,
       role: true,
+      image: true,
       createdAt: true,
       banned: true,
     },
@@ -46,4 +48,26 @@ export async function createUser(data: {
 
 export async function deleteUser(id: string) {
   return prisma.user.delete({ where: { id } });
+}
+
+export async function updateUser(
+  id: string,
+  data: { name?: string; image?: string },
+) {
+  return prisma.user.update({
+    where: { id },
+    data: {
+      ...(data.name !== undefined && { name: data.name }),
+      ...(data.image !== undefined && { image: data.image || null }),
+    },
+  });
+}
+
+export async function setUserPassword(id: string, newPassword: string) {
+  return auth.api.setUserPassword({
+    body: {
+      userId: id,
+      newPassword,
+    },
+  });
 }

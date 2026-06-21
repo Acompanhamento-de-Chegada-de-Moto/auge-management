@@ -27,7 +27,7 @@ export default async function EstoquePage({
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
-        <div>
+        <div className="block md:hidden">
           <h1 className="text-2xl font-bold">Estoque</h1>
           <p className="text-muted-foreground mt-1">
             Controle de motocicletas em estoque.

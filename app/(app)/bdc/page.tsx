@@ -37,7 +37,7 @@ export default async function BDCPage({ searchParams }: BDCPageProps) {
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-        <p className="text-muted-foreground">Acompanhamento de Clientes.</p>
+        <p className="text-muted-foreground block md:hidden">Acompanhamento de Clientes.</p>
 
         <div className="flex items-center gap-2 flex-wrap">
           <SpreadsheetUploadDialog />

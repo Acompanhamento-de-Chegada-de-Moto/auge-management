@@ -2,12 +2,16 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/app/data/admin/require-admin";
-import { getUsers, createUser, deleteUser } from "@/lib/data/user";
+import { getUsers, createUser, updateUser, setUserPassword, deleteUser } from "@/lib/data/user";
 import { upsertSetting } from "@/lib/data/settings";
 import {
   type CreateUserInput,
   createUserSchema,
 } from "@/validators/create-user-schema";
+import {
+  type UpdateUserInput,
+  updateUserSchema,
+} from "@/validators/update-user-schema";
 
 export async function getUsersAction() {
   await requireAdmin();
@@ -47,6 +51,47 @@ export async function createUserAction(data: CreateUserInput) {
         error instanceof Error
           ? error.message
           : "Erro interno ao criar usuário.",
+    };
+  }
+}
+
+export async function updateUserAction(data: UpdateUserInput) {
+  await requireAdmin();
+
+  const parsed = updateUserSchema.safeParse(data);
+  if (!parsed.success) {
+    return {
+      status: "error" as const,
+      message: "Dados do formulário inválidos.",
+      errors: parsed.error.flatten().fieldErrors,
+    };
+  }
+
+  try {
+    await updateUser(parsed.data.userId, {
+      name: parsed.data.name,
+      image: parsed.data.image,
+    });
+
+    if (parsed.data.newPassword) {
+      await setUserPassword(parsed.data.userId, parsed.data.newPassword);
+    }
+
+    revalidatePath("/settings");
+
+    return {
+      status: "success" as const,
+      message: "Usuário atualizado com sucesso.",
+    };
+  } catch (error) {
+    console.error("Erro ao atualizar usuário:", error);
+
+    return {
+      status: "error" as const,
+      message:
+        error instanceof Error
+          ? error.message
+          : "Erro interno ao atualizar usuário.",
     };
   }
 }
