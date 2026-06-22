@@ -35,15 +35,29 @@ export async function createUser(data: {
   name: string;
   email: string;
   password: string;
+  role?: "USER" | "MANAGER" | "ADMIN";
 }) {
-  return auth.api.createUser({
+  const result = await auth.api.createUser({
     body: {
       name: data.name,
       email: data.email,
       password: data.password,
-      role: "user",
+      role: (data.role ?? "USER") as "admin" | "user",
     },
   });
+
+  try {
+    await auth.api.setUserPassword({
+      body: {
+        userId: result.user.id,
+        newPassword: data.password,
+      },
+    });
+  } catch {
+    // Se o linkAccount falhou no createUser, o setUserPassword cria o credential account
+  }
+
+  return result;
 }
 
 export async function deleteUser(id: string) {

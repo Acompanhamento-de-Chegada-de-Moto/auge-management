@@ -168,7 +168,7 @@ function EditUserDialog({
           <Pencil className="size-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md" showCloseButton={false}>
         <DialogHeader>
           <DialogTitle>Editar usuário</DialogTitle>
           <DialogDescription>Altere nome, senha ou foto do perfil</DialogDescription>

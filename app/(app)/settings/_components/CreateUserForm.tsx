@@ -6,6 +6,14 @@ import { useId, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   type CreateUserInput,
   createUserSchema,
@@ -22,11 +30,16 @@ export function CreateUserForm() {
     register,
     handleSubmit,
     setError,
+    setValue,
+    watch,
     reset,
     formState: { errors, isSubmitting },
   } = useForm<CreateUserInput>({
     resolver: zodResolver(createUserSchema),
+    defaultValues: { role: "USER" },
   });
+
+  const selectedRole = watch("role");
 
   const onSubmit = async (data: CreateUserInput) => {
     const result = await createUserAction(data);
@@ -117,6 +130,24 @@ export function CreateUserForm() {
             {errors.password.message}
           </p>
         )}
+      </div>
+
+      <div className="space-y-1.5">
+        <Label>Função</Label>
+        <Select
+          value={selectedRole}
+          onValueChange={(v) => setValue("role", v as "USER" | "MANAGER" | "ADMIN")}
+          disabled={isSubmitting}
+        >
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="USER">Usuário</SelectItem>
+            <SelectItem value="MANAGER">Gerente</SelectItem>
+            <SelectItem value="ADMIN">Administrador</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <Button type="submit" disabled={isSubmitting} className="w-full">

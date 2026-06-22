@@ -4,11 +4,12 @@ import { Palette, Settings2, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { authClient } from "@/lib/auth-client";
 
-const tabs = [
-  { title: "Usuários", href: "/settings", icon: Users },
+const allTabs = [
+  { title: "Usuários", href: "/settings", icon: Users, adminOnly: true },
   { title: "Aparência", href: "/settings/cosmetics", icon: Palette },
-  { title: "Sistema", href: "/settings/system", icon: Settings2 },
+  { title: "Sistema", href: "/settings/system", icon: Settings2, adminOnly: true },
 ];
 
 export default function SettingsLayout({
@@ -17,6 +18,11 @@ export default function SettingsLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const { data: session } = authClient.useSession();
+
+  const visibleTabs = allTabs.filter(
+    (tab) => !tab.adminOnly || session?.user?.role === "ADMIN",
+  );
 
   const currentTab =
     pathname === "/settings"
@@ -41,7 +47,7 @@ export default function SettingsLayout({
 
       <Tabs value={currentTab}>
         <TabsList>
-          {tabs.map((tab) => (
+          {visibleTabs.map((tab) => (
             <TabsTrigger key={tab.href} value={tab.href} asChild>
               <Link href={tab.href}>
                 <tab.icon className="mr-2 size-4" />

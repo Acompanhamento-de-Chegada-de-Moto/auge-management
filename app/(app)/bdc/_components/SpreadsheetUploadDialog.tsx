@@ -93,7 +93,7 @@ export function SpreadsheetUploadDialog() {
           Importar Planilha
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md" showCloseButton={false}>
         <DialogHeader>
           <DialogTitle>Importar Planilha</DialogTitle>
           <DialogDescription>

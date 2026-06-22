@@ -21,6 +21,8 @@ model User {
   banExpires    DateTime?
   accounts      Account[]
   sessions      Session[]
+  tickets       Ticket[]
+  ticketMessages TicketMessage[]
 
   @@map("user")
 }
@@ -122,4 +124,33 @@ model Setting {
   updatedAt DateTime @updatedAt
 
   @@map("setting")
+}
+
+model Ticket {
+  id          String          @id @default(uuid()) @db.Uuid
+  subject     String
+  description String
+  priority    String          @default("NORMAL")
+  status      String          @default("OPEN")
+  createdById String
+  createdBy   User            @relation(fields: [createdById], references: [id])
+  messages    TicketMessage[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([createdById])
+  @@map("tickets")
+}
+
+model TicketMessage {
+  id        String   @id @default(uuid()) @db.Uuid
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  ticketId  String   @db.Uuid
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  message   String
+  createdAt DateTime @default(now())
+
+  @@index([ticketId])
+  @@map("ticket_messages")
 }

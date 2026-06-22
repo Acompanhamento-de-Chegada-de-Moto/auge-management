@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Lock } from "lucide-react";
 import { useTransition } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -36,8 +37,10 @@ export default function LoginForm() {
         callbackURL: `${process.env.NEXT_PUBLIC_BETTER_AUTH_URL}/bdc`,
       });
 
-      if (!result.error) {
-        // Login bem-sucedido
+      if (result.error) {
+        toast.error(
+          "Não foi possível fazer login. Verifique suas credenciais e tente novamente.",
+        );
       }
     });
   };

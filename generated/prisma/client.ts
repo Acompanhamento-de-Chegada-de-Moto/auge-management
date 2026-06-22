@@ -76,3 +76,13 @@ export type Motorcycle = Prisma.MotorcycleModel
  * 
  */
 export type Setting = Prisma.SettingModel
+/**
+ * Model Ticket
+ * 
+ */
+export type Ticket = Prisma.TicketModel
+/**
+ * Model TicketMessage
+ * 
+ */
+export type TicketMessage = Prisma.TicketMessageModel
