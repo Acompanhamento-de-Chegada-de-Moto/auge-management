@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ClientCard } from "@/components/home/ClientCard";
 import { SearchForm } from "@/components/home/SearchForm";
 import { searchClients } from "@/lib/data/client";
+import { getSetting } from "@/lib/data/settings";
 
 export const metadata: Metadata = {
   title: "Acompanhamento",
@@ -18,11 +19,13 @@ export default async function AcompanhamentoPage({
   const query = params.q;
   const clients = query ? await searchClients(query) : [];
 
+  const logoUrl = await getSetting("logo_url");
+
   return (
     <div className="flex min-h-full flex-col items-center bg-background px-4 py-12 sm:px-6 lg:px-8">
       <div className="flex w-full max-w-2xl flex-col items-center gap-8">
         <div className="flex flex-col items-center gap-2 text-center">
-          <Image src="/logo-auge.png" alt="Auge" width={80} height={80} className="size-20 object-contain" />
+          <Image src={logoUrl || "/logo-auge.png"} alt="Auge" width={80} height={80} className="size-20 object-contain" />
           <h1 className="text-2xl font-bold tracking-tight">
             Acompanhamento de Motocicletas
           </h1>

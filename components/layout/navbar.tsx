@@ -2,6 +2,7 @@
 
 import {
   LayoutDashboard,
+  LifeBuoy,
   LogOut,
   Package,
   Search,
@@ -25,12 +26,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
+import { getLogoUrlAction } from "@/app/(app)/settings/actions";
 
 interface NavItem {
   title: string;
   href: string;
   icon: LucideIcon;
   adminOnly?: boolean;
+  managerOnly?: boolean;
 }
 
 const navigationData: NavItem[] = [
@@ -45,9 +48,14 @@ const navigationData: NavItem[] = [
   },
   {
     title: "Configurações",
-    href: "/settings",
+    href: "/settings/cosmetics",
     icon: Settings,
-    adminOnly: true,
+  },
+  {
+    title: "Suporte",
+    href: "/support",
+    icon: LifeBuoy,
+    managerOnly: true,
   },
 ];
 
@@ -56,6 +64,12 @@ const Navbar = () => {
   const router = useRouter();
   const { data: session } = authClient.useSession();
   const [sticky, setSticky] = useState(false);
+
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    getLogoUrlAction().then(setLogoUrl);
+  }, []);
 
   const handleScroll = useCallback(() => {
     setSticky(window.scrollY >= 10);
@@ -83,9 +97,11 @@ const Navbar = () => {
         .slice(0, 2)
     : null;
 
-  const visibleNav = navigationData.filter(
-    (item) => !item.adminOnly || session?.user?.role === "ADMIN",
-  );
+  const visibleNav = navigationData.filter((item) => {
+    if (item.adminOnly) return session?.user?.role === "ADMIN";
+    if (item.managerOnly) return session?.user?.role === "ADMIN" || session?.user?.role === "MANAGER";
+    return true;
+  });
 
   return (
     <header
@@ -99,11 +115,12 @@ const Navbar = () => {
           {/* Logo */}
           <Link href="/tracking" className="flex items-center gap-3 shrink-0">
             <Image
-              src="/logo-auge.png"
+              src={logoUrl || "/logo-auge.png"}
               alt="Auge"
               width={36}
               height={36}
               className="rounded-lg object-contain"
+              key={logoUrl}
             />
             <div className="hidden sm:block">
               <h1 className="text-base font-bold text-foreground leading-tight">

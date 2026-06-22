@@ -14,6 +14,7 @@ import { formatCPF } from "@/lib/cpf";
 import {
   getContactPhone,
   getDelayMessage,
+  getSetting,
   getWhatsAppMessage,
 } from "@/lib/data/settings";
 import { maskChassis } from "@/lib/utils";
@@ -36,6 +37,7 @@ export default async function MotocicletaDetalhePage({
   }
 
   const client = motorcycle.client;
+  const logoUrl = await getSetting("logo_url");
   const contactPhone = await getContactPhone();
   const delayMessage = await getDelayMessage();
   const whatsappMessage = await getWhatsAppMessage();
@@ -50,7 +52,7 @@ export default async function MotocicletaDetalhePage({
         {/* Cabeçalho */}
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
-            <Image src="/logo-auge.png" alt="" width={40} height={40} className="object-contain" aria-hidden="true" />
+            <Image src={logoUrl || "/logo-auge.png"} alt="" width={40} height={40} className="object-contain" aria-hidden="true" />
             <h1 className="truncate text-lg font-bold sm:text-xl">
               Acompanhamento de Motocicleta
             </h1>

@@ -8,6 +8,29 @@ cloudinaryV2.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+export async function uploadLogo(
+  fileBuffer: Buffer,
+  fileName: string,
+): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinaryV2.uploader.upload_stream(
+      {
+        folder: "auge/logos",
+        public_id: `logo-${Date.now()}`,
+        overwrite: true,
+        resource_type: "image",
+        transformation: [{ width: 200, crop: "scale" }],
+      },
+      (error, result) => {
+        if (error) reject(error);
+        else resolve(result!.secure_url);
+      },
+    );
+
+    uploadStream.end(fileBuffer);
+  });
+}
+
 export async function uploadAvatar(
   fileBuffer: Buffer,
   fileName: string,

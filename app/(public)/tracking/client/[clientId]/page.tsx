@@ -5,6 +5,7 @@ import { getClientById } from "@/lib/data/client";
 import {
   getContactPhone,
   getDelayMessage,
+  getSetting,
   getWhatsAppMessage,
 } from "@/lib/data/settings";
 import {
@@ -34,6 +35,7 @@ export default async function ClienteDetalhePage({
     notFound();
   }
 
+  const logoUrl = await getSetting("logo_url");
   const contactPhone = await getContactPhone();
   const delayMessage = await getDelayMessage();
   const whatsappMessage = await getWhatsAppMessage();
@@ -43,7 +45,7 @@ export default async function ClienteDetalhePage({
       <div className="flex w-full max-w-2xl flex-col gap-6">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
-            <Image src="/logo-auge.png" alt="" width={40} height={40} className="object-contain" />
+            <Image src={logoUrl || "/logo-auge.png"} alt="" width={40} height={40} className="object-contain" />
             <h1 className="text-xl font-bold">Acompanhamento de Motocicleta</h1>
           </div>
           <div className="flex items-center gap-2 shrink-0">
