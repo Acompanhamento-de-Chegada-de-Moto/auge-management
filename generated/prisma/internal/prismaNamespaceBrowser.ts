@@ -57,7 +57,9 @@ export const ModelName = {
   Verification: 'Verification',
   Client: 'Client',
   Motorcycle: 'Motorcycle',
-  Setting: 'Setting'
+  Setting: 'Setting',
+  Ticket: 'Ticket',
+  TicketMessage: 'TicketMessage'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -142,13 +144,11 @@ export type VerificationScalarFieldEnum = (typeof VerificationScalarFieldEnum)[k
 export const ClientScalarFieldEnum = {
   id: 'id',
   name: 'name',
-  sellerName: 'sellerName',
-  city: 'city',
-  billingDate: 'billingDate',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt',
   cpf: 'cpf',
-  deliveryForecast: 'deliveryForecast'
+  city: 'city',
+  sellersName: 'sellersName',
+  billingDate: 'billingDate',
+  createdAt: 'createdAt'
 } as const
 
 export type ClientScalarFieldEnum = (typeof ClientScalarFieldEnum)[keyof typeof ClientScalarFieldEnum]
@@ -156,14 +156,14 @@ export type ClientScalarFieldEnum = (typeof ClientScalarFieldEnum)[keyof typeof 
 
 export const MotorcycleScalarFieldEnum = {
   id: 'id',
-  chassis: 'chassis',
+  chassi: 'chassi',
   model: 'model',
-  forecastDate: 'forecastDate',
+  forecastArrival: 'forecastArrival',
+  forecastArrivalStatus: 'forecastArrivalStatus',
   registrationStatus: 'registrationStatus',
-  registrationStatusDate: 'registrationStatusDate',
+  registrationDate: 'registrationDate',
   clientId: 'clientId',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  createdAt: 'createdAt'
 } as const
 
 export type MotorcycleScalarFieldEnum = (typeof MotorcycleScalarFieldEnum)[keyof typeof MotorcycleScalarFieldEnum]
@@ -177,6 +177,31 @@ export const SettingScalarFieldEnum = {
 } as const
 
 export type SettingScalarFieldEnum = (typeof SettingScalarFieldEnum)[keyof typeof SettingScalarFieldEnum]
+
+
+export const TicketScalarFieldEnum = {
+  id: 'id',
+  subject: 'subject',
+  description: 'description',
+  priority: 'priority',
+  status: 'status',
+  createdById: 'createdById',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type TicketScalarFieldEnum = (typeof TicketScalarFieldEnum)[keyof typeof TicketScalarFieldEnum]
+
+
+export const TicketMessageScalarFieldEnum = {
+  id: 'id',
+  ticketId: 'ticketId',
+  userId: 'userId',
+  message: 'message',
+  createdAt: 'createdAt'
+} as const
+
+export type TicketMessageScalarFieldEnum = (typeof TicketMessageScalarFieldEnum)[keyof typeof TicketMessageScalarFieldEnum]
 
 
 export const SortOrder = {

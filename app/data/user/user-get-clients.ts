@@ -1,34 +1,74 @@
 import "server-only";
 
-import { notFound } from "next/navigation";
-import { requireAuth } from "../require-auth";
-import {
-  getClientsPaginated as dalGetClientsPaginated,
-  getBDCFilterOptions as dalGetFilterOptions,
-} from "@/lib/data/client";
+import { prisma } from "@/lib/db";
+import { requireAuth } from "./require-auth";
 
-export async function userGetClientsPaginated(params: {
-  page: number;
-  pageSize: number;
+interface UserGetClientsFilters {
   sellerName?: string;
   city?: string;
   model?: string;
-  search?: string;
-}) {
-  await requireAuth();
-
-  return dalGetClientsPaginated(params);
 }
 
-export async function userGetFilterOptions() {
+export async function userGetClients(filters?: UserGetClientsFilters) {
   await requireAuth();
 
-  return dalGetFilterOptions();
+  const data = await prisma.client.findMany({
+    where: {
+      ...(filters?.sellerName && {
+        sellersName: {
+          contains: filters.sellerName,
+          mode: "insensitive",
+        },
+      }),
+
+      ...(filters?.city && {
+        city: {
+          contains: filters.city,
+          mode: "insensitive",
+        },
+      }),
+
+      ...(filters?.model && {
+        motorcycles: {
+          some: {
+            model: {
+              contains: filters.model,
+              mode: "insensitive",
+            },
+          },
+        },
+      }),
+    },
+
+    select: {
+      id: true,
+      cpf: true,
+      name: true,
+      sellersName: true,
+      city: true,
+      billingDate: true,
+
+      motorcycles: {
+        select: {
+          id: true,
+          chassi: true,
+          model: true,
+          forecastArrival: true,
+          registrationStatus: true,
+          registrationDate: true,
+          forecastArrivalStatus: true,
+        },
+      },
+    },
+
+    orderBy: {
+      createdAt: "desc",
+    },
+
+    take: 500,
+  });
+
+  return data;
 }
 
-export type UserGetClientsPaginatedType = Awaited<
-  ReturnType<typeof userGetClientsPaginated>
->;
-export type UserGetFilterOptionsType = Awaited<
-  ReturnType<typeof userGetFilterOptions>
->;
+export type UserGetClientsType = Awaited<ReturnType<typeof userGetClients>>[0];

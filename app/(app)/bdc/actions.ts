@@ -1,332 +1,143 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import * as XLSX from "xlsx";
-import { requireAuth } from "@/app/data/require-auth";
-import { parseExcelDate } from "@/lib/bdc-data";
-
+import { redirect } from "next/navigation";
+import { requireAuth } from "@/app/data/user/require-auth";
 import {
-  createClientsBatch,
-  deleteClient as dalDeleteClient,
-  getAllClientsForImport,
+  getClientById,
+  updateClient,
 } from "@/lib/data/client";
+import { prisma } from "@/lib/db";
 import {
-  createMotorcyclesBatch,
-  linkMotorcyclesBatch,
-  updateMotorcyclesBatch,
+  updateMotorcycle,
+  getMotorcycleByChassis,
+  createMotorcycle,
 } from "@/lib/data/motorcycle";
-import { getMotorcycleByChassis } from "@/lib/data/motorcycle";
+import type { ApiResponse } from "@/lib/types";
+import { stripCPF } from "@/lib/cpf";
+import {
+  type CustomerFormData,
+  customerSchema,
+} from "@/validators/customer-schema";
 
-function findSheet(
-  workbook: XLSX.WorkBook,
-  names: string[],
-): XLSX.WorkSheet | undefined {
-  for (const name of names) {
-    const sheet = workbook.Sheets[name];
-    if (sheet) return sheet;
-  }
-  return undefined;
-}
-
-function detectColumn(
-  row: Record<string, unknown>,
-  candidates: string[],
-): unknown {
-  for (const key of Object.keys(row)) {
-    const upper = key.trim().toUpperCase();
-    for (const candidate of candidates) {
-      if (upper === candidate) return row[key];
-    }
-  }
-  return undefined;
-}
-
-const CHASSIS_KEYS = ["CHASSI", "CHASSIS", "Nº CHASSI", "CHASSI MOTO"];
-const CLIENT_NAME_KEYS = ["CLIENTE", "NOME", "NOME CLIENTE"];
-const SELLER_KEYS = ["VENDEDOR", "VENDEDOR RESPONSÁVEL"];
-const CITY_KEYS = ["CIDADE", "MUNICÍPIO", "CIDADE CLIENTE"];
-const MODEL_KEYS = ["MODELO", "MODELO MOTO", "MODELO MOTOCICLETA"];
-const BILLING_DATE_KEYS = [
-  "DATA DO FATURAMENTO",
-  "DATA DE FATURAMENTO",
-  "DATA FATURAMENTO",
-  "DT FATURAMENTO",
-];
-const HAS_ARRIVED_KEYS = [
-  "MOTO CHEGOU NA MATRIZ (SIM / NÃO)",
-  "MOTO CHEGOU",
-  "CHEGOU",
-  "CHEGOU NA MATRIZ",
-];
-const ARRIVAL_DATE_KEYS = [
-  "DATA CHEGADA",
-  "DATA DE CHEGADA",
-  "DATA DA CHEGADA",
-  "DT CHEGADA",
-  "CHEGADA",
-  "DATA DE CHEGADA NA MATRIZ",
-];
-
-export async function searchChassisAction(chassis: string) {
-  await requireAuth();
-  return getMotorcycleByChassis(chassis);
-}
-
-export async function deleteClientAction(id: string) {
+export async function EditClientAction(
+  clientId: string,
+  values: CustomerFormData,
+): Promise<ApiResponse> {
   await requireAuth();
 
-  try {
-    await dalDeleteClient(id);
-
-    revalidatePath("/bdc");
-    revalidatePath("/estoque");
-    return { success: true };
-  } catch {
-    return { success: false, error: "Erro ao remover cliente." };
-  }
-}
-
-function readMainSheet(workbook: XLSX.WorkBook): Record<string, unknown>[] {
-  const sheetNames = ["Página1", "Plan1", "Planilha1"];
-  const sheet =
-    findSheet(workbook, sheetNames) ?? workbook.Sheets[workbook.SheetNames[0]];
-  return XLSX.utils.sheet_to_json(sheet, { range: 1 });
-}
-
-function readArrivalSheet(
-  workbook: XLSX.WorkBook,
-): Map<string, { forecastDate: Date | null }> {
-  const sheetNames = ["Página2", "Plan2", "Planilha2"];
-  const sheet = findSheet(workbook, sheetNames);
-  if (!sheet) return new Map();
-
-  const rows = XLSX.utils.sheet_to_json(sheet, { range: 1 }) as Record<
-    string,
-    unknown
-  >[];
-  const map = new Map<string, { forecastDate: Date | null }>();
-
-  for (const row of rows) {
-    const chassisRaw = detectColumn(row, CHASSIS_KEYS);
-    if (!chassisRaw) continue;
-
-    const chassis = String(chassisRaw).trim().toUpperCase();
-    if (!chassis) continue;
-
-    const forecastDateRaw = detectColumn(row, ARRIVAL_DATE_KEYS);
-    const forecastDate = parseExcelDate(forecastDateRaw);
-
-    map.set(chassis, { forecastDate: forecastDate ?? null });
-  }
-
-  return map;
-}
-
-export async function importSpreadsheetAction(formData: FormData) {
-  await requireAuth();
-
-  const file = formData.get("file") as File | null;
-  if (!file) {
-    return { success: false, error: "Nenhum arquivo enviado." };
-  }
-
-  const allowedExtensions = [".xlsx", ".xls", ".ods", ".csv"];
-  const fileName = file.name.toLowerCase();
-  const isValid = allowedExtensions.some((ext) => fileName.endsWith(ext));
-
-  if (!isValid) {
-    return { success: false, error: "Formato de arquivo não suportado." };
+  const parsed = customerSchema.safeParse(values);
+  if (!parsed.success) {
+    const firstIssue = parsed.error.issues[0];
+    return {
+      status: "error",
+      message: firstIssue?.message ?? "Dados do formulário inválidos.",
+    };
   }
 
   try {
-    const arrayBuffer = await file.arrayBuffer();
-    const workbook = XLSX.read(arrayBuffer, { cellDates: true });
-    const json = readMainSheet(workbook);
-    const arrivalMap = readArrivalSheet(workbook);
+    const {
+      customerName,
+      cpf,
+      sellerName,
+      city,
+      billingDate,
+      chassis,
+      model,
+      forecastDate,
+      registrationStatus,
+      registrationDate,
+      arrivalStatus,
+      newChassis,
+      newModel,
+      newForecastDate,
+    } = parsed.data;
 
-    const existingClients = await getAllClientsForImport();
-    const existingMotorcycles = await (
-      await import("@/lib/data/motorcycle")
-    ).getAllMotorcyclesForImport();
-
-    const clientMap = new Map<
-      string,
-      { id: string; name: string; sellerName: string }
-    >();
-    for (const c of existingClients) {
-      const key = `${c.name.toLowerCase()}|${c.sellerName.toLowerCase()}`;
-      clientMap.set(key, c);
+    const client = await getClientById(clientId);
+    if (!client) {
+      return { status: "error", message: "Cliente não encontrado." };
     }
 
-    const motorcycleMap = new Map<
-      string,
-      {
-        id: string;
-        chassis: string;
-        forecastDate: Date | null;
-        clientId: string | null;
+    const strippedCpf = stripCPF(cpf);
+    if (strippedCpf !== client.cpf) {
+      const cpfExists = await prisma.client.findFirst({
+        where: { cpf: strippedCpf, NOT: { id: clientId } },
+      });
+      if (cpfExists) {
+        return {
+          status: "error",
+          message: "Este CPF já está cadastrado para outro cliente.",
+        };
       }
-    >();
-    for (const m of existingMotorcycles) {
-      motorcycleMap.set(m.chassis, m);
     }
 
-    const clientsToCreate: Array<{
-      name: string;
-      sellerName: string;
-      city: string;
-      billingDate?: Date | null;
-    }> = [];
-    const motorcyclesToCreate: Array<{
-      chassis: string;
-      model: string;
-      forecastDate?: Date | null;
-      registrationStatus: "NO_PLATE";
-      clientId?: string;
-    }> = [];
-    const motorcyclesToUpdate: Array<{ chassis: string; forecastDate: Date }> =
-      [];
-    const motorcyclesToLink: Array<{ chassis: string; clientId: string }> = [];
+    await updateClient(clientId, {
+      cpf,
+      name: customerName,
+      sellerName,
+      city,
+      billingDate: billingDate ?? null,
+    });
 
-    let created = 0;
-    let updated = 0;
-    let skipped = 0;
-
-    const processedRows: Array<{
-      clientKey: string;
-      clientName: string;
-      sellerName: string;
-      city: string;
-      billingDate?: Date | null;
-      chassis: string;
-      model: string;
-      forecastDate: Date | null;
-    }> = [];
-
-    for (const row of json as Record<string, unknown>[]) {
-      const clientName = detectColumn(row, CLIENT_NAME_KEYS);
-      const chassis = detectColumn(row, CHASSIS_KEYS);
-      const sellerName = detectColumn(row, SELLER_KEYS);
-
-      if (!chassis || !clientName || !sellerName) {
-        skipped++;
-        continue;
+    const motorcycle = client.motorcycles[0];
+    if (motorcycle) {
+      if (chassis !== motorcycle.chassi) {
+        const chassiExists = await getMotorcycleByChassis(chassis);
+        if (chassiExists) {
+          return {
+            status: "error",
+            message: "Este chassi já está cadastrado em outra motocicleta.",
+          };
+        }
       }
 
-      const chassisStr = String(chassis).trim().toUpperCase();
-      const nameStr = String(clientName);
-      const sellerStr = String(sellerName);
-      const city = String(detectColumn(row, CITY_KEYS) ?? "");
-      const model = String(detectColumn(row, MODEL_KEYS) ?? "");
+      const arrivalStatusMap: Record<string, "NO_INFORMATION" | "ARRIVED" | "DELAYED"> = {
+        "Sem Informação": "NO_INFORMATION",
+        Chegou: "ARRIVED",
+        Atrasada: "DELAYED",
+      };
 
-      const billingDateRaw = detectColumn(row, BILLING_DATE_KEYS);
-      const billingDate = parseExcelDate(billingDateRaw);
-
-      const arrivalInfo = arrivalMap.get(chassisStr);
-      const hasArrivedRaw = detectColumn(row, HAS_ARRIVED_KEYS);
-      const hasArrivedFromMainSheet =
-        typeof hasArrivedRaw === "string"
-          ? hasArrivedRaw.trim().toUpperCase() === "SIM"
-          : false;
-
-      let forecastDate: Date | null = null;
-      if (arrivalInfo?.forecastDate) {
-        forecastDate = arrivalInfo.forecastDate;
-      } else if (hasArrivedFromMainSheet) {
-        forecastDate = new Date();
-      }
-
-      const clientKey = `${nameStr.toLowerCase()}|${sellerStr.toLowerCase()}`;
-
-      processedRows.push({
-        clientKey,
-        clientName: nameStr,
-        sellerName: sellerStr,
-        city,
-        billingDate,
-        chassis: chassisStr,
+      await updateMotorcycle(motorcycle.id, {
+        chassi: chassis,
         model,
-        forecastDate,
+        forecastArrival: forecastDate ?? null,
+        forecastArrivalStatus: arrivalStatusMap[arrivalStatus ?? ""] ?? "NO_INFORMATION",
+        registrationStatus:
+          registrationStatus === "Emplacado"
+            ? "PLATED"
+            : registrationStatus === "Emplacando"
+              ? "PLATING"
+              : "NO_PLATE",
+        registrationDate: registrationDate ?? null,
       });
     }
 
-    const newClientKeys = new Set<string>();
-    for (const row of processedRows) {
-      if (!clientMap.has(row.clientKey) && !newClientKeys.has(row.clientKey)) {
-        newClientKeys.add(row.clientKey);
-        clientsToCreate.push({
-          name: row.clientName,
-          sellerName: row.sellerName,
-          city: row.city,
-          billingDate: row.billingDate,
+    if (newChassis) {
+      const existingMotorcycle = await getMotorcycleByChassis(newChassis);
+      if (existingMotorcycle) {
+        await prisma.motorcycle.update({
+          where: { id: existingMotorcycle.id },
+          data: { clientId },
         });
-      }
-    }
-
-    if (clientsToCreate.length > 0) {
-      const createdClients = await createClientsBatch(clientsToCreate);
-      for (const c of createdClients) {
-        const key = `${c.name.toLowerCase()}|${c.sellerName.toLowerCase()}`;
-        clientMap.set(key, c);
-      }
-    }
-
-    for (const row of processedRows) {
-      const client = clientMap.get(row.clientKey);
-      if (!client) continue;
-
-      const existingMoto = motorcycleMap.get(row.chassis);
-
-      if (existingMoto) {
-        if (row.forecastDate && !existingMoto.forecastDate) {
-          motorcyclesToUpdate.push({
-            chassis: row.chassis,
-            forecastDate: row.forecastDate,
-          });
-          existingMoto.forecastDate = row.forecastDate;
-          updated++;
-        }
-
-        if (!existingMoto.clientId || existingMoto.clientId !== client.id) {
-          motorcyclesToLink.push({ chassis: row.chassis, clientId: client.id });
-          existingMoto.clientId = client.id;
-        }
       } else {
-        motorcyclesToCreate.push({
-          chassis: row.chassis,
-          model: row.model,
-          forecastDate: row.forecastDate,
-          registrationStatus: "NO_PLATE",
-          clientId: client.id,
+        await createMotorcycle({
+          chassi: newChassis,
+          model: newModel ?? "",
+          forecastArrival: newForecastDate ?? null,
+          clientId,
         });
-        motorcycleMap.set(row.chassis, {
-          id: "",
-          chassis: row.chassis,
-          forecastDate: row.forecastDate,
-          clientId: client.id,
-        });
-        created++;
       }
     }
-
-    await createMotorcyclesBatch(motorcyclesToCreate);
-    await updateMotorcyclesBatch(motorcyclesToUpdate);
-    await linkMotorcyclesBatch(motorcyclesToLink);
-
-    const success = processedRows.length;
 
     revalidatePath("/bdc");
-    revalidatePath("/estoque");
-
-    return {
-      success: true,
-      message: `${success} linhas processadas: ${created} criadas, ${updated} atualizadas, ${skipped} puladas`,
-      stats: { success, created, updated, skipped },
-    };
+    revalidatePath("/tracking", "layout");
   } catch (error) {
+    console.error("Erro ao editar cliente:", error);
     return {
-      success: false,
-      error: `Erro ao processar arquivo: ${error instanceof Error ? error.message : "Erro desconhecido"}`,
+      status: "error",
+      message: "Erro interno ao atualizar os dados do cliente.",
     };
   }
+
+  redirect("/bdc");
 }

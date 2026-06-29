@@ -61,7 +61,28 @@ export function parseExcelDate(value: unknown): Date | undefined {
   return Number.isNaN(date.getTime()) ? undefined : date;
 }
 
-export function getArrivalStatus(forecastDate: Date | null | undefined) {
+export type ArrivalStatusValue = "NO_INFORMATION" | "ARRIVED" | "DELAYED";
+
+export function getArrivalStatus(
+  forecastDate: Date | null | undefined,
+  arrivalStatus?: ArrivalStatusValue | null,
+) {
+  if (arrivalStatus === "ARRIVED") {
+    return {
+      label: "Chegou",
+      color:
+        "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+    };
+  }
+
+  if (arrivalStatus === "DELAYED") {
+    return {
+      label: "Atrasada",
+      color:
+        "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
+    };
+  }
+
   if (!forecastDate) {
     return {
       label: "Em Trânsito",
@@ -81,21 +102,33 @@ export function getArrivalStatus(forecastDate: Date | null | undefined) {
     };
   }
 
-  if (arrival.isSame(hoje, "day")) {
-    return {
-      label: "Chegou",
-      color:
-        "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
-    };
-  }
-
   return {
-    label: "Atrasada",
-    color: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
+    label: "Chegou",
+    color:
+      "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
   };
 }
 
-export function getForecastStatus(forecastDate: Date | null | undefined) {
+export function getForecastStatus(
+  forecastDate: Date | null | undefined,
+  arrivalStatus?: ArrivalStatusValue | null,
+) {
+  if (arrivalStatus === "ARRIVED") {
+    return {
+      label: "Chegou",
+      color:
+        "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400",
+    };
+  }
+
+  if (arrivalStatus === "DELAYED") {
+    return {
+      label: "Atrasada",
+      color:
+        "bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400",
+    };
+  }
+
   if (!forecastDate) {
     return {
       label: "Sem Previsão",
@@ -122,15 +155,13 @@ export function getForecastStatus(forecastDate: Date | null | undefined) {
   };
 }
 
-export function mapRegistrationStatusLabel(
-  status: "NO_PLATE" | "PLATING" | "PLATED",
-) {
-  const map = {
+export function mapRegistrationStatusLabel(status: string | null | undefined) {
+  const map: Record<string, string> = {
     NO_PLATE: "Sem Emplacamento",
     PLATING: "Emplacando",
     PLATED: "Emplacado",
-  } as const;
-  return map[status];
+  };
+  return map[status ?? ""] ?? "Sem Emplacamento";
 }
 
 export function getStatusColor(status: string) {

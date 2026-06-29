@@ -6,9 +6,10 @@ export async function getAllMotorcycles() {
   return prisma.motorcycle.findMany({
     select: {
       id: true,
-      chassis: true,
+      chassi: true,
       model: true,
-      forecastDate: true,
+      forecastArrival: true,
+      forecastArrivalStatus: true,
     },
     orderBy: {
       createdAt: "desc",
@@ -45,26 +46,38 @@ export async function getMotorcyclesPaginated(params: {
 
   if (params.status) {
     const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0);
-    const amanha = new Date(hoje);
-    amanha.setDate(amanha.getDate() + 1);
+    hoje.setHours(23, 59, 59, 999);
 
     switch (params.status) {
       case "Em Trânsito":
-        where.OR = [{ forecastDate: null }, { forecastDate: { gte: amanha } }];
+        where.OR = [
+          { forecastArrival: null, forecastArrivalStatus: "NO_INFORMATION" },
+          { forecastArrival: { gt: hoje }, forecastArrivalStatus: "NO_INFORMATION" },
+        ];
         break;
       case "Chegou":
-        where.forecastDate = { gte: hoje, lt: amanha };
+        where.OR = [
+          { forecastArrivalStatus: "ARRIVED" },
+          {
+            forecastArrival: { lte: hoje },
+            forecastArrivalStatus: "NO_INFORMATION",
+          },
+        ];
         break;
       case "Atrasada":
-        where.forecastDate = { lt: hoje };
-        where.NOT = { forecastDate: null };
+        where.OR = [
+          { forecastArrivalStatus: "DELAYED" },
+          {
+            forecastArrival: { lt: hoje },
+            forecastArrivalStatus: "NO_INFORMATION",
+          },
+        ];
         break;
     }
   }
 
   if (params.chassisSearch) {
-    where.chassis = { contains: params.chassisSearch, mode: "insensitive" };
+    where.chassi = { contains: params.chassisSearch, mode: "insensitive" };
   }
 
   const [data, total] = await Promise.all([
@@ -74,9 +87,10 @@ export async function getMotorcyclesPaginated(params: {
       take: params.pageSize,
       select: {
         id: true,
-        chassis: true,
+        chassi: true,
         model: true,
-        forecastDate: true,
+        forecastArrival: true,
+        forecastArrivalStatus: true,
       },
       orderBy: { createdAt: "desc" },
     }),
@@ -96,8 +110,8 @@ export async function getAllMotorcyclesForImport() {
   return prisma.motorcycle.findMany({
     select: {
       id: true,
-      chassis: true,
-      forecastDate: true,
+      chassi: true,
+      forecastArrival: true,
       clientId: true,
     },
   });
@@ -105,9 +119,10 @@ export async function getAllMotorcyclesForImport() {
 
 export async function createMotorcyclesBatch(
   motorcycles: Array<{
-    chassis: string;
+    chassi: string;
     model: string;
-    forecastDate?: Date | null;
+    forecastArrival?: Date | null;
+    forecastArrivalStatus?: "NO_INFORMATION" | "ARRIVED" | "DELAYED";
     registrationStatus?: RegistrationStatus;
     clientId?: string;
   }>,
@@ -115,9 +130,10 @@ export async function createMotorcyclesBatch(
   if (motorcycles.length === 0) return;
   return prisma.motorcycle.createMany({
     data: motorcycles.map((m) => ({
-      chassis: m.chassis,
+      chassi: m.chassi,
       model: m.model,
-      forecastDate: m.forecastDate ?? null,
+      forecastArrival: m.forecastArrival ?? null,
+      forecastArrivalStatus: m.forecastArrivalStatus ?? "NO_INFORMATION",
       registrationStatus: m.registrationStatus ?? "NO_PLATE",
       clientId: m.clientId,
     })),
@@ -126,27 +142,27 @@ export async function createMotorcyclesBatch(
 
 export async function updateMotorcyclesBatch(
   updates: Array<{
-    chassis: string;
-    forecastDate: Date;
+    chassi: string;
+    forecastArrival: Date;
   }>,
 ) {
   if (updates.length === 0) return;
   const operations = updates.map((u) =>
     prisma.motorcycle.update({
-      where: { chassis: u.chassis },
-      data: { forecastDate: u.forecastDate },
+      where: { chassi: u.chassi },
+      data: { forecastArrival: u.forecastArrival },
     }),
   );
   return prisma.$transaction(operations);
 }
 
 export async function linkMotorcyclesBatch(
-  links: Array<{ chassis: string; clientId: string }>,
+  links: Array<{ chassi: string; clientId: string }>,
 ) {
   if (links.length === 0) return;
   const operations = links.map((l) =>
     prisma.motorcycle.update({
-      where: { chassis: l.chassis },
+      where: { chassi: l.chassi },
       data: { clientId: l.clientId },
     }),
   );
@@ -154,28 +170,30 @@ export async function linkMotorcyclesBatch(
 }
 
 export async function createMotorcycle(data: {
-  chassis: string;
+  chassi: string;
   model: string;
-  forecastDate?: Date | null;
+  forecastArrival?: Date | null;
+  forecastArrivalStatus?: "NO_INFORMATION" | "ARRIVED" | "DELAYED";
   registrationStatus?: RegistrationStatus;
-  registrationStatusDate?: Date | null;
+  registrationDate?: Date | null;
   clientId?: string;
 }) {
   return prisma.motorcycle.create({
     data: {
-      chassis: data.chassis,
+      chassi: data.chassi,
       model: data.model,
-      forecastDate: data.forecastDate,
+      forecastArrival: data.forecastArrival,
+      forecastArrivalStatus: data.forecastArrivalStatus ?? "NO_INFORMATION",
       registrationStatus: data.registrationStatus ?? "NO_PLATE",
-      registrationStatusDate: data.registrationStatusDate,
+      registrationDate: data.registrationDate ?? null,
       clientId: data.clientId,
     },
   });
 }
 
-export async function getMotorcycleByChassis(chassis: string) {
+export async function getMotorcycleByChassis(chassi: string) {
   return prisma.motorcycle.findUnique({
-    where: { chassis },
+    where: { chassi },
   });
 }
 
@@ -197,44 +215,48 @@ export async function getMotorcycleByIdWithClient(id: string) {
 export async function updateMotorcycle(
   id: string,
   data: {
-    chassis?: string;
+    chassi?: string;
     model?: string;
-    forecastDate?: Date | null;
+    forecastArrival?: Date | null;
+    forecastArrivalStatus?: "NO_INFORMATION" | "ARRIVED" | "DELAYED";
     registrationStatus?: RegistrationStatus;
-    registrationStatusDate?: Date | null;
+    registrationDate?: Date | null;
     clientId?: string | null;
   },
 ) {
   return prisma.motorcycle.update({
     where: { id },
     data: {
-      chassis: data.chassis,
+      chassi: data.chassi,
       model: data.model,
-      forecastDate: data.forecastDate,
+      forecastArrival: data.forecastArrival,
+      forecastArrivalStatus: data.forecastArrivalStatus,
       registrationStatus: data.registrationStatus,
-      registrationStatusDate: data.registrationStatusDate,
+      registrationDate: data.registrationDate,
       clientId: data.clientId,
     },
   });
 }
 
 export async function updateMotorcycleByChassis(
-  chassis: string,
+  chassi: string,
   data: {
     model?: string;
-    forecastDate?: Date | null;
+    forecastArrival?: Date | null;
+    forecastArrivalStatus?: "NO_INFORMATION" | "ARRIVED" | "DELAYED";
     registrationStatus?: RegistrationStatus;
-    registrationStatusDate?: Date | null;
+    registrationDate?: Date | null;
     clientId?: string | null;
   },
 ) {
   return prisma.motorcycle.update({
-    where: { chassis },
+    where: { chassi },
     data: {
       model: data.model,
-      forecastDate: data.forecastDate,
+      forecastArrival: data.forecastArrival,
+      forecastArrivalStatus: data.forecastArrivalStatus,
       registrationStatus: data.registrationStatus,
-      registrationStatusDate: data.registrationStatusDate,
+      registrationDate: data.registrationDate,
       clientId: data.clientId,
     },
   });
@@ -246,12 +268,9 @@ export async function deleteMotorcycle(id: string) {
   });
 }
 
-export async function linkMotorcycleToClient(
-  chassis: string,
-  clientId: string,
-) {
+export async function linkMotorcycleToClient(chassi: string, clientId: string) {
   return prisma.motorcycle.update({
-    where: { chassis },
+    where: { chassi },
     data: { clientId },
   });
 }

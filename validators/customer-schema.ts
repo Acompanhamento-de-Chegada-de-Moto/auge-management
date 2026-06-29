@@ -18,11 +18,18 @@ export const customerSchema = z
     billingDate: z.date().optional(),
     forecastDate: z.date().optional(),
     registrationStatus: z.enum(["Sem Emplacamento", "Emplacando", "Emplacado"]),
-    plateDate: z.date().optional(),
+    registrationDate: z.date().optional(),
+    arrivalStatus: z.enum(["Sem Informação", "Chegou", "Atrasada"]),
+    newChassis: z.string().optional(),
+    newModel: z.string().optional(),
+    newForecastDate: z.date().optional(),
   })
   .refine(
     (data) => {
-      if (data.registrationStatus !== "Sem Emplacamento" && !data.plateDate) {
+      if (
+        data.registrationStatus !== "Sem Emplacamento" &&
+        !data.registrationDate
+      ) {
         return false;
       }
       return true;
@@ -30,7 +37,17 @@ export const customerSchema = z
     {
       message:
         "Data do emplacamento é obrigatória quando o status não é Sem Emplacamento",
-      path: ["plateDate"],
+      path: ["registrationDate"],
+    },
+  )
+  .refine(
+    (data) => {
+      if (data.newChassis && !data.newModel) return false;
+      return true;
+    },
+    {
+      message: "Modelo é obrigatório quando um novo chassi é informado",
+      path: ["newModel"],
     },
   );
 

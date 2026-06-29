@@ -1,11 +1,21 @@
 "use client";
 
-import { Bike, LogOut, Settings, TextAlignJustify, User } from "lucide-react";
+import {
+  LayoutDashboard,
+  LifeBuoy,
+  LogOut,
+  Package,
+  Search,
+  Settings,
+  User,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { BreadcrumbNav } from "@/components/layout/breadcrumb-nav";
-import { ModeToggle } from "@/components/mode-toggle";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -16,11 +26,37 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
+import { getLogoUrlAction } from "@/app/(app)/settings/actions";
 
-const navigationData = [
-  { title: "Acompanhamento", href: "/acompanhamento" },
-  { title: "BDC", href: "/bdc" },
-  { title: "Estoque", href: "/estoque" },
+interface NavItem {
+  title: string;
+  href: string;
+  icon: LucideIcon;
+  adminOnly?: boolean;
+  managerOnly?: boolean;
+}
+
+const navigationData: NavItem[] = [
+  { title: "Acompanhamento", href: "/tracking", icon: Search },
+  { title: "BDC", href: "/bdc", icon: Users },
+  { title: "Estoque", href: "/inventory", icon: Package },
+  {
+    title: "Dashboard",
+    href: "/dashboard",
+    icon: LayoutDashboard,
+    adminOnly: true,
+  },
+  {
+    title: "Configurações",
+    href: "/settings/cosmetics",
+    icon: Settings,
+  },
+  {
+    title: "Suporte",
+    href: "/support",
+    icon: LifeBuoy,
+    managerOnly: true,
+  },
 ];
 
 const Navbar = () => {
@@ -28,7 +64,12 @@ const Navbar = () => {
   const router = useRouter();
   const { data: session } = authClient.useSession();
   const [sticky, setSticky] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    getLogoUrlAction().then(setLogoUrl);
+  }, []);
 
   const handleScroll = useCallback(() => {
     setSticky(window.scrollY >= 10);
@@ -56,6 +97,12 @@ const Navbar = () => {
         .slice(0, 2)
     : null;
 
+  const visibleNav = navigationData.filter((item) => {
+    if (item.adminOnly) return session?.user?.role === "ADMIN";
+    if (item.managerOnly) return session?.user?.role === "ADMIN" || session?.user?.role === "MANAGER";
+    return true;
+  });
+
   return (
     <header
       className={cn(
@@ -64,13 +111,17 @@ const Navbar = () => {
       )}
     >
       <div className="w-full px-4 sm:px-6 lg:px-8">
-        {/* ─── Top Row ─── */}
         <div className="flex items-center h-14 justify-between gap-4">
           {/* Logo */}
-          <Link href="/acompanhamento" className="flex items-center gap-3 shrink-0">
-            <div className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
-              <Bike className="size-5" />
-            </div>
+          <Link href="/tracking" className="flex items-center gap-3 shrink-0">
+            <Image
+              src={logoUrl || "/logo-auge.png"}
+              alt="Auge"
+              width={36}
+              height={36}
+              className="rounded-lg object-contain"
+              key={logoUrl}
+            />
             <div className="hidden sm:block">
               <h1 className="text-base font-bold text-foreground leading-tight">
                 Acompanhamento
@@ -83,19 +134,23 @@ const Navbar = () => {
 
           {/* Center Nav — Desktop */}
           <nav className="hidden md:flex items-center gap-1">
-            {navigationData.map((item) => {
-              const isActive = pathname === item.href;
+            {visibleNav.map((item) => {
+              const isActive =
+                pathname === item.href ||
+                pathname.startsWith(`${item.href}/`);
+
               return (
                 <Link
                   key={item.title}
                   href={item.href}
                   className={cn(
-                    "px-4 py-2 text-sm font-medium rounded-lg transition-colors",
+                    "px-4 py-2 text-sm font-medium rounded-lg transition-colors inline-flex items-center gap-2",
                     isActive
                       ? "bg-muted text-foreground"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
                   )}
                 >
+                  <item.icon className="size-4" />
                   {item.title}
                 </Link>
               );
@@ -104,10 +159,6 @@ const Navbar = () => {
 
           {/* Right Actions */}
           <div className="flex items-center gap-2">
-            {/* Mode Toggle */}
-            <ModeToggle />
-
-            {/* User Dropdown */}
             {session?.user && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -116,7 +167,17 @@ const Navbar = () => {
                     size="icon"
                     className="rounded-lg size-9 border border-border/60 bg-muted/40 hover:bg-muted"
                   >
-                    {userInitials ? (
+                    {session.user.image ? (
+                      <Avatar className="size-9">
+                        <AvatarImage
+                          src={session.user.image}
+                          alt={session.user.name}
+                        />
+                        <AvatarFallback className="text-xs font-semibold">
+                          {userInitials}
+                        </AvatarFallback>
+                      </Avatar>
+                    ) : userInitials ? (
                       <span className="text-xs font-semibold">
                         {userInitials}
                       </span>
@@ -126,20 +187,50 @@ const Navbar = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
-                  <div className="px-2 py-2">
-                    <p className="text-sm font-medium">{session.user.name}</p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {session.user.email}
-                    </p>
+                  <div className="flex items-center gap-3 px-2 py-2">
+                    <Avatar className="size-9">
+                      {session.user.image ? (
+                        <AvatarImage src={session.user.image} />
+                      ) : null}
+                      <AvatarFallback className="text-xs">
+                        {userInitials}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="text-sm font-medium">
+                        {session.user.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {session.user.email}
+                      </p>
+                    </div>
                   </div>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => router.push("/configuracoes")}
-                    className="cursor-pointer"
-                  >
-                    <Settings className="mr-2 size-4" />
-                    Configurações
-                  </DropdownMenuItem>
+
+                  {/* Nav links — apenas mobile */}
+                  <div className="md:hidden">
+                    <DropdownMenuSeparator />
+                    {visibleNav.map((item) => {
+                      const isActive =
+                        pathname === item.href ||
+                        pathname.startsWith(`${item.href}/`);
+
+                      return (
+                        <DropdownMenuItem key={item.title} asChild>
+                          <Link
+                            href={item.href}
+                            className={cn(
+                              "w-full cursor-pointer text-sm font-medium",
+                              isActive && "font-semibold",
+                            )}
+                          >
+                            <item.icon className="mr-2 size-4" />
+                            {item.title}
+                          </Link>
+                        </DropdownMenuItem>
+                      );
+                    })}
+                  </div>
+
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={handleSignOut}
@@ -151,42 +242,8 @@ const Navbar = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
-
-            {/* Mobile Hamburger */}
-            <div className="md:hidden">
-              <DropdownMenu
-                open={mobileMenuOpen}
-                onOpenChange={setMobileMenuOpen}
-              >
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="rounded-lg size-9 border border-border/60 bg-muted/40 hover:bg-muted"
-                  >
-                    <TextAlignJustify className="size-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 mt-1">
-                  {navigationData.map((item) => (
-                    <DropdownMenuItem key={item.title} asChild>
-                      <Link
-                        href={item.href}
-                        className={cn(
-                          "w-full cursor-pointer text-sm font-medium",
-                          pathname === item.href && "font-semibold",
-                        )}
-                      >
-                        {item.title}
-                      </Link>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
           </div>
         </div>
-
       </div>
     </header>
   );

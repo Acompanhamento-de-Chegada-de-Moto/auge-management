@@ -1,19 +1,39 @@
 import "server-only";
 
-import { notFound } from "next/navigation";
-import { requireAuth } from "../require-auth";
-import { getClientById as dalGetClientById } from "@/lib/data/client";
+import { prisma } from "@/lib/db";
+import { requireAuth } from "./require-auth";
 
-export async function userGetClientById(id: string) {
+export async function userGetClient(id: string) {
   await requireAuth();
 
-  const data = await dalGetClientById(id);
+  const data = await prisma.client.findFirst({
+    where: {
+      id: id,
+    },
+    select: {
+      id: true,
+      cpf: true,
+      name: true,
+      sellersName: true,
+      city: true,
+      billingDate: true,
+      motorcycles: {
+        select: {
+          id: true,
+          chassi: true,
+          model: true,
+          forecastArrival: true,
+          registrationStatus: true,
+        },
+      },
+    },
 
-  if (!data) {
-    notFound();
-  }
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
 
   return data;
 }
 
-export type UserGetClientByIdType = Awaited<ReturnType<typeof userGetClientById>>;
+export type UserGetClientType = Awaited<ReturnType<typeof userGetClient>>;

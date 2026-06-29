@@ -1,1 +1,0 @@
-export { EditClientSkeleton as default } from "@/components/bdc/edit-client-skeleton";

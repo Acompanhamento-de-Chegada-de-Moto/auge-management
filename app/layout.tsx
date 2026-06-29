@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
-import { CookieConsentBanner } from "@/components/cookie-consent-banner";
-import { GlobalLoadingBar } from "@/components/ui/global-loading-bar";
-import { ThemeProvider } from "@/components/theme-provider";
+import { CookieConsentBanner } from "@/components/CookieConsentBanner";
+import { ThemeColorSync } from "@/components/ThemeColorSync";
+import { ThemeProvider } from "@/components/ThemeProvider";
+import { QueryProvider } from "@/components/providers/query-provider";
 import { cn } from "@/lib/utils";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
@@ -25,6 +26,17 @@ export const metadata: Metadata = {
     template: "%s | Acompanhamento Chegada de Moto",
   },
   description: "Sistema de gerenciamento de concessionária de motocicletas.",
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/favicon-96x96.png", sizes: "96x96", type: "image/png" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180" },
+    ],
+  },
+  manifest: "/site.webmanifest",
 };
 
 export default function RootLayout({
@@ -46,15 +58,17 @@ export default function RootLayout({
       )}
     >
       <body className="min-h-full flex flex-col">
-        <GlobalLoadingBar />
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
-          {children}
-          <Toaster />
+          <QueryProvider>
+            <ThemeColorSync />
+            {children}
+            <Toaster />
+          </QueryProvider>
         </ThemeProvider>
         <CookieConsentBanner />
       </body>

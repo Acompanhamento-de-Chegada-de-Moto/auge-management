@@ -26,76 +26,76 @@ export type AggregateMotorcycle = {
 
 export type MotorcycleMinAggregateOutputType = {
   id: string | null
-  chassis: string | null
+  chassi: string | null
   model: string | null
-  forecastDate: Date | null
+  forecastArrival: Date | null
+  forecastArrivalStatus: $Enums.ArrivalStatus | null
   registrationStatus: $Enums.RegistrationStatus | null
-  registrationStatusDate: Date | null
+  registrationDate: Date | null
   clientId: string | null
   createdAt: Date | null
-  updatedAt: Date | null
 }
 
 export type MotorcycleMaxAggregateOutputType = {
   id: string | null
-  chassis: string | null
+  chassi: string | null
   model: string | null
-  forecastDate: Date | null
+  forecastArrival: Date | null
+  forecastArrivalStatus: $Enums.ArrivalStatus | null
   registrationStatus: $Enums.RegistrationStatus | null
-  registrationStatusDate: Date | null
+  registrationDate: Date | null
   clientId: string | null
   createdAt: Date | null
-  updatedAt: Date | null
 }
 
 export type MotorcycleCountAggregateOutputType = {
   id: number
-  chassis: number
+  chassi: number
   model: number
-  forecastDate: number
+  forecastArrival: number
+  forecastArrivalStatus: number
   registrationStatus: number
-  registrationStatusDate: number
+  registrationDate: number
   clientId: number
   createdAt: number
-  updatedAt: number
   _all: number
 }
 
 
 export type MotorcycleMinAggregateInputType = {
   id?: true
-  chassis?: true
+  chassi?: true
   model?: true
-  forecastDate?: true
+  forecastArrival?: true
+  forecastArrivalStatus?: true
   registrationStatus?: true
-  registrationStatusDate?: true
+  registrationDate?: true
   clientId?: true
   createdAt?: true
-  updatedAt?: true
 }
 
 export type MotorcycleMaxAggregateInputType = {
   id?: true
-  chassis?: true
+  chassi?: true
   model?: true
-  forecastDate?: true
+  forecastArrival?: true
+  forecastArrivalStatus?: true
   registrationStatus?: true
-  registrationStatusDate?: true
+  registrationDate?: true
   clientId?: true
   createdAt?: true
-  updatedAt?: true
 }
 
 export type MotorcycleCountAggregateInputType = {
   id?: true
-  chassis?: true
+  chassi?: true
   model?: true
-  forecastDate?: true
+  forecastArrival?: true
+  forecastArrivalStatus?: true
   registrationStatus?: true
-  registrationStatusDate?: true
+  registrationDate?: true
   clientId?: true
   createdAt?: true
-  updatedAt?: true
   _all?: true
 }
 
@@ -173,14 +173,14 @@ export type MotorcycleGroupByArgs<ExtArgs extends runtime.Types.Extensions.Inter
 
 export type MotorcycleGroupByOutputType = {
   id: string
-  chassis: string
+  chassi: string
   model: string
-  forecastDate: Date | null
-  registrationStatus: $Enums.RegistrationStatus
-  registrationStatusDate: Date | null
+  forecastArrival: Date | null
+  forecastArrivalStatus: $Enums.ArrivalStatus
+  registrationStatus: $Enums.RegistrationStatus | null
+  registrationDate: Date | null
   clientId: string | null
   createdAt: Date
-  updatedAt: Date
   _count: MotorcycleCountAggregateOutputType | null
   _min: MotorcycleMinAggregateOutputType | null
   _max: MotorcycleMaxAggregateOutputType | null
@@ -205,57 +205,57 @@ export type MotorcycleWhereInput = {
   AND?: Prisma.MotorcycleWhereInput | Prisma.MotorcycleWhereInput[]
   OR?: Prisma.MotorcycleWhereInput[]
   NOT?: Prisma.MotorcycleWhereInput | Prisma.MotorcycleWhereInput[]
-  id?: Prisma.StringFilter<"Motorcycle"> | string
-  chassis?: Prisma.StringFilter<"Motorcycle"> | string
+  id?: Prisma.UuidFilter<"Motorcycle"> | string
+  chassi?: Prisma.StringFilter<"Motorcycle"> | string
   model?: Prisma.StringFilter<"Motorcycle"> | string
-  forecastDate?: Prisma.DateTimeNullableFilter<"Motorcycle"> | Date | string | null
-  registrationStatus?: Prisma.EnumRegistrationStatusFilter<"Motorcycle"> | $Enums.RegistrationStatus
-  registrationStatusDate?: Prisma.DateTimeNullableFilter<"Motorcycle"> | Date | string | null
-  clientId?: Prisma.StringNullableFilter<"Motorcycle"> | string | null
+  forecastArrival?: Prisma.DateTimeNullableFilter<"Motorcycle"> | Date | string | null
+  forecastArrivalStatus?: Prisma.EnumArrivalStatusFilter<"Motorcycle"> | $Enums.ArrivalStatus
+  registrationStatus?: Prisma.EnumRegistrationStatusNullableFilter<"Motorcycle"> | $Enums.RegistrationStatus | null
+  registrationDate?: Prisma.DateTimeNullableFilter<"Motorcycle"> | Date | string | null
+  clientId?: Prisma.UuidNullableFilter<"Motorcycle"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Motorcycle"> | Date | string
-  updatedAt?: Prisma.DateTimeFilter<"Motorcycle"> | Date | string
   client?: Prisma.XOR<Prisma.ClientNullableScalarRelationFilter, Prisma.ClientWhereInput> | null
 }
 
 export type MotorcycleOrderByWithRelationInput = {
   id?: Prisma.SortOrder
-  chassis?: Prisma.SortOrder
+  chassi?: Prisma.SortOrder
   model?: Prisma.SortOrder
-  forecastDate?: Prisma.SortOrderInput | Prisma.SortOrder
-  registrationStatus?: Prisma.SortOrder
-  registrationStatusDate?: Prisma.SortOrderInput | Prisma.SortOrder
+  forecastArrival?: Prisma.SortOrderInput | Prisma.SortOrder
+  forecastArrivalStatus?: Prisma.SortOrder
+  registrationStatus?: Prisma.SortOrderInput | Prisma.SortOrder
+  registrationDate?: Prisma.SortOrderInput | Prisma.SortOrder
   clientId?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
-  updatedAt?: Prisma.SortOrder
   client?: Prisma.ClientOrderByWithRelationInput
 }
 
 export type MotorcycleWhereUniqueInput = Prisma.AtLeast<{
   id?: string
-  chassis?: string
+  chassi?: string
   AND?: Prisma.MotorcycleWhereInput | Prisma.MotorcycleWhereInput[]
   OR?: Prisma.MotorcycleWhereInput[]
   NOT?: Prisma.MotorcycleWhereInput | Prisma.MotorcycleWhereInput[]
   model?: Prisma.StringFilter<"Motorcycle"> | string
-  forecastDate?: Prisma.DateTimeNullableFilter<"Motorcycle"> | Date | string | null
-  registrationStatus?: Prisma.EnumRegistrationStatusFilter<"Motorcycle"> | $Enums.RegistrationStatus
-  registrationStatusDate?: Prisma.DateTimeNullableFilter<"Motorcycle"> | Date | string | null
-  clientId?: Prisma.StringNullableFilter<"Motorcycle"> | string | null
+  forecastArrival?: Prisma.DateTimeNullableFilter<"Motorcycle"> | Date | string | null
+  forecastArrivalStatus?: Prisma.EnumArrivalStatusFilter<"Motorcycle"> | $Enums.ArrivalStatus
+  registrationStatus?: Prisma.EnumRegistrationStatusNullableFilter<"Motorcycle"> | $Enums.RegistrationStatus | null
+  registrationDate?: Prisma.DateTimeNullableFilter<"Motorcycle"> | Date | string | null
+  clientId?: Prisma.UuidNullableFilter<"Motorcycle"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Motorcycle"> | Date | string
-  updatedAt?: Prisma.DateTimeFilter<"Motorcycle"> | Date | string
   client?: Prisma.XOR<Prisma.ClientNullableScalarRelationFilter, Prisma.ClientWhereInput> | null
-}, "id" | "chassis">
+}, "id" | "chassi">
 
 export type MotorcycleOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
-  chassis?: Prisma.SortOrder
+  chassi?: Prisma.SortOrder
   model?: Prisma.SortOrder
-  forecastDate?: Prisma.SortOrderInput | Prisma.SortOrder
-  registrationStatus?: Prisma.SortOrder
-  registrationStatusDate?: Prisma.SortOrderInput | Prisma.SortOrder
+  forecastArrival?: Prisma.SortOrderInput | Prisma.SortOrder
+  forecastArrivalStatus?: Prisma.SortOrder
+  registrationStatus?: Prisma.SortOrderInput | Prisma.SortOrder
+  registrationDate?: Prisma.SortOrderInput | Prisma.SortOrder
   clientId?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
-  updatedAt?: Prisma.SortOrder
   _count?: Prisma.MotorcycleCountOrderByAggregateInput
   _max?: Prisma.MotorcycleMaxOrderByAggregateInput
   _min?: Prisma.MotorcycleMinOrderByAggregateInput
@@ -265,98 +265,98 @@ export type MotorcycleScalarWhereWithAggregatesInput = {
   AND?: Prisma.MotorcycleScalarWhereWithAggregatesInput | Prisma.MotorcycleScalarWhereWithAggregatesInput[]
   OR?: Prisma.MotorcycleScalarWhereWithAggregatesInput[]
   NOT?: Prisma.MotorcycleScalarWhereWithAggregatesInput | Prisma.MotorcycleScalarWhereWithAggregatesInput[]
-  id?: Prisma.StringWithAggregatesFilter<"Motorcycle"> | string
-  chassis?: Prisma.StringWithAggregatesFilter<"Motorcycle"> | string
+  id?: Prisma.UuidWithAggregatesFilter<"Motorcycle"> | string
+  chassi?: Prisma.StringWithAggregatesFilter<"Motorcycle"> | string
   model?: Prisma.StringWithAggregatesFilter<"Motorcycle"> | string
-  forecastDate?: Prisma.DateTimeNullableWithAggregatesFilter<"Motorcycle"> | Date | string | null
-  registrationStatus?: Prisma.EnumRegistrationStatusWithAggregatesFilter<"Motorcycle"> | $Enums.RegistrationStatus
-  registrationStatusDate?: Prisma.DateTimeNullableWithAggregatesFilter<"Motorcycle"> | Date | string | null
-  clientId?: Prisma.StringNullableWithAggregatesFilter<"Motorcycle"> | string | null
+  forecastArrival?: Prisma.DateTimeNullableWithAggregatesFilter<"Motorcycle"> | Date | string | null
+  forecastArrivalStatus?: Prisma.EnumArrivalStatusWithAggregatesFilter<"Motorcycle"> | $Enums.ArrivalStatus
+  registrationStatus?: Prisma.EnumRegistrationStatusNullableWithAggregatesFilter<"Motorcycle"> | $Enums.RegistrationStatus | null
+  registrationDate?: Prisma.DateTimeNullableWithAggregatesFilter<"Motorcycle"> | Date | string | null
+  clientId?: Prisma.UuidNullableWithAggregatesFilter<"Motorcycle"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Motorcycle"> | Date | string
-  updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Motorcycle"> | Date | string
 }
 
 export type MotorcycleCreateInput = {
   id?: string
-  chassis: string
+  chassi: string
   model: string
-  forecastDate?: Date | string | null
-  registrationStatus?: $Enums.RegistrationStatus
-  registrationStatusDate?: Date | string | null
+  forecastArrival?: Date | string | null
+  forecastArrivalStatus?: $Enums.ArrivalStatus
+  registrationStatus?: $Enums.RegistrationStatus | null
+  registrationDate?: Date | string | null
   createdAt?: Date | string
-  updatedAt?: Date | string
   client?: Prisma.ClientCreateNestedOneWithoutMotorcyclesInput
 }
 
 export type MotorcycleUncheckedCreateInput = {
   id?: string
-  chassis: string
+  chassi: string
   model: string
-  forecastDate?: Date | string | null
-  registrationStatus?: $Enums.RegistrationStatus
-  registrationStatusDate?: Date | string | null
+  forecastArrival?: Date | string | null
+  forecastArrivalStatus?: $Enums.ArrivalStatus
+  registrationStatus?: $Enums.RegistrationStatus | null
+  registrationDate?: Date | string | null
   clientId?: string | null
   createdAt?: Date | string
-  updatedAt?: Date | string
 }
 
 export type MotorcycleUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  chassis?: Prisma.StringFieldUpdateOperationsInput | string
+  chassi?: Prisma.StringFieldUpdateOperationsInput | string
   model?: Prisma.StringFieldUpdateOperationsInput | string
-  forecastDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  registrationStatus?: Prisma.EnumRegistrationStatusFieldUpdateOperationsInput | $Enums.RegistrationStatus
-  registrationStatusDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  forecastArrival?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  forecastArrivalStatus?: Prisma.EnumArrivalStatusFieldUpdateOperationsInput | $Enums.ArrivalStatus
+  registrationStatus?: Prisma.NullableEnumRegistrationStatusFieldUpdateOperationsInput | $Enums.RegistrationStatus | null
+  registrationDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   client?: Prisma.ClientUpdateOneWithoutMotorcyclesNestedInput
 }
 
 export type MotorcycleUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  chassis?: Prisma.StringFieldUpdateOperationsInput | string
+  chassi?: Prisma.StringFieldUpdateOperationsInput | string
   model?: Prisma.StringFieldUpdateOperationsInput | string
-  forecastDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  registrationStatus?: Prisma.EnumRegistrationStatusFieldUpdateOperationsInput | $Enums.RegistrationStatus
-  registrationStatusDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  forecastArrival?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  forecastArrivalStatus?: Prisma.EnumArrivalStatusFieldUpdateOperationsInput | $Enums.ArrivalStatus
+  registrationStatus?: Prisma.NullableEnumRegistrationStatusFieldUpdateOperationsInput | $Enums.RegistrationStatus | null
+  registrationDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   clientId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type MotorcycleCreateManyInput = {
   id?: string
-  chassis: string
+  chassi: string
   model: string
-  forecastDate?: Date | string | null
-  registrationStatus?: $Enums.RegistrationStatus
-  registrationStatusDate?: Date | string | null
+  forecastArrival?: Date | string | null
+  forecastArrivalStatus?: $Enums.ArrivalStatus
+  registrationStatus?: $Enums.RegistrationStatus | null
+  registrationDate?: Date | string | null
   clientId?: string | null
   createdAt?: Date | string
-  updatedAt?: Date | string
 }
 
 export type MotorcycleUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  chassis?: Prisma.StringFieldUpdateOperationsInput | string
+  chassi?: Prisma.StringFieldUpdateOperationsInput | string
   model?: Prisma.StringFieldUpdateOperationsInput | string
-  forecastDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  registrationStatus?: Prisma.EnumRegistrationStatusFieldUpdateOperationsInput | $Enums.RegistrationStatus
-  registrationStatusDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  forecastArrival?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  forecastArrivalStatus?: Prisma.EnumArrivalStatusFieldUpdateOperationsInput | $Enums.ArrivalStatus
+  registrationStatus?: Prisma.NullableEnumRegistrationStatusFieldUpdateOperationsInput | $Enums.RegistrationStatus | null
+  registrationDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type MotorcycleUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  chassis?: Prisma.StringFieldUpdateOperationsInput | string
+  chassi?: Prisma.StringFieldUpdateOperationsInput | string
   model?: Prisma.StringFieldUpdateOperationsInput | string
-  forecastDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  registrationStatus?: Prisma.EnumRegistrationStatusFieldUpdateOperationsInput | $Enums.RegistrationStatus
-  registrationStatusDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  forecastArrival?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  forecastArrivalStatus?: Prisma.EnumArrivalStatusFieldUpdateOperationsInput | $Enums.ArrivalStatus
+  registrationStatus?: Prisma.NullableEnumRegistrationStatusFieldUpdateOperationsInput | $Enums.RegistrationStatus | null
+  registrationDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   clientId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type MotorcycleListRelationFilter = {
@@ -371,38 +371,38 @@ export type MotorcycleOrderByRelationAggregateInput = {
 
 export type MotorcycleCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  chassis?: Prisma.SortOrder
+  chassi?: Prisma.SortOrder
   model?: Prisma.SortOrder
-  forecastDate?: Prisma.SortOrder
+  forecastArrival?: Prisma.SortOrder
+  forecastArrivalStatus?: Prisma.SortOrder
   registrationStatus?: Prisma.SortOrder
-  registrationStatusDate?: Prisma.SortOrder
+  registrationDate?: Prisma.SortOrder
   clientId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
-  updatedAt?: Prisma.SortOrder
 }
 
 export type MotorcycleMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  chassis?: Prisma.SortOrder
+  chassi?: Prisma.SortOrder
   model?: Prisma.SortOrder
-  forecastDate?: Prisma.SortOrder
+  forecastArrival?: Prisma.SortOrder
+  forecastArrivalStatus?: Prisma.SortOrder
   registrationStatus?: Prisma.SortOrder
-  registrationStatusDate?: Prisma.SortOrder
+  registrationDate?: Prisma.SortOrder
   clientId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
-  updatedAt?: Prisma.SortOrder
 }
 
 export type MotorcycleMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  chassis?: Prisma.SortOrder
+  chassi?: Prisma.SortOrder
   model?: Prisma.SortOrder
-  forecastDate?: Prisma.SortOrder
+  forecastArrival?: Prisma.SortOrder
+  forecastArrivalStatus?: Prisma.SortOrder
   registrationStatus?: Prisma.SortOrder
-  registrationStatusDate?: Prisma.SortOrder
+  registrationDate?: Prisma.SortOrder
   clientId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
-  updatedAt?: Prisma.SortOrder
 }
 
 export type MotorcycleCreateNestedManyWithoutClientInput = {
@@ -447,30 +447,34 @@ export type MotorcycleUncheckedUpdateManyWithoutClientNestedInput = {
   deleteMany?: Prisma.MotorcycleScalarWhereInput | Prisma.MotorcycleScalarWhereInput[]
 }
 
-export type EnumRegistrationStatusFieldUpdateOperationsInput = {
-  set?: $Enums.RegistrationStatus
+export type EnumArrivalStatusFieldUpdateOperationsInput = {
+  set?: $Enums.ArrivalStatus
+}
+
+export type NullableEnumRegistrationStatusFieldUpdateOperationsInput = {
+  set?: $Enums.RegistrationStatus | null
 }
 
 export type MotorcycleCreateWithoutClientInput = {
   id?: string
-  chassis: string
+  chassi: string
   model: string
-  forecastDate?: Date | string | null
-  registrationStatus?: $Enums.RegistrationStatus
-  registrationStatusDate?: Date | string | null
+  forecastArrival?: Date | string | null
+  forecastArrivalStatus?: $Enums.ArrivalStatus
+  registrationStatus?: $Enums.RegistrationStatus | null
+  registrationDate?: Date | string | null
   createdAt?: Date | string
-  updatedAt?: Date | string
 }
 
 export type MotorcycleUncheckedCreateWithoutClientInput = {
   id?: string
-  chassis: string
+  chassi: string
   model: string
-  forecastDate?: Date | string | null
-  registrationStatus?: $Enums.RegistrationStatus
-  registrationStatusDate?: Date | string | null
+  forecastArrival?: Date | string | null
+  forecastArrivalStatus?: $Enums.ArrivalStatus
+  registrationStatus?: $Enums.RegistrationStatus | null
+  registrationDate?: Date | string | null
   createdAt?: Date | string
-  updatedAt?: Date | string
 }
 
 export type MotorcycleCreateOrConnectWithoutClientInput = {
@@ -503,115 +507,115 @@ export type MotorcycleScalarWhereInput = {
   AND?: Prisma.MotorcycleScalarWhereInput | Prisma.MotorcycleScalarWhereInput[]
   OR?: Prisma.MotorcycleScalarWhereInput[]
   NOT?: Prisma.MotorcycleScalarWhereInput | Prisma.MotorcycleScalarWhereInput[]
-  id?: Prisma.StringFilter<"Motorcycle"> | string
-  chassis?: Prisma.StringFilter<"Motorcycle"> | string
+  id?: Prisma.UuidFilter<"Motorcycle"> | string
+  chassi?: Prisma.StringFilter<"Motorcycle"> | string
   model?: Prisma.StringFilter<"Motorcycle"> | string
-  forecastDate?: Prisma.DateTimeNullableFilter<"Motorcycle"> | Date | string | null
-  registrationStatus?: Prisma.EnumRegistrationStatusFilter<"Motorcycle"> | $Enums.RegistrationStatus
-  registrationStatusDate?: Prisma.DateTimeNullableFilter<"Motorcycle"> | Date | string | null
-  clientId?: Prisma.StringNullableFilter<"Motorcycle"> | string | null
+  forecastArrival?: Prisma.DateTimeNullableFilter<"Motorcycle"> | Date | string | null
+  forecastArrivalStatus?: Prisma.EnumArrivalStatusFilter<"Motorcycle"> | $Enums.ArrivalStatus
+  registrationStatus?: Prisma.EnumRegistrationStatusNullableFilter<"Motorcycle"> | $Enums.RegistrationStatus | null
+  registrationDate?: Prisma.DateTimeNullableFilter<"Motorcycle"> | Date | string | null
+  clientId?: Prisma.UuidNullableFilter<"Motorcycle"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Motorcycle"> | Date | string
-  updatedAt?: Prisma.DateTimeFilter<"Motorcycle"> | Date | string
 }
 
 export type MotorcycleCreateManyClientInput = {
   id?: string
-  chassis: string
+  chassi: string
   model: string
-  forecastDate?: Date | string | null
-  registrationStatus?: $Enums.RegistrationStatus
-  registrationStatusDate?: Date | string | null
+  forecastArrival?: Date | string | null
+  forecastArrivalStatus?: $Enums.ArrivalStatus
+  registrationStatus?: $Enums.RegistrationStatus | null
+  registrationDate?: Date | string | null
   createdAt?: Date | string
-  updatedAt?: Date | string
 }
 
 export type MotorcycleUpdateWithoutClientInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  chassis?: Prisma.StringFieldUpdateOperationsInput | string
+  chassi?: Prisma.StringFieldUpdateOperationsInput | string
   model?: Prisma.StringFieldUpdateOperationsInput | string
-  forecastDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  registrationStatus?: Prisma.EnumRegistrationStatusFieldUpdateOperationsInput | $Enums.RegistrationStatus
-  registrationStatusDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  forecastArrival?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  forecastArrivalStatus?: Prisma.EnumArrivalStatusFieldUpdateOperationsInput | $Enums.ArrivalStatus
+  registrationStatus?: Prisma.NullableEnumRegistrationStatusFieldUpdateOperationsInput | $Enums.RegistrationStatus | null
+  registrationDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type MotorcycleUncheckedUpdateWithoutClientInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  chassis?: Prisma.StringFieldUpdateOperationsInput | string
+  chassi?: Prisma.StringFieldUpdateOperationsInput | string
   model?: Prisma.StringFieldUpdateOperationsInput | string
-  forecastDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  registrationStatus?: Prisma.EnumRegistrationStatusFieldUpdateOperationsInput | $Enums.RegistrationStatus
-  registrationStatusDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  forecastArrival?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  forecastArrivalStatus?: Prisma.EnumArrivalStatusFieldUpdateOperationsInput | $Enums.ArrivalStatus
+  registrationStatus?: Prisma.NullableEnumRegistrationStatusFieldUpdateOperationsInput | $Enums.RegistrationStatus | null
+  registrationDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type MotorcycleUncheckedUpdateManyWithoutClientInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  chassis?: Prisma.StringFieldUpdateOperationsInput | string
+  chassi?: Prisma.StringFieldUpdateOperationsInput | string
   model?: Prisma.StringFieldUpdateOperationsInput | string
-  forecastDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  registrationStatus?: Prisma.EnumRegistrationStatusFieldUpdateOperationsInput | $Enums.RegistrationStatus
-  registrationStatusDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  forecastArrival?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  forecastArrivalStatus?: Prisma.EnumArrivalStatusFieldUpdateOperationsInput | $Enums.ArrivalStatus
+  registrationStatus?: Prisma.NullableEnumRegistrationStatusFieldUpdateOperationsInput | $Enums.RegistrationStatus | null
+  registrationDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 
 
 export type MotorcycleSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  chassis?: boolean
+  chassi?: boolean
   model?: boolean
-  forecastDate?: boolean
+  forecastArrival?: boolean
+  forecastArrivalStatus?: boolean
   registrationStatus?: boolean
-  registrationStatusDate?: boolean
+  registrationDate?: boolean
   clientId?: boolean
   createdAt?: boolean
-  updatedAt?: boolean
   client?: boolean | Prisma.Motorcycle$clientArgs<ExtArgs>
 }, ExtArgs["result"]["motorcycle"]>
 
 export type MotorcycleSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  chassis?: boolean
+  chassi?: boolean
   model?: boolean
-  forecastDate?: boolean
+  forecastArrival?: boolean
+  forecastArrivalStatus?: boolean
   registrationStatus?: boolean
-  registrationStatusDate?: boolean
+  registrationDate?: boolean
   clientId?: boolean
   createdAt?: boolean
-  updatedAt?: boolean
   client?: boolean | Prisma.Motorcycle$clientArgs<ExtArgs>
 }, ExtArgs["result"]["motorcycle"]>
 
 export type MotorcycleSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  chassis?: boolean
+  chassi?: boolean
   model?: boolean
-  forecastDate?: boolean
+  forecastArrival?: boolean
+  forecastArrivalStatus?: boolean
   registrationStatus?: boolean
-  registrationStatusDate?: boolean
+  registrationDate?: boolean
   clientId?: boolean
   createdAt?: boolean
-  updatedAt?: boolean
   client?: boolean | Prisma.Motorcycle$clientArgs<ExtArgs>
 }, ExtArgs["result"]["motorcycle"]>
 
 export type MotorcycleSelectScalar = {
   id?: boolean
-  chassis?: boolean
+  chassi?: boolean
   model?: boolean
-  forecastDate?: boolean
+  forecastArrival?: boolean
+  forecastArrivalStatus?: boolean
   registrationStatus?: boolean
-  registrationStatusDate?: boolean
+  registrationDate?: boolean
   clientId?: boolean
   createdAt?: boolean
-  updatedAt?: boolean
 }
 
-export type MotorcycleOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "chassis" | "model" | "forecastDate" | "registrationStatus" | "registrationStatusDate" | "clientId" | "createdAt" | "updatedAt", ExtArgs["result"]["motorcycle"]>
+export type MotorcycleOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "chassi" | "model" | "forecastArrival" | "forecastArrivalStatus" | "registrationStatus" | "registrationDate" | "clientId" | "createdAt", ExtArgs["result"]["motorcycle"]>
 export type MotorcycleInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   client?: boolean | Prisma.Motorcycle$clientArgs<ExtArgs>
 }
@@ -629,14 +633,14 @@ export type $MotorcyclePayload<ExtArgs extends runtime.Types.Extensions.Internal
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
-    chassis: string
+    chassi: string
     model: string
-    forecastDate: Date | null
-    registrationStatus: $Enums.RegistrationStatus
-    registrationStatusDate: Date | null
+    forecastArrival: Date | null
+    forecastArrivalStatus: $Enums.ArrivalStatus
+    registrationStatus: $Enums.RegistrationStatus | null
+    registrationDate: Date | null
     clientId: string | null
     createdAt: Date
-    updatedAt: Date
   }, ExtArgs["result"]["motorcycle"]>
   composites: {}
 }
@@ -1062,14 +1066,14 @@ export interface Prisma__MotorcycleClient<T, Null = never, ExtArgs extends runti
  */
 export interface MotorcycleFieldRefs {
   readonly id: Prisma.FieldRef<"Motorcycle", 'String'>
-  readonly chassis: Prisma.FieldRef<"Motorcycle", 'String'>
+  readonly chassi: Prisma.FieldRef<"Motorcycle", 'String'>
   readonly model: Prisma.FieldRef<"Motorcycle", 'String'>
-  readonly forecastDate: Prisma.FieldRef<"Motorcycle", 'DateTime'>
+  readonly forecastArrival: Prisma.FieldRef<"Motorcycle", 'DateTime'>
+  readonly forecastArrivalStatus: Prisma.FieldRef<"Motorcycle", 'ArrivalStatus'>
   readonly registrationStatus: Prisma.FieldRef<"Motorcycle", 'RegistrationStatus'>
-  readonly registrationStatusDate: Prisma.FieldRef<"Motorcycle", 'DateTime'>
+  readonly registrationDate: Prisma.FieldRef<"Motorcycle", 'DateTime'>
   readonly clientId: Prisma.FieldRef<"Motorcycle", 'String'>
   readonly createdAt: Prisma.FieldRef<"Motorcycle", 'DateTime'>
-  readonly updatedAt: Prisma.FieldRef<"Motorcycle", 'DateTime'>
 }
     
 

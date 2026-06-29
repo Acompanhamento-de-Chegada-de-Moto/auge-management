@@ -1,0 +1,47 @@
+import { ArrowLeft } from "lucide-react";
+import type { Metadata } from "next";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { buttonVariants } from "@/components/ui/button";
+import { getClientById } from "@/lib/data/client";
+import { EditClientForm } from "./_components/EditClientForm";
+
+export const metadata: Metadata = {
+  title: "Editar Cliente",
+};
+
+export default async function EditarClientePage({
+  params,
+}: {
+  params: Promise<{ clientId: string }>;
+}) {
+  const { clientId } = await params;
+
+  if (!clientId) {
+    notFound();
+  }
+
+  const client = await getClientById(clientId);
+
+  if (!client) {
+    notFound();
+  }
+
+  return (
+    <div className="p-4 sm:p-6 lg:p-8">
+      <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+        <h1 className="text-2xl font-bold">Editar Cliente</h1>
+        <Link
+          title="voltar"
+          href="/bdc"
+          className={buttonVariants({
+            variant: "secondary",
+          })}
+        >
+          <ArrowLeft className="size-4 mr-2" /> Voltar
+        </Link>
+      </div>
+      <EditClientForm client={client} />
+    </div>
+  );
+}
