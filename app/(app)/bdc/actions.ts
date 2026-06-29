@@ -224,6 +224,7 @@ export async function importSpreadsheetAction(
       clientCpf: string;
     }> = [];
 
+    const newCpfs = new Set<string>();
     let created = 0;
     let updated = 0;
     let skipped = 0;
@@ -232,11 +233,12 @@ export async function importSpreadsheetAction(
       try {
         const cpf = row.cpf
           ? stripCPF(row.cpf)
-          : `TEMP-${row.chassi.slice(0, 8).toUpperCase()}`;
+          : `TEMP-${row.chassi.toUpperCase()}`;
 
-        let existingClient = clientByCpf.get(cpf);
+        const existingClient = clientByCpf.get(cpf);
 
-        if (!existingClient) {
+        if (!existingClient && !newCpfs.has(cpf)) {
+          newCpfs.add(cpf);
           const billingDate = parseDateStringDDMMAAA(row.faturamento);
           newClients.push({
             cpf,
@@ -245,7 +247,7 @@ export async function importSpreadsheetAction(
             city: row.cidade,
             billingDate,
           });
-        } else {
+        } else if (existingClient) {
           const billingDate = parseDateStringDDMMAAA(row.faturamento);
           if (billingDate && !existingClient.billingDate) {
             billingDateUpdates.push({ cpf, billingDate });
@@ -275,7 +277,7 @@ export async function importSpreadsheetAction(
 
     console.log(
       "[import] Classificação:",
-      { newClients: newClients.length, newMotorcycles: newMotorcycles.length, linkMotorcycles: linkMotorcycles.length, billingDateUpdates: billingDateUpdates.length },
+      { newClients: newClients.length, newMotorcycles: newMotorcycles.length, linkMotorcycles: linkMotorcycles.length, billingDateUpdates: billingDateUpdates.length, skipped },
     );
 
     if (newClients.length > 0) {
