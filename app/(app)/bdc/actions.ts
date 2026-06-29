@@ -225,6 +225,7 @@ export async function importSpreadsheetAction(
     }> = [];
 
     const newCpfs = new Set<string>();
+    const newChassis = new Set<string>();
     let created = 0;
     let updated = 0;
     let skipped = 0;
@@ -256,12 +257,13 @@ export async function importSpreadsheetAction(
 
         const existingMoto = motoByChassi.get(row.chassi);
 
-        if (existingMoto) {
-          if (!existingMoto.clientId) {
+        if (existingMoto || newChassis.has(row.chassi)) {
+          if (existingMoto && !existingMoto.clientId) {
             linkMotorcycles.push({ chassi: row.chassi, clientCpf: cpf });
           }
           updated++;
         } else {
+          newChassis.add(row.chassi);
           newMotorcycles.push({
             chassi: row.chassi,
             model: row.modelo,
