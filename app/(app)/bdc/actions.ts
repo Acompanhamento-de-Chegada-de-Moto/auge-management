@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { requireAuth } from "@/app/data/user/require-auth";
 import { stripCPF } from "@/lib/cpf";
 import {
+  createClientsBatch,
+  getAllClientsForImport,
   getBDCFilterOptions,
   getClientByCpf,
   getClientById,
@@ -13,7 +15,10 @@ import {
 } from "@/lib/data/client";
 import {
   createMotorcycle,
+  createMotorcyclesBatch,
+  getAllMotorcyclesForImport,
   getMotorcycleByChassis,
+  linkMotorcyclesBatch,
   updateMotorcycle,
 } from "@/lib/data/motorcycle";
 import { prisma } from "@/lib/db";
@@ -173,64 +178,130 @@ export async function importSpreadsheetAction(
 ): Promise<{ status: "success" | "error"; message: string }> {
   await requireAuth();
 
+  const [existingClients, existingMotorcycles] = await Promise.all([
+    getAllClientsForImport(),
+    getAllMotorcyclesForImport(),
+  ]);
+
+  const clientByCpf = new Map(
+    existingClients.map((c) => [c.cpf, c]),
+  );
+  const motoByChassi = new Map(
+    existingMotorcycles.map((m) => [m.chassi, m]),
+  );
+
+  const newClients: Array<{
+    cpf: string;
+    name: string;
+    sellerName: string;
+    city: string;
+    billingDate: Date | null;
+  }> = [];
+
+  const billingDateUpdates: Array<{
+    cpf: string;
+    billingDate: Date;
+  }> = [];
+
+  const newMotorcycles: Array<{
+    chassi: string;
+    model: string;
+    clientCpf: string;
+  }> = [];
+
+  const linkMotorcycles: Array<{
+    chassi: string;
+    clientCpf: string;
+  }> = [];
+
   let created = 0;
   let updated = 0;
   let skipped = 0;
-  const errors: string[] = [];
 
   for (const row of rows) {
     try {
-      const strippedCpf = stripCPF(row.cpf);
+      const cpf = row.cpf
+        ? stripCPF(row.cpf)
+        : `TEMP-${row.chassi.slice(0, 8).toUpperCase()}`;
 
-      let client = strippedCpf ? await getClientByCpf(strippedCpf) : null;
+      let existingClient = clientByCpf.get(cpf);
 
-      if (!client) {
+      if (!existingClient) {
         const billingDate = parseDateStringDDMMAAA(row.faturamento);
-
-        client = await prisma.client.create({
-          data: {
-            cpf: strippedCpf || `TEMP-${row.chassi.slice(0, 8).toUpperCase()}`,
-            name: row.cliente,
-            sellersName: row.consultor,
-            city: row.cidade || "",
-            billingDate,
-          },
-          include: { motorcycles: true },
+        newClients.push({
+          cpf,
+          name: row.cliente,
+          sellerName: row.consultor,
+          city: row.cidade,
+          billingDate,
         });
-      } else if (row.faturamento) {
+      } else {
         const billingDate = parseDateStringDDMMAAA(row.faturamento);
-        if (billingDate && !client.billingDate) {
-          await prisma.client.update({
-            where: { id: client.id },
-            data: { billingDate },
-          });
+        if (billingDate && !existingClient.billingDate) {
+          billingDateUpdates.push({ cpf, billingDate });
         }
       }
 
-      const motorcycle = await getMotorcycleByChassis(row.chassi);
+      const existingMoto = motoByChassi.get(row.chassi);
 
-      if (motorcycle) {
-        if (!motorcycle.clientId) {
-          await prisma.motorcycle.update({
-            where: { id: motorcycle.id },
-            data: { clientId: client.id },
-          });
+      if (existingMoto) {
+        if (!existingMoto.clientId) {
+          linkMotorcycles.push({ chassi: row.chassi, clientCpf: cpf });
         }
         updated++;
       } else {
-        await createMotorcycle({
+        newMotorcycles.push({
           chassi: row.chassi,
           model: row.modelo,
-          clientId: client.id,
+          clientCpf: cpf,
         });
         created++;
       }
     } catch (err) {
       skipped++;
-      errors.push(
-        `Chassi ${row.chassi}: ${err instanceof Error ? err.message : "Erro desconhecido"}`,
-      );
     }
+  }
+
+  const createdClients = newClients.length > 0
+    ? await createClientsBatch(newClients)
+    : [];
+
+  const clientIdByCpf = new Map<string, string>();
+  for (const c of existingClients) clientIdByCpf.set(c.cpf, c.id);
+  for (const c of createdClients) clientIdByCpf.set(c.cpf, c.id);
+
+  if (newMotorcycles.length > 0) {
+    await createMotorcyclesBatch(
+      newMotorcycles.map((m) => ({
+        chassi: m.chassi,
+        model: m.model,
+        clientId: clientIdByCpf.get(m.clientCpf),
+      })),
+    );
+  }
+
+  if (linkMotorcycles.length > 0) {
+    const links = linkMotorcycles
+      .map((l) => ({
+        chassi: l.chassi,
+        clientId: clientIdByCpf.get(l.clientCpf),
+      }))
+      .filter((l): l is { chassi: string; clientId: string } => !!l.clientId);
+
+    if (links.length > 0) {
+      await linkMotorcyclesBatch(links);
+    }
+  }
+
+  if (billingDateUpdates.length > 0) {
+    await prisma.$transaction(
+      billingDateUpdates.map((u) =>
+        prisma.client.update({
+          where: { cpf: u.cpf },
+          data: { billingDate: u.billingDate },
+        }),
+      ),
+    );
   }
 
   const parts: string[] = [];
@@ -251,7 +322,7 @@ export async function importSpreadsheetAction(
 
   return {
     status: "success",
-    message: `Importação concluída. ${parts.join(", ")}.${errors.length > 0 ? ` Erros: ${errors.slice(0, 3).join("; ")}${errors.length > 3 ? ` e mais ${errors.length - 3}` : ""}` : ""}`,
+    message: `Importação concluída. ${parts.join(", ")}.`,
   };
 }
 

@@ -64,6 +64,7 @@ export async function getAllClientsForImport() {
       cpf: true,
       name: true,
       sellersName: true,
+      billingDate: true,
     },
   });
 }
@@ -74,6 +75,7 @@ export async function createClientsBatch(
     name: string;
     sellerName: string;
     city: string;
+    billingDate?: Date | null;
   }>,
 ) {
   if (clients.length === 0) return [];
@@ -89,6 +91,7 @@ export async function createClientsBatch(
         name: c.name,
         sellersName: c.sellerName,
         city: c.city,
+        billingDate: c.billingDate ?? null,
       };
     }),
     select: {
