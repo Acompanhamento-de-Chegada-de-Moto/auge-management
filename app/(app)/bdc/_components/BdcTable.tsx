@@ -1,11 +1,11 @@
 "use client";
 
 import { format } from "date-fns";
-import { PencilIcon, Trash2Icon } from "lucide-react";
+import { ChevronLeft, ChevronRight, PencilIcon, Trash2Icon } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useTransition } from "react";
-import type { UserGetClientsType } from "@/app/data/user/user-get-clients";
+import { useTransition } from "react";
+import type { ClientRow } from "@/app/(app)/bdc/actions";
 import { CopyText } from "@/components/general/CopyText";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -38,62 +38,32 @@ import {
 import { formatCPF } from "@/lib/cpf";
 
 interface IBDCTableProps {
-  data: UserGetClientsType[];
-  filters: {
+  rows: ClientRow[];
+  totalPages: number;
+  page: number;
+  filterOptions: {
+    sellers: string[];
+    cities: string[];
+    models: string[];
+  };
+  activeFilters: {
     sellerName: string;
     city: string;
     model: string;
   };
 }
 
-export function BDCTable({ data, filters }: IBDCTableProps) {
+export function BDCTable({
+  rows,
+  totalPages,
+  page,
+  filterOptions,
+  activeFilters,
+}: IBDCTableProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-
   const [isPending, startTransition] = useTransition();
-
-  const sellers = useMemo(
-    () => [...new Set(data.map((item) => item.sellersName).filter(Boolean))],
-    [data],
-  );
-
-  const cities = useMemo(
-    () => [...new Set(data.map((item) => item.city).filter(Boolean))],
-    [data],
-  );
-
-  const models = useMemo(
-    () => [
-      ...new Set(
-        data.flatMap((item) =>
-          item.motorcycles
-            .map((motorcycle) => motorcycle.model)
-            .filter(Boolean),
-        ),
-      ),
-    ],
-    [data],
-  );
-
-  const flatData = useMemo(() => {
-    return data.flatMap((client) => {
-      if (client.motorcycles.length === 0) {
-        return [
-          {
-            ...client,
-            motorcycle: null as (typeof client.motorcycles)[0] | null,
-            rowKey: `${client.id}-none`,
-          },
-        ];
-      }
-      return client.motorcycles.map((motorcycle) => ({
-        ...client,
-        motorcycle,
-        rowKey: `${client.id}-${motorcycle.id}`,
-      }));
-    });
-  }, [data]);
 
   const updateFilter = (
     key: "sellerName" | "city" | "model",
@@ -106,22 +76,31 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
     } else {
       params.set(key, value);
     }
+    params.delete("page");
 
     startTransition(() => {
       router.replace(`${pathname}?${params.toString()}`);
     });
   };
 
-  const clearFilters = () => {
+  const handleClearFilters = () => {
     startTransition(() => {
       router.replace(pathname);
+    });
+  };
+
+  const handlePageChange = (newPage: number) => {
+    const params = new URLSearchParams(searchParams);
+    params.set("page", String(newPage));
+    startTransition(() => {
+      router.replace(`${pathname}?${params.toString()}`);
     });
   };
 
   return (
     <TooltipProvider>
       <div className="md:hidden space-y-3">
-        {flatData.map((row) => {
+        {rows.map((row) => {
           const motorcycle = row.motorcycle;
           return (
             <div key={row.rowKey} className="rounded-lg border p-4">
@@ -178,17 +157,17 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
                       <TooltipTrigger asChild>
                         <Badge
                           className={`px-3 py-1 ${
-                    getArrivalStatus(
-                      motorcycle?.forecastArrival ?? null,
-                      motorcycle?.forecastArrivalStatus,
-                    ).color
+                            getArrivalStatus(
+                              motorcycle?.forecastArrival ?? null,
+                              motorcycle?.forecastArrivalStatus,
+                            ).color
                           }`}
                         >
                           {
-                    getArrivalStatus(
-                      motorcycle?.forecastArrival ?? null,
-                      motorcycle?.forecastArrivalStatus,
-                    ).label
+                            getArrivalStatus(
+                              motorcycle?.forecastArrival ?? null,
+                              motorcycle?.forecastArrivalStatus,
+                            ).label
                           }
                         </Badge>
                       </TooltipTrigger>
@@ -234,22 +213,44 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
             </div>
           );
         })}
+
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 pt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page <= 1 || isPending}
+              onClick={() => handlePageChange(page - 1)}
+            >
+              <ChevronLeft className="size-4" />
+            </Button>
+            <span className="text-sm text-muted-foreground">
+              Página {page} de {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page >= totalPages || isPending}
+              onClick={() => handlePageChange(page + 1)}
+            >
+              <ChevronRight className="size-4" />
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="w-full hidden md:block rounded-sm">
         <div className="mb-4 flex flex-wrap items-center gap-2">
           <Select
-            value={filters.sellerName || "all"}
+            value={activeFilters.sellerName || "all"}
             onValueChange={(value) => updateFilter("sellerName", value)}
           >
             <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder="Vendedor" />
             </SelectTrigger>
-
             <SelectContent>
               <SelectItem value="all">Todos os vendedores</SelectItem>
-
-              {sellers.map((seller) => (
+              {filterOptions.sellers.map((seller) => (
                 <SelectItem key={seller} value={seller}>
                   {seller}
                 </SelectItem>
@@ -258,17 +259,15 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
           </Select>
 
           <Select
-            value={filters.city || "all"}
+            value={activeFilters.city || "all"}
             onValueChange={(value) => updateFilter("city", value)}
           >
             <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder="Cidade" />
             </SelectTrigger>
-
             <SelectContent>
               <SelectItem value="all">Todas as cidades</SelectItem>
-
-              {cities.map((city) => (
+              {filterOptions.cities.map((city) => (
                 <SelectItem key={city} value={city}>
                   {city}
                 </SelectItem>
@@ -277,17 +276,15 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
           </Select>
 
           <Select
-            value={filters.model || "all"}
+            value={activeFilters.model || "all"}
             onValueChange={(value) => updateFilter("model", value)}
           >
             <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder="Modelo" />
             </SelectTrigger>
-
             <SelectContent>
               <SelectItem value="all">Todos os modelos</SelectItem>
-
-              {models.map((model) => (
+              {filterOptions.models.map((model) => (
                 <SelectItem key={model} value={model}>
                   {model}
                 </SelectItem>
@@ -295,7 +292,11 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
             </SelectContent>
           </Select>
 
-          <Button variant="outline" onClick={clearFilters} disabled={isPending}>
+          <Button
+            variant="outline"
+            onClick={handleClearFilters}
+            disabled={isPending}
+          >
             Limpar filtros
           </Button>
         </div>
@@ -325,17 +326,17 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
               </TableHeader>
 
               <TableBody>
-                {data.length === 0 ? (
+                {rows.length === 0 ? (
                   <TableRow>
                     <TableCell
-                      colSpan={10} // Ajustado colSpan para bater com o número correto de colunas
+                      colSpan={10}
                       className="py-8 text-center text-muted-foreground"
                     >
                       Nenhum registro encontrado.
                     </TableCell>
                   </TableRow>
                 ) : (
-                  flatData.map((row, index) => {
+                  rows.map((row, index) => {
                     const motorcycle = row.motorcycle;
 
                     return (
@@ -344,21 +345,16 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
                         className={index % 2 === 0 ? undefined : "bg-muted/20"}
                       >
                         <TableCell>{row.name}</TableCell>
-
                         <TableCell>
                           <CopyText text={row.cpf}>
                             <span>{formatCPF(row.cpf)}</span>
                           </CopyText>
                         </TableCell>
-
                         <TableCell>{row.sellersName}</TableCell>
-
                         <TableCell className="hidden md:table-cell">
                           {row.city}
                         </TableCell>
-
                         <TableCell>{motorcycle?.model ?? "—"}</TableCell>
-
                         <TableCell>
                           {motorcycle?.chassi ? (
                             <CopyText text={motorcycle.chassi}>
@@ -368,13 +364,11 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
                             "—"
                           )}
                         </TableCell>
-
                         <TableCell className="hidden md:table-cell">
                           {row.billingDate
                             ? format(row.billingDate, "dd/MM/yyyy")
                             : "—"}
                         </TableCell>
-
                         <TableCell>
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -404,7 +398,6 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
                             </TooltipContent>
                           </Tooltip>
                         </TableCell>
-
                         <TableCell>
                           {motorcycle?.registrationStatus ? (
                             <Tooltip>
@@ -434,7 +427,6 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
                             "—"
                           )}
                         </TableCell>
-
                         <TableCell>
                           <div className="flex h-full items-center gap-1">
                             <Link
@@ -470,6 +462,32 @@ export function BDCTable({ data, filters }: IBDCTableProps) {
               </TableBody>
             </Table>
           </div>
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-4 pt-4">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page <= 1 || isPending}
+                onClick={() => handlePageChange(page - 1)}
+              >
+                <ChevronLeft className="mr-1 size-4" />
+                Anterior
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                Página {page} de {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page >= totalPages || isPending}
+                onClick={() => handlePageChange(page + 1)}
+              >
+                Próximo
+                <ChevronRight className="ml-1 size-4" />
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </TooltipProvider>

@@ -64,6 +64,7 @@ export async function getAllClientsForImport() {
       cpf: true,
       name: true,
       sellersName: true,
+      billingDate: true,
     },
   });
 }
@@ -74,6 +75,7 @@ export async function createClientsBatch(
     name: string;
     sellerName: string;
     city: string;
+    billingDate?: Date | null;
   }>,
 ) {
   if (clients.length === 0) return [];
@@ -89,6 +91,7 @@ export async function createClientsBatch(
         name: c.name,
         sellersName: c.sellerName,
         city: c.city,
+        billingDate: c.billingDate ?? null,
       };
     }),
     select: {
@@ -197,13 +200,13 @@ export async function getClientsPaginated(params: {
   const where: Record<string, unknown> = {};
 
   if (params.sellerName) {
-    where.sellerName = params.sellerName;
+    where.sellersName = { contains: params.sellerName, mode: "insensitive" };
   }
   if (params.city) {
-    where.city = params.city;
+    where.city = { contains: params.city, mode: "insensitive" };
   }
   if (params.model) {
-    where.motorcycles = { some: { model: params.model } };
+    where.motorcycles = { some: { model: { contains: params.model, mode: "insensitive" } } };
   }
   if (params.search) {
     where.cpf = { contains: params.search };

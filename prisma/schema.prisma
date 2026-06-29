@@ -8,20 +8,20 @@ datasource db {
 }
 
 model User {
-  id            String    @id
-  name          String
-  email         String    @unique
-  emailVerified Boolean   @default(false)
-  image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  role          String    @default("USER")
-  banned        Boolean   @default(false)
-  banReason     String?
-  banExpires    DateTime?
-  accounts      Account[]
-  sessions      Session[]
-  tickets       Ticket[]
+  id             String          @id
+  name           String
+  email          String          @unique
+  emailVerified  Boolean         @default(false)
+  image          String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  role           String          @default("USER")
+  banned         Boolean         @default(false)
+  banReason      String?
+  banExpires     DateTime?
+  accounts       Account[]
+  sessions       Session[]
+  tickets        Ticket[]
   ticketMessages TicketMessage[]
 
   @@map("user")

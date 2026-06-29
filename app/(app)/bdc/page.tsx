@@ -5,7 +5,7 @@ import { Suspense } from "react";
 
 import { BDCTable } from "@/app/(app)/bdc/_components/BdcTable";
 import { SpreadsheetUploadDialog } from "@/app/(app)/bdc/_components/SpreadsheetUploadDialog";
-import { userGetClients } from "@/app/data/user/user-get-clients";
+import { getClientsPaginatedAction } from "@/app/(app)/bdc/actions";
 
 import { EmptyState } from "@/components/general/EmptyState";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,7 @@ export const metadata: Metadata = {
 
 interface BDCPageProps {
   searchParams: Promise<{
+    page?: string;
     sellerName?: string;
     city?: string;
     model?: string;
@@ -32,7 +33,7 @@ interface BDCPageProps {
 }
 
 export default async function BDCPage({ searchParams }: BDCPageProps) {
-  const filters = await searchParams;
+  const params = await searchParams;
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
@@ -52,28 +53,30 @@ export default async function BDCPage({ searchParams }: BDCPageProps) {
       </div>
 
       <Suspense fallback={<BDCPageSkeletonLayout />}>
-        <RenderClients filters={filters} />
+        <RenderClients params={params} />
       </Suspense>
     </div>
   );
 }
 
 async function RenderClients({
-  filters,
+  params,
 }: {
-  filters: {
+  params: {
+    page?: string;
     sellerName?: string;
     city?: string;
     model?: string;
   };
 }) {
-  const data = await userGetClients({
-    sellerName: filters.sellerName,
-    city: filters.city,
-    model: filters.model,
+  const result = await getClientsPaginatedAction({
+    page: Number(params.page) || 1,
+    sellerName: params.sellerName,
+    city: params.city,
+    model: params.model,
   });
 
-  if (data.length === 0) {
+  if (result.rows.length === 0) {
     return (
       <EmptyState
         title="Nenhum cliente encontrado"
@@ -86,11 +89,14 @@ async function RenderClients({
 
   return (
     <BDCTable
-      data={data}
-      filters={{
-        sellerName: filters.sellerName ?? "",
-        city: filters.city ?? "",
-        model: filters.model ?? "",
+      rows={result.rows}
+      totalPages={result.totalPages}
+      page={result.page}
+      filterOptions={result.filterOptions}
+      activeFilters={{
+        sellerName: params.sellerName ?? "",
+        city: params.city ?? "",
+        model: params.model ?? "",
       }}
     />
   );
