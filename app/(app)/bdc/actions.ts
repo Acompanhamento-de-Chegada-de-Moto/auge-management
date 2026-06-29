@@ -178,152 +178,181 @@ export async function importSpreadsheetAction(
 ): Promise<{ status: "success" | "error"; message: string }> {
   await requireAuth();
 
-  const [existingClients, existingMotorcycles] = await Promise.all([
-    getAllClientsForImport(),
-    getAllMotorcyclesForImport(),
-  ]);
+  try {
+    console.log("[import] Iniciando importação de", rows.length, "linhas");
 
-  const clientByCpf = new Map(
-    existingClients.map((c) => [c.cpf, c]),
-  );
-  const motoByChassi = new Map(
-    existingMotorcycles.map((m) => [m.chassi, m]),
-  );
+    const [existingClients, existingMotorcycles] = await Promise.all([
+      getAllClientsForImport(),
+      getAllMotorcyclesForImport(),
+    ]);
 
-  const newClients: Array<{
-    cpf: string;
-    name: string;
-    sellerName: string;
-    city: string;
-    billingDate: Date | null;
-  }> = [];
+    console.log(
+      "[import] Clientes existentes:",
+      existingClients.length,
+      "Motos existentes:",
+      existingMotorcycles.length,
+    );
 
-  const billingDateUpdates: Array<{
-    cpf: string;
-    billingDate: Date;
-  }> = [];
+    const clientByCpf = new Map(
+      existingClients.map((c) => [c.cpf, c]),
+    );
+    const motoByChassi = new Map(
+      existingMotorcycles.map((m) => [m.chassi, m]),
+    );
 
-  const newMotorcycles: Array<{
-    chassi: string;
-    model: string;
-    clientCpf: string;
-  }> = [];
+    const newClients: Array<{
+      cpf: string;
+      name: string;
+      sellerName: string;
+      city: string;
+      billingDate: Date | null;
+    }> = [];
 
-  const linkMotorcycles: Array<{
-    chassi: string;
-    clientCpf: string;
-  }> = [];
+    const billingDateUpdates: Array<{
+      cpf: string;
+      billingDate: Date;
+    }> = [];
 
-  let created = 0;
-  let updated = 0;
-  let skipped = 0;
+    const newMotorcycles: Array<{
+      chassi: string;
+      model: string;
+      clientCpf: string;
+    }> = [];
 
-  for (const row of rows) {
-    try {
-      const cpf = row.cpf
-        ? stripCPF(row.cpf)
-        : `TEMP-${row.chassi.slice(0, 8).toUpperCase()}`;
+    const linkMotorcycles: Array<{
+      chassi: string;
+      clientCpf: string;
+    }> = [];
 
-      let existingClient = clientByCpf.get(cpf);
+    let created = 0;
+    let updated = 0;
+    let skipped = 0;
 
-      if (!existingClient) {
-        const billingDate = parseDateStringDDMMAAA(row.faturamento);
-        newClients.push({
-          cpf,
-          name: row.cliente,
-          sellerName: row.consultor,
-          city: row.cidade,
-          billingDate,
-        });
-      } else {
-        const billingDate = parseDateStringDDMMAAA(row.faturamento);
-        if (billingDate && !existingClient.billingDate) {
-          billingDateUpdates.push({ cpf, billingDate });
+    for (const row of rows) {
+      try {
+        const cpf = row.cpf
+          ? stripCPF(row.cpf)
+          : `TEMP-${row.chassi.slice(0, 8).toUpperCase()}`;
+
+        let existingClient = clientByCpf.get(cpf);
+
+        if (!existingClient) {
+          const billingDate = parseDateStringDDMMAAA(row.faturamento);
+          newClients.push({
+            cpf,
+            name: row.cliente,
+            sellerName: row.consultor,
+            city: row.cidade,
+            billingDate,
+          });
+        } else {
+          const billingDate = parseDateStringDDMMAAA(row.faturamento);
+          if (billingDate && !existingClient.billingDate) {
+            billingDateUpdates.push({ cpf, billingDate });
+          }
         }
-      }
 
-      const existingMoto = motoByChassi.get(row.chassi);
+        const existingMoto = motoByChassi.get(row.chassi);
 
-      if (existingMoto) {
-        if (!existingMoto.clientId) {
-          linkMotorcycles.push({ chassi: row.chassi, clientCpf: cpf });
+        if (existingMoto) {
+          if (!existingMoto.clientId) {
+            linkMotorcycles.push({ chassi: row.chassi, clientCpf: cpf });
+          }
+          updated++;
+        } else {
+          newMotorcycles.push({
+            chassi: row.chassi,
+            model: row.modelo,
+            clientCpf: cpf,
+          });
+          created++;
         }
-        updated++;
-      } else {
-        newMotorcycles.push({
-          chassi: row.chassi,
-          model: row.modelo,
-          clientCpf: cpf,
-        });
-        created++;
+      } catch (err) {
+        console.error("[import] Erro ao processar linha", row.chassi, err);
+        skipped++;
       }
-    } catch (err) {
-      skipped++;
     }
-  }
 
-  const createdClients = newClients.length > 0
-    ? await createClientsBatch(newClients)
-    : [];
-
-  const clientIdByCpf = new Map<string, string>();
-  for (const c of existingClients) clientIdByCpf.set(c.cpf, c.id);
-  for (const c of createdClients) clientIdByCpf.set(c.cpf, c.id);
-
-  if (newMotorcycles.length > 0) {
-    await createMotorcyclesBatch(
-      newMotorcycles.map((m) => ({
-        chassi: m.chassi,
-        model: m.model,
-        clientId: clientIdByCpf.get(m.clientCpf),
-      })),
+    console.log(
+      "[import] Classificação:",
+      { newClients: newClients.length, newMotorcycles: newMotorcycles.length, linkMotorcycles: linkMotorcycles.length, billingDateUpdates: billingDateUpdates.length },
     );
-  }
 
-  if (linkMotorcycles.length > 0) {
-    const links = linkMotorcycles
-      .map((l) => ({
-        chassi: l.chassi,
-        clientId: clientIdByCpf.get(l.clientCpf),
-      }))
-      .filter((l): l is { chassi: string; clientId: string } => !!l.clientId);
-
-    if (links.length > 0) {
-      await linkMotorcyclesBatch(links);
+    if (newClients.length > 0) {
+      console.log("[import] Criando", newClients.length, "clientes em batch");
     }
+    const createdClients = newClients.length > 0
+      ? await createClientsBatch(newClients)
+      : [];
+
+    const clientIdByCpf = new Map<string, string>();
+    for (const c of existingClients) clientIdByCpf.set(c.cpf, c.id);
+    for (const c of createdClients) clientIdByCpf.set(c.cpf, c.id);
+
+    if (newMotorcycles.length > 0) {
+      console.log("[import] Criando", newMotorcycles.length, "motos em batch");
+      await createMotorcyclesBatch(
+        newMotorcycles.map((m) => ({
+          chassi: m.chassi,
+          model: m.model,
+          clientId: clientIdByCpf.get(m.clientCpf),
+        })),
+      );
+    }
+
+    if (linkMotorcycles.length > 0) {
+      const links = linkMotorcycles
+        .map((l) => ({
+          chassi: l.chassi,
+          clientId: clientIdByCpf.get(l.clientCpf),
+        }))
+        .filter((l): l is { chassi: string; clientId: string } => !!l.clientId);
+
+      if (links.length > 0) {
+        console.log("[import] Vinculando", links.length, "motos existentes");
+        await linkMotorcyclesBatch(links);
+      }
+    }
+
+    if (billingDateUpdates.length > 0) {
+      console.log("[import] Atualizando", billingDateUpdates.length, "billingDates");
+      await prisma.$transaction(
+        billingDateUpdates.map((u) =>
+          prisma.client.update({
+            where: { cpf: u.cpf },
+            data: { billingDate: u.billingDate },
+          }),
+        ),
+      );
+    }
+
+    const parts: string[] = [];
+    if (created > 0)
+      parts.push(
+        `${created} moto${created > 1 ? "s" : ""} criada${created > 1 ? "s" : ""}`,
+      );
+    if (updated > 0)
+      parts.push(
+        `${updated} moto${updated > 1 ? "s" : ""} atualizada${updated > 1 ? "s" : ""}`,
+      );
+    if (skipped > 0)
+      parts.push(
+        `${skipped} linha${skipped > 1 ? "s" : ""} ignorada${skipped > 1 ? "s" : ""}`,
+      );
+
+    revalidatePath("/bdc");
+
+    return {
+      status: "success",
+      message: `Importação concluída. ${parts.join(", ")}.`,
+    };
+  } catch (err) {
+    console.error("[import] Erro fatal:", err);
+    return {
+      status: "error",
+      message: err instanceof Error ? err.message : "Erro interno ao importar planilha.",
+    };
   }
-
-  if (billingDateUpdates.length > 0) {
-    await prisma.$transaction(
-      billingDateUpdates.map((u) =>
-        prisma.client.update({
-          where: { cpf: u.cpf },
-          data: { billingDate: u.billingDate },
-        }),
-      ),
-    );
-  }
-
-  const parts: string[] = [];
-  if (created > 0)
-    parts.push(
-      `${created} moto${created > 1 ? "s" : ""} criada${created > 1 ? "s" : ""}`,
-    );
-  if (updated > 0)
-    parts.push(
-      `${updated} moto${updated > 1 ? "s" : ""} atualizada${updated > 1 ? "s" : ""}`,
-    );
-  if (skipped > 0)
-    parts.push(
-      `${skipped} linha${skipped > 1 ? "s" : ""} ignorada${skipped > 1 ? "s" : ""}`,
-    );
-
-  revalidatePath("/bdc");
-
-  return {
-    status: "success",
-    message: `Importação concluída. ${parts.join(", ")}.`,
-  };
 }
 
 export type ClientRow = {

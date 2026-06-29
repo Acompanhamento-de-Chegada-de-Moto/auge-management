@@ -175,7 +175,20 @@ export function SpreadsheetUploadDialog() {
     setIsUploading(true);
 
     try {
-      const { rows } = await parseSpreadsheet(file);
+      let rows;
+      try {
+        const parsed = await parseSpreadsheet(file);
+        rows = parsed.rows;
+      } catch (parseErr) {
+        console.error("Erro no parse da planilha:", parseErr);
+        toast.error("Erro ao ler planilha", {
+          description:
+            parseErr instanceof Error
+              ? parseErr.message
+              : "Formato de arquivo não reconhecido.",
+        });
+        return;
+      }
 
       if (rows.length === 0) {
         toast.error("Nenhuma linha válida encontrada", {
@@ -199,9 +212,13 @@ export function SpreadsheetUploadDialog() {
           description: result.message,
         });
       }
-    } catch {
+    } catch (actionErr) {
+      console.error("Erro na server action:", actionErr);
       toast.error("Erro na importação", {
-        description: "Não foi possível processar o arquivo. Tente novamente.",
+        description:
+          actionErr instanceof Error
+            ? actionErr.message
+            : "Não foi possível processar o arquivo. Tente novamente.",
       });
     } finally {
       setIsUploading(false);
