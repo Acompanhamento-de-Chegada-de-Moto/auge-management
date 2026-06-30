@@ -2,7 +2,7 @@ import { PlusIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
-import { userGetMotorcycles } from "@/app/data/user/user-get-motorcycles";
+import { getMotorcyclesPaginatedAction } from "@/app/(app)/inventory/actions";
 import { EmptyState } from "@/components/general/EmptyState";
 import { Button } from "@/components/ui/button";
 import {
@@ -54,22 +54,17 @@ async function RenderMotorcycles({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const params = await searchParams;
-  const filters = {
-    model: typeof params.model === "string" ? params.model : "",
-    status: typeof params.status === "string" ? params.status : "",
-  };
 
-  const data = await userGetMotorcycles({
-    ...(filters.model && { model: filters.model }),
-    ...((filters.status === "Em Trânsito" ||
-      filters.status === "Chegou" ||
-      filters.status === "Atrasada") && { status: filters.status }),
+  const result = await getMotorcyclesPaginatedAction({
+    page: Number(params.page) || 1,
+    model: typeof params.model === "string" ? params.model : undefined,
+    status: typeof params.status === "string" ? params.status : undefined,
   });
 
-  if (data.length === 0) {
+  if (result.rows.length === 0) {
     return (
       <EmptyState
-        title="Nenhuma mototcicleta encontrada"
+        title="Nenhuma motocicleta encontrada"
         description="Para começar adicione uma nova motocicleta"
         buttonText="Adicionar Motocicleta"
         href="/inventory/motorcycle/new"
@@ -77,7 +72,18 @@ async function RenderMotorcycles({
     );
   }
 
-  return <MotorcycleTable motorcycles={data} filters={filters} />;
+  return (
+    <MotorcycleTable
+      motorcycles={result.rows}
+      totalPages={result.totalPages}
+      page={result.page}
+      filterOptions={result.filterOptions}
+      activeFilters={{
+        model: typeof params.model === "string" ? params.model : "",
+        status: typeof params.status === "string" ? params.status : "",
+      }}
+    />
+  );
 }
 
 export function EstoquePageSkeletonLayout() {

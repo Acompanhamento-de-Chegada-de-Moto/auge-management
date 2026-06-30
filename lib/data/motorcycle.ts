@@ -91,6 +91,7 @@ export async function getMotorcyclesPaginated(params: {
         model: true,
         forecastArrival: true,
         forecastArrivalStatus: true,
+        registrationStatus: true,
       },
       orderBy: { createdAt: "desc" },
     }),
