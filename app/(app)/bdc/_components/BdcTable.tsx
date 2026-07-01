@@ -118,196 +118,55 @@ export function BDCTable({
 
   return (
     <TooltipProvider>
-      <div className="md:hidden space-y-3">
-        {rows.map((row) => {
-          const motorcycle = row.motorcycle;
-          return (
-            <div key={row.rowKey} className="rounded-lg border p-4">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <p className="font-medium">{row.name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {formatCPF(row.cpf)}
-                  </p>
-                </div>
-                <div className="flex gap-1">
-                  <Link
-                    href={`/bdc/client/${row.id}/edit`}
-                    aria-label={`Editar cliente ${row.name}`}
-                    className={buttonVariants({
-                      variant: "ghost",
-                      size: "icon",
-                      className: "rounded-full min-h-[44px] min-w-[44px]",
-                    })}
-                  >
-                    <PencilIcon className="size-4" />
-                  </Link>
-                  <Link
-                    href={`/bdc/client/${row.id}/delete`}
-                    aria-label={`Excluir cliente ${row.name}`}
-                    className={buttonVariants({
-                      variant: "ghost",
-                      size: "icon",
-                      className: "rounded-full min-h-[44px] min-w-[44px]",
-                    })}
-                  >
-                    <Trash2Icon className="size-4 text-red-500" />
-                  </Link>
-                </div>
-              </div>
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <Select
+          value={activeFilters.sellerName || "all"}
+          onValueChange={(value) => updateFilter("sellerName", value)}
+        >
+          <SelectTrigger className="w-full sm:w-[180px]">
+            <SelectValue placeholder="Vendedor" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os vendedores</SelectItem>
+            {filterOptions.sellers.map((seller) => (
+              <SelectItem key={seller} value={seller}>
+                {seller}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-              <dl className="mt-3 grid grid-cols-2 gap-2 text-sm">
-                <div>
-                  <dt className="text-muted-foreground">Vendedor</dt>
-                  <dd>{row.sellersName}</dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground">Modelo</dt>
-                  <dd>{motorcycle?.model ?? "—"}</dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground">Cidade</dt>
-                  <dd>{row.city}</dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground">Previsão</dt>
-                  <dd>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Badge
-                          className={`px-3 py-1 ${
-                            getArrivalStatus(
-                              motorcycle?.forecastArrival ?? null,
-                              motorcycle?.forecastArrivalStatus,
-                            ).color
-                          }`}
-                        >
-                          {
-                            getArrivalStatus(
-                              motorcycle?.forecastArrival ?? null,
-                              motorcycle?.forecastArrivalStatus,
-                            ).label
-                          }
-                        </Badge>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        {motorcycle?.forecastArrival
-                          ? format(motorcycle.forecastArrival, "dd/MM/yyyy")
-                          : "Sem previsão"}
-                      </TooltipContent>
-                    </Tooltip>
-                  </dd>
-                </div>
-              </dl>
+        <Select
+          value={activeFilters.city || "all"}
+          onValueChange={(value) => updateFilter("city", value)}
+        >
+          <SelectTrigger className="w-full sm:w-[180px]">
+            <SelectValue placeholder="Cidade" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas as cidades</SelectItem>
+            {filterOptions.cities.map((city) => (
+              <SelectItem key={city} value={city}>
+                {city}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-              <div className="mt-3 flex items-center justify-between border-t pt-2">
-                <span className="text-xs text-muted-foreground">
-                  Chassi: {motorcycle?.chassi ?? "—"}
-                </span>
-                {motorcycle?.registrationStatus ? (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Badge
-                        className={`px-3 py-1 ${getStatusColor(
-                          mapRegistrationStatusLabel(
-                            motorcycle.registrationStatus,
-                          ),
-                        )}`}
-                      >
-                        {mapRegistrationStatusLabel(
-                          motorcycle.registrationStatus,
-                        )}
-                      </Badge>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      {motorcycle.registrationDate
-                        ? format(motorcycle.registrationDate, "dd/MM/yyyy")
-                        : "Sem data de emplacamento"}
-                    </TooltipContent>
-                  </Tooltip>
-                ) : (
-                  <span className="text-xs text-muted-foreground">—</span>
-                )}
-              </div>
-            </div>
-          );
-        })}
-
-        {totalPages > 1 && (
-          <div className="flex items-center justify-center gap-2 pt-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page <= 1 || isPending}
-              onClick={() => handlePageChange(page - 1)}
-            >
-              <ChevronLeft className="size-4" />
-            </Button>
-            <span className="text-sm text-muted-foreground">
-              Página {page} de {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page >= totalPages || isPending}
-              onClick={() => handlePageChange(page + 1)}
-            >
-              <ChevronRight className="size-4" />
-            </Button>
-          </div>
-        )}
-      </div>
-
-      <div className="w-full hidden md:block rounded-sm">
-        <div className="mb-4 flex flex-wrap items-center gap-2">
-          <Select
-            value={activeFilters.sellerName || "all"}
-            onValueChange={(value) => updateFilter("sellerName", value)}
-          >
-            <SelectTrigger className="w-full sm:w-[180px]">
-              <SelectValue placeholder="Vendedor" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os vendedores</SelectItem>
-              {filterOptions.sellers.map((seller) => (
-                <SelectItem key={seller} value={seller}>
-                  {seller}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select
-            value={activeFilters.city || "all"}
-            onValueChange={(value) => updateFilter("city", value)}
-          >
-            <SelectTrigger className="w-full sm:w-[180px]">
-              <SelectValue placeholder="Cidade" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas as cidades</SelectItem>
-              {filterOptions.cities.map((city) => (
-                <SelectItem key={city} value={city}>
-                  {city}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select
-            value={activeFilters.model || "all"}
-            onValueChange={(value) => updateFilter("model", value)}
-          >
-            <SelectTrigger className="w-full sm:w-[180px]">
-              <SelectValue placeholder="Modelo" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os modelos</SelectItem>
-              {filterOptions.models.map((model) => (
-                <SelectItem key={model} value={model}>
-                  {model}
-                </SelectItem>
-              ))}
+        <Select
+          value={activeFilters.model || "all"}
+          onValueChange={(value) => updateFilter("model", value)}
+        >
+          <SelectTrigger className="w-full sm:w-[180px]">
+            <SelectValue placeholder="Modelo" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os modelos</SelectItem>
+            {filterOptions.models.map((model) => (
+              <SelectItem key={model} value={model}>
+                {model}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
 
@@ -345,45 +204,179 @@ export function BDCTable({
           disabled={isPending}
         >
           Limpar filtros
-          </Button>
+        </Button>
+      </div>
+
+      {rows.length === 0 ? (
+        <div className="rounded-sm border py-8 text-center text-muted-foreground">
+          Nenhum registro encontrado.
         </div>
-
+      ) : (
         <div
-          className={
-            isPending ? "pointer-events-none opacity-60 transition-opacity" : ""
-          }
+          className={isPending ? "pointer-events-none opacity-60 transition-opacity" : ""}
         >
-          <div className="rounded-sm border shadow-sm">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>CPF</TableHead>
-                  <TableHead>Vendedor</TableHead>
-                  <TableHead className="hidden md:table-cell">Cidade</TableHead>
-                  <TableHead>Modelo</TableHead>
-                  <TableHead>Chassi</TableHead>
-                  <TableHead className="hidden md:table-cell">
-                    Data Faturamento
-                  </TableHead>
-                  <TableHead>Previsão Chegada</TableHead>
-                  <TableHead>Situação</TableHead>
-                  <TableHead>Ações</TableHead>
-                </TableRow>
-              </TableHeader>
+          <div className="md:hidden space-y-3">
+            {rows.map((row) => {
+              const motorcycle = row.motorcycle;
+              return (
+                <div key={row.rowKey} className="rounded-lg border p-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="font-medium">{row.name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {formatCPF(row.cpf)}
+                      </p>
+                    </div>
+                    <div className="flex gap-1">
+                      <Link
+                        href={`/bdc/client/${row.id}/edit`}
+                        aria-label={`Editar cliente ${row.name}`}
+                        className={buttonVariants({
+                          variant: "ghost",
+                          size: "icon",
+                          className: "rounded-full min-h-[44px] min-w-[44px]",
+                        })}
+                      >
+                        <PencilIcon className="size-4" />
+                      </Link>
+                      <Link
+                        href={`/bdc/client/${row.id}/delete`}
+                        aria-label={`Excluir cliente ${row.name}`}
+                        className={buttonVariants({
+                          variant: "ghost",
+                          size: "icon",
+                          className: "rounded-full min-h-[44px] min-w-[44px]",
+                        })}
+                      >
+                        <Trash2Icon className="size-4 text-red-500" />
+                      </Link>
+                    </div>
+                  </div>
 
-              <TableBody>
-                {rows.length === 0 ? (
+                  <dl className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <dt className="text-muted-foreground">Vendedor</dt>
+                      <dd>{row.sellersName}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground">Modelo</dt>
+                      <dd>{motorcycle?.model ?? "—"}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground">Cidade</dt>
+                      <dd>{row.city}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground">Previsão</dt>
+                      <dd>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Badge
+                              className={`px-3 py-1 ${
+                                getArrivalStatus(
+                                  motorcycle?.forecastArrival ?? null,
+                                  motorcycle?.forecastArrivalStatus,
+                                ).color
+                              }`}
+                            >
+                              {
+                                getArrivalStatus(
+                                  motorcycle?.forecastArrival ?? null,
+                                  motorcycle?.forecastArrivalStatus,
+                                ).label
+                              }
+                            </Badge>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {motorcycle?.forecastArrival
+                              ? format(motorcycle.forecastArrival, "dd/MM/yyyy")
+                              : "Sem previsão"}
+                          </TooltipContent>
+                        </Tooltip>
+                      </dd>
+                    </div>
+                  </dl>
+
+                  <div className="mt-3 flex items-center justify-between border-t pt-2">
+                    <span className="text-xs text-muted-foreground">
+                      Chassi: {motorcycle?.chassi ?? "—"}
+                    </span>
+                    {motorcycle?.registrationStatus ? (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Badge
+                            className={`px-3 py-1 ${getStatusColor(
+                              mapRegistrationStatusLabel(
+                                motorcycle.registrationStatus,
+                              ),
+                            )}`}
+                          >
+                            {mapRegistrationStatusLabel(
+                              motorcycle.registrationStatus,
+                            )}
+                          </Badge>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {motorcycle.registrationDate
+                            ? format(motorcycle.registrationDate, "dd/MM/yyyy")
+                            : "Sem data de emplacamento"}
+                        </TooltipContent>
+                      </Tooltip>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 pt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page <= 1 || isPending}
+                  onClick={() => handlePageChange(page - 1)}
+                >
+                  <ChevronLeft className="size-4" />
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  Página {page} de {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page >= totalPages || isPending}
+                  onClick={() => handlePageChange(page + 1)}
+                >
+                  <ChevronRight className="size-4" />
+                </Button>
+              </div>
+            )}
+          </div>
+
+          <div className="hidden md:block">
+            <div className="rounded-sm border shadow-sm">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell
-                      colSpan={10}
-                      className="py-8 text-center text-muted-foreground"
-                    >
-                      Nenhum registro encontrado.
-                    </TableCell>
+                    <TableHead>Cliente</TableHead>
+                    <TableHead>CPF</TableHead>
+                    <TableHead>Vendedor</TableHead>
+                    <TableHead className="hidden md:table-cell">Cidade</TableHead>
+                    <TableHead>Modelo</TableHead>
+                    <TableHead>Chassi</TableHead>
+                    <TableHead className="hidden md:table-cell">
+                      Data Faturamento
+                    </TableHead>
+                    <TableHead>Previsão Chegada</TableHead>
+                    <TableHead>Situação</TableHead>
+                    <TableHead>Ações</TableHead>
                   </TableRow>
-                ) : (
-                  rows.map((row, index) => {
+                </TableHeader>
+
+                <TableBody>
+                  {rows.map((row, index) => {
                     const motorcycle = row.motorcycle;
 
                     return (
@@ -504,39 +497,39 @@ export function BDCTable({
                         </TableCell>
                       </TableRow>
                     );
-                  })
-                )}
-              </TableBody>
-            </Table>
-          </div>
-
-          {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-4 pt-4">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page <= 1 || isPending}
-                onClick={() => handlePageChange(page - 1)}
-              >
-                <ChevronLeft className="mr-1 size-4" />
-                Anterior
-              </Button>
-              <span className="text-sm text-muted-foreground">
-                Página {page} de {totalPages}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page >= totalPages || isPending}
-                onClick={() => handlePageChange(page + 1)}
-              >
-                Próximo
-                <ChevronRight className="ml-1 size-4" />
-              </Button>
+                  })}
+                </TableBody>
+              </Table>
             </div>
-          )}
+
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-4 pt-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page <= 1 || isPending}
+                  onClick={() => handlePageChange(page - 1)}
+                >
+                  <ChevronLeft className="mr-1 size-4" />
+                  Anterior
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  Página {page} de {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page >= totalPages || isPending}
+                  onClick={() => handlePageChange(page + 1)}
+                >
+                  Próximo
+                  <ChevronRight className="ml-1 size-4" />
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </TooltipProvider>
   );
 }

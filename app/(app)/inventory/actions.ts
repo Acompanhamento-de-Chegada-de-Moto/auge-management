@@ -15,6 +15,7 @@ export async function getMotorcyclesPaginatedAction(params: {
   model?: string;
   status?: string;
   chassisSearch?: string;
+  arrived?: "true" | "false";
 }) {
   await requireAuth();
 
@@ -33,6 +34,7 @@ export async function getMotorcyclesPaginatedAction(params: {
       model: params.model,
       status: params.status as "Em Trânsito" | "Chegou" | "Atrasada" | undefined,
       chassisSearch: params.chassisSearch,
+      arrived: params.arrived,
     }),
   ]);
 
