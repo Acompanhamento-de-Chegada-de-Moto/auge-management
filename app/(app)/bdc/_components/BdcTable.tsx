@@ -171,7 +171,13 @@ export function BDCTable({
         </Select>
 
         <div className="relative w-full sm:w-[220px]">
-          <SearchIcon className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+          <button
+            type="button"
+            onClick={() => updateSearch(searchInput)}
+            className="absolute left-2 top-1/2 -translate-y-1/2"
+          >
+            <SearchIcon className="size-4 text-muted-foreground hover:text-foreground" />
+          </button>
           <Input
             placeholder="Buscar nome, CPF ou chassi"
             value={searchInput}
