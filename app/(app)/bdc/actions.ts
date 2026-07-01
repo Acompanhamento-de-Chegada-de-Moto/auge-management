@@ -396,6 +396,7 @@ export async function getClientsPaginatedAction(params: {
   sellerName?: string;
   city?: string;
   model?: string;
+  search?: string;
 }): Promise<PaginatedResult> {
   await requireAuth();
 
@@ -408,6 +409,7 @@ export async function getClientsPaginatedAction(params: {
       sellerName: params.sellerName,
       city: params.city,
       model: params.model,
+      search: params.search,
     }),
     getBDCFilterOptions(),
   ]);

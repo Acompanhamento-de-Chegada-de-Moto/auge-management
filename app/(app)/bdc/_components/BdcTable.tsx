@@ -1,13 +1,14 @@
 "use client";
 
 import { format } from "date-fns";
-import { ChevronLeft, ChevronRight, PencilIcon, Trash2Icon } from "lucide-react";
+import { ChevronLeft, ChevronRight, PencilIcon, SearchIcon, Trash2Icon, XIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import type { ClientRow } from "@/app/(app)/bdc/actions";
 import { CopyText } from "@/components/general/CopyText";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -50,6 +51,7 @@ interface IBDCTableProps {
     sellerName: string;
     city: string;
     model: string;
+    search: string;
   };
 }
 
@@ -64,6 +66,7 @@ export function BDCTable({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
+  const [searchInput, setSearchInput] = useState(activeFilters.search);
 
   const updateFilter = (
     key: "sellerName" | "city" | "model",
@@ -83,7 +86,23 @@ export function BDCTable({
     });
   };
 
+  const updateSearch = (value: string) => {
+    const params = new URLSearchParams(searchParams);
+
+    if (!value) {
+      params.delete("search");
+    } else {
+      params.set("search", value);
+    }
+    params.delete("page");
+
+    startTransition(() => {
+      router.replace(`${pathname}?${params.toString()}`);
+    });
+  };
+
   const handleClearFilters = () => {
+    setSearchInput("");
     startTransition(() => {
       router.replace(pathname);
     });
@@ -289,15 +308,43 @@ export function BDCTable({
                   {model}
                 </SelectItem>
               ))}
-            </SelectContent>
-          </Select>
+          </SelectContent>
+        </Select>
 
-          <Button
-            variant="outline"
-            onClick={handleClearFilters}
+        <div className="relative w-full sm:w-[220px]">
+          <SearchIcon className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+          <Input
+            placeholder="Buscar nome, CPF ou chassi"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                updateSearch(searchInput);
+              }
+            }}
+            className="pl-8 pr-8"
             disabled={isPending}
-          >
-            Limpar filtros
+          />
+          {searchInput && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearchInput("");
+                updateSearch("");
+              }}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              <XIcon className="size-4" />
+            </button>
+          )}
+        </div>
+
+        <Button
+          variant="outline"
+          onClick={handleClearFilters}
+          disabled={isPending}
+        >
+          Limpar filtros
           </Button>
         </div>
 

@@ -1,12 +1,12 @@
 "use client";
 
 import dayjs from "dayjs";
-import { CheckIcon, CopyIcon, PencilIcon, Trash2Icon } from "lucide-react";
+import { CheckIcon, ChevronLeft, ChevronRight, CopyIcon, PencilIcon, SearchIcon, Trash2Icon, XIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState, useTransition } from "react";
-import type { UserGetMotorcyclesType } from "@/app/data/user/user-get-motorcycles";
+import { useState, useTransition } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -69,26 +69,42 @@ function getArrivalStatus(
   };
 }
 
+interface MotorcycleRow {
+  id: string;
+  chassi: string;
+  model: string;
+  forecastArrival: Date | null;
+  forecastArrivalStatus: string | null;
+}
+
 interface MotorcycleTableProps {
-  motorcycles: UserGetMotorcyclesType[];
-  filters: {
+  motorcycles: MotorcycleRow[];
+  totalPages: number;
+  page: number;
+  filterOptions: {
+    models: string[];
+  };
+  activeFilters: {
     model: string;
     status: string;
+    chassis: string;
   };
 }
 
-export default function MotorcycleTable({ motorcycles, filters }: MotorcycleTableProps) {
+export default function MotorcycleTable({
+  motorcycles,
+  totalPages,
+  page,
+  filterOptions,
+  activeFilters,
+}: MotorcycleTableProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
   const [isPending, startTransition] = useTransition();
   const [copiedId, setCopiedId] = useState<string | null>(null);
-
-  const models = useMemo(
-    () => [...new Set(motorcycles.map((m) => m.model).filter(Boolean))],
-    [motorcycles],
-  );
+  const [chassisInput, setChassisInput] = useState(activeFilters.chassis);
 
   const handleCopy = (text: string, id: string) => {
     navigator.clipboard.writeText(text).then(() => {
@@ -105,6 +121,22 @@ export default function MotorcycleTable({ motorcycles, filters }: MotorcycleTabl
     } else {
       params.set(key, value);
     }
+    params.delete("page");
+
+    startTransition(() => {
+      router.replace(`${pathname}?${params.toString()}`);
+    });
+  };
+
+  const updateChassisSearch = (value: string) => {
+    const params = new URLSearchParams(searchParams);
+
+    if (!value) {
+      params.delete("chassis");
+    } else {
+      params.set("chassis", value);
+    }
+    params.delete("page");
 
     startTransition(() => {
       router.replace(`${pathname}?${params.toString()}`);
@@ -112,8 +144,17 @@ export default function MotorcycleTable({ motorcycles, filters }: MotorcycleTabl
   };
 
   const clearFilters = () => {
+    setChassisInput("");
     startTransition(() => {
       router.replace(pathname);
+    });
+  };
+
+  const handlePageChange = (newPage: number) => {
+    const params = new URLSearchParams(searchParams);
+    params.set("page", String(newPage));
+    startTransition(() => {
+      router.replace(`${pathname}?${params.toString()}`);
     });
   };
 
@@ -129,7 +170,7 @@ export default function MotorcycleTable({ motorcycles, filters }: MotorcycleTabl
     <div className="w-full">
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <Select
-          value={filters.model || "all"}
+          value={activeFilters.model || "all"}
           onValueChange={(value) => updateFilter("model", value)}
         >
           <SelectTrigger className="w-full sm:w-[180px]">
@@ -139,7 +180,7 @@ export default function MotorcycleTable({ motorcycles, filters }: MotorcycleTabl
           <SelectContent>
             <SelectItem value="all">Todos os modelos</SelectItem>
 
-            {models.map((model) => (
+            {filterOptions.models.map((model) => (
               <SelectItem key={model} value={model}>
                 {model}
               </SelectItem>
@@ -148,7 +189,7 @@ export default function MotorcycleTable({ motorcycles, filters }: MotorcycleTabl
         </Select>
 
         <Select
-          value={filters.status || "all"}
+          value={activeFilters.status || "all"}
           onValueChange={(value) => updateFilter("status", value)}
         >
           <SelectTrigger className="w-full sm:w-[180px]">
@@ -162,6 +203,34 @@ export default function MotorcycleTable({ motorcycles, filters }: MotorcycleTabl
             <SelectItem value="Atrasada">Atrasada</SelectItem>
           </SelectContent>
         </Select>
+
+        <div className="relative w-full sm:w-[200px]">
+          <SearchIcon className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+          <Input
+            placeholder="Buscar chassi"
+            value={chassisInput}
+            onChange={(e) => setChassisInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                updateChassisSearch(chassisInput);
+              }
+            }}
+            className="pl-8 pr-8"
+            disabled={isPending}
+          />
+          {chassisInput && (
+            <button
+              type="button"
+              onClick={() => {
+                setChassisInput("");
+                updateChassisSearch("");
+              }}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              <XIcon className="size-4" />
+            </button>
+          )}
+        </div>
 
         <Button variant="outline" onClick={clearFilters} disabled={isPending}>
           Limpar filtros
@@ -247,6 +316,29 @@ export default function MotorcycleTable({ motorcycles, filters }: MotorcycleTabl
               </div>
             );
           })}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 pt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page <= 1 || isPending}
+                onClick={() => handlePageChange(page - 1)}
+              >
+                <ChevronLeft className="size-4" />
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                Página {page} de {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page >= totalPages || isPending}
+                onClick={() => handlePageChange(page + 1)}
+              >
+                <ChevronRight className="size-4" />
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* DESKTOP: tabela (md e acima) */}
@@ -343,6 +435,32 @@ export default function MotorcycleTable({ motorcycles, filters }: MotorcycleTabl
               })}
             </TableBody>
           </Table>
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-4 px-4 py-3 border-t">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page <= 1 || isPending}
+                onClick={() => handlePageChange(page - 1)}
+              >
+                <ChevronLeft className="mr-1 size-4" />
+                Anterior
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                Página {page} de {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page >= totalPages || isPending}
+                onClick={() => handlePageChange(page + 1)}
+              >
+                Próximo
+                <ChevronRight className="ml-1 size-4" />
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </div>

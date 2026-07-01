@@ -209,7 +209,11 @@ export async function getClientsPaginated(params: {
     where.motorcycles = { some: { model: { contains: params.model, mode: "insensitive" } } };
   }
   if (params.search) {
-    where.cpf = { contains: params.search };
+    where.OR = [
+      { name: { contains: params.search, mode: "insensitive" } },
+      { cpf: { contains: params.search } },
+      { motorcycles: { some: { chassi: { contains: params.search, mode: "insensitive" } } } },
+    ];
   }
 
   const [data, total] = await Promise.all([
