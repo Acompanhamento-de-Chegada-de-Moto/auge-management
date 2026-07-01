@@ -52,6 +52,7 @@ interface IBDCTableProps {
     city: string;
     model: string;
     search: string;
+    arrived: string;
   };
 }
 
@@ -69,7 +70,7 @@ export function BDCTable({
   const [searchInput, setSearchInput] = useState(activeFilters.search);
 
   const updateFilter = (
-    key: "sellerName" | "city" | "model",
+    key: "sellerName" | "city" | "model" | "arrived",
     value: string,
   ) => {
     const params = new URLSearchParams(searchParams);
@@ -167,6 +168,20 @@ export function BDCTable({
                 {model}
               </SelectItem>
             ))}
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={activeFilters.arrived || "all"}
+          onValueChange={(value) => updateFilter("arrived", value)}
+        >
+          <SelectTrigger className="w-full sm:w-[180px]">
+            <SelectValue placeholder="Chegada" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas</SelectItem>
+            <SelectItem value="true">Chegou</SelectItem>
+            <SelectItem value="false">Não Chegou</SelectItem>
           </SelectContent>
         </Select>
 

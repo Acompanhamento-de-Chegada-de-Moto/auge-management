@@ -397,6 +397,7 @@ export async function getClientsPaginatedAction(params: {
   city?: string;
   model?: string;
   search?: string;
+  arrived?: "true" | "false";
 }): Promise<PaginatedResult> {
   await requireAuth();
 
@@ -410,6 +411,7 @@ export async function getClientsPaginatedAction(params: {
       city: params.city,
       model: params.model,
       search: params.search,
+      arrived: params.arrived,
     }),
     getBDCFilterOptions(),
   ]);
