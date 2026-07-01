@@ -3,7 +3,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { getMotorcyclesPaginatedAction } from "@/app/(app)/inventory/actions";
-import { EmptyState } from "@/components/general/EmptyState";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -60,18 +59,8 @@ async function RenderMotorcycles({
     model: typeof params.model === "string" ? params.model : undefined,
     status: typeof params.status === "string" ? params.status : undefined,
     chassisSearch: typeof params.chassis === "string" ? params.chassis : undefined,
+    arrived: typeof params.arrived === "string" ? params.arrived as "true" | "false" : undefined,
   });
-
-  if (result.rows.length === 0) {
-    return (
-      <EmptyState
-        title="Nenhuma motocicleta encontrada"
-        description="Para começar adicione uma nova motocicleta"
-        buttonText="Adicionar Motocicleta"
-        href="/inventory/motorcycle/new"
-      />
-    );
-  }
 
   return (
     <MotorcycleTable
@@ -83,6 +72,7 @@ async function RenderMotorcycles({
         model: typeof params.model === "string" ? params.model : "",
         status: typeof params.status === "string" ? params.status : "",
         chassis: typeof params.chassis === "string" ? params.chassis : "",
+        arrived: typeof params.arrived === "string" ? params.arrived : "",
       }}
     />
   );

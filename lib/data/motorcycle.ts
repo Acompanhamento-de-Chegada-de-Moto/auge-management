@@ -37,6 +37,7 @@ export async function getMotorcyclesPaginated(params: {
   model?: string;
   status?: "Em Trânsito" | "Chegou" | "Atrasada";
   chassisSearch?: string;
+  arrived?: "true" | "false";
 }) {
   const where: Record<string, unknown> = {};
 
@@ -44,36 +45,60 @@ export async function getMotorcyclesPaginated(params: {
     where.model = params.model;
   }
 
-  if (params.status) {
-    const hoje = new Date();
-    hoje.setHours(23, 59, 59, 999);
+  const hoje = new Date();
+  hoje.setHours(23, 59, 59, 999);
 
+  const andConditions: Record<string, unknown>[] = [];
+
+  if (params.status) {
     switch (params.status) {
       case "Em Trânsito":
-        where.OR = [
-          { forecastArrival: null, forecastArrivalStatus: "NO_INFORMATION" },
-          { forecastArrival: { gt: hoje }, forecastArrivalStatus: "NO_INFORMATION" },
-        ];
+        andConditions.push({
+          OR: [
+            { forecastArrival: null, forecastArrivalStatus: "NO_INFORMATION" },
+            { forecastArrival: { gt: hoje }, forecastArrivalStatus: "NO_INFORMATION" },
+          ],
+        });
         break;
       case "Chegou":
-        where.OR = [
-          { forecastArrivalStatus: "ARRIVED" },
-          {
-            forecastArrival: { lte: hoje },
-            forecastArrivalStatus: "NO_INFORMATION",
-          },
-        ];
+        andConditions.push({
+          OR: [
+            { forecastArrivalStatus: "ARRIVED" },
+            { forecastArrival: { lte: hoje }, forecastArrivalStatus: "NO_INFORMATION" },
+          ],
+        });
         break;
       case "Atrasada":
-        where.OR = [
-          { forecastArrivalStatus: "DELAYED" },
-          {
-            forecastArrival: { lt: hoje },
-            forecastArrivalStatus: "NO_INFORMATION",
-          },
-        ];
+        andConditions.push({
+          OR: [
+            { forecastArrivalStatus: "DELAYED" },
+            { forecastArrival: { lt: hoje }, forecastArrivalStatus: "NO_INFORMATION" },
+          ],
+        });
         break;
     }
+  }
+
+  if (params.arrived === "true") {
+    andConditions.push({
+      OR: [
+        { forecastArrivalStatus: "ARRIVED" },
+        { forecastArrival: { lte: hoje }, forecastArrivalStatus: "NO_INFORMATION" },
+      ],
+    });
+  } else if (params.arrived === "false") {
+    andConditions.push({
+      NOT: {
+        OR: [
+          { forecastArrivalStatus: "ARRIVED" },
+          { forecastArrival: { lte: hoje }, forecastArrivalStatus: "NO_INFORMATION" },
+        ],
+      },
+    });
+  }
+
+  if (andConditions.length > 0) {
+    where.AND = andConditions;
   }
 
   if (params.chassisSearch) {

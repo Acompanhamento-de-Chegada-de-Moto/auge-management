@@ -7,7 +7,6 @@ import { BDCTable } from "@/app/(app)/bdc/_components/BdcTable";
 import { SpreadsheetUploadDialog } from "@/app/(app)/bdc/_components/SpreadsheetUploadDialog";
 import { getClientsPaginatedAction } from "@/app/(app)/bdc/actions";
 
-import { EmptyState } from "@/components/general/EmptyState";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -78,17 +77,6 @@ async function RenderClients({
     model: params.model,
     search: params.search,
   });
-
-  if (result.rows.length === 0) {
-    return (
-      <EmptyState
-        title="Nenhum cliente encontrado"
-        description="Para começar adicione um novo cliente"
-        buttonText="Adicionar Cliente"
-        href="/bdc/client/new"
-      />
-    );
-  }
 
   return (
     <BDCTable
