@@ -51,7 +51,7 @@ export async function getClients() {
       },
     },
     orderBy: {
-      createdAt: "desc",
+      updatedAt: "desc",
     },
     take: 500,
   });
@@ -155,7 +155,7 @@ export async function searchClientsByName(name: string) {
       motorcycles: true,
     },
     orderBy: {
-      createdAt: "desc",
+      updatedAt: "desc",
     },
   });
 }
@@ -275,7 +275,7 @@ export async function getClientsPaginated(params: {
           },
         },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { updatedAt: "desc" },
     }),
     prisma.client.count({ where }),
   ]);
@@ -316,7 +316,7 @@ export async function searchClients(query: string) {
       },
     },
     orderBy: {
-      createdAt: "desc",
+      updatedAt: "desc",
     },
     take: 500,
   });

@@ -12,7 +12,7 @@ export async function getAllMotorcycles() {
       forecastArrivalStatus: true,
     },
     orderBy: {
-      createdAt: "desc",
+      updatedAt: "desc",
     },
     take: 500,
   });
@@ -118,7 +118,7 @@ export async function getMotorcyclesPaginated(params: {
         forecastArrivalStatus: true,
         registrationStatus: true,
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { updatedAt: "desc" },
     }),
     prisma.motorcycle.count({ where }),
   ]);
@@ -137,6 +137,7 @@ export async function getAllMotorcyclesForImport() {
     select: {
       id: true,
       chassi: true,
+      model: true,
       forecastArrival: true,
       clientId: true,
     },
@@ -177,6 +178,22 @@ export async function updateMotorcyclesBatch(
     prisma.motorcycle.update({
       where: { chassi: u.chassi },
       data: { forecastArrival: u.forecastArrival },
+    }),
+  );
+  return prisma.$transaction(operations);
+}
+
+export async function updateMotorcyclesModelBatch(
+  updates: Array<{
+    chassi: string;
+    model: string;
+  }>,
+) {
+  if (updates.length === 0) return;
+  const operations = updates.map((u) =>
+    prisma.motorcycle.update({
+      where: { chassi: u.chassi },
+      data: { model: u.model },
     }),
   );
   return prisma.$transaction(operations);

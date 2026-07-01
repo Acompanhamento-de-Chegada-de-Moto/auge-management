@@ -20,6 +20,7 @@ import {
   getMotorcycleByChassis,
   linkMotorcyclesBatch,
   updateMotorcycle,
+  updateMotorcyclesModelBatch,
 } from "@/lib/data/motorcycle";
 import { prisma } from "@/lib/db";
 import type { ArrivalStatusValue } from "@/lib/bdc-data";
@@ -227,8 +228,11 @@ export async function importSpreadsheetAction(
     const newCpfs = new Set<string>();
     const newChassis = new Set<string>();
     let created = 0;
+    let linked = 0;
     let updated = 0;
     let skipped = 0;
+
+    const toUpdateModel: Array<{ chassi: string; model: string }> = [];
 
     for (const row of rows) {
       try {
@@ -257,11 +261,20 @@ export async function importSpreadsheetAction(
 
         const existingMoto = motoByChassi.get(row.chassi);
 
-        if (existingMoto || newChassis.has(row.chassi)) {
-          if (existingMoto && !existingMoto.clientId) {
+        if (newChassis.has(row.chassi)) {
+          skipped++;
+        } else if (existingMoto) {
+          if (!existingMoto.clientId) {
             linkMotorcycles.push({ chassi: row.chassi, clientCpf: cpf });
+            linked++;
           }
-          updated++;
+          if (row.modelo && existingMoto.model !== row.modelo) {
+            toUpdateModel.push({ chassi: row.chassi, model: row.modelo });
+            updated++;
+          }
+          if (existingMoto.clientId && (!row.modelo || existingMoto.model === row.modelo)) {
+            skipped++;
+          }
         } else {
           newChassis.add(row.chassi);
           newMotorcycles.push({
@@ -279,7 +292,7 @@ export async function importSpreadsheetAction(
 
     console.log(
       "[import] Classificação:",
-      { newClients: newClients.length, newMotorcycles: newMotorcycles.length, linkMotorcycles: linkMotorcycles.length, billingDateUpdates: billingDateUpdates.length, skipped },
+      { newClients: newClients.length, newMotorcycles: newMotorcycles.length, linkMotorcycles: linkMotorcycles.length, toUpdateModel: toUpdateModel.length, billingDateUpdates: billingDateUpdates.length, created, linked, updated, skipped },
     );
 
     if (newClients.length > 0) {
@@ -330,6 +343,11 @@ export async function importSpreadsheetAction(
       );
     }
 
+    if (toUpdateModel.length > 0) {
+      console.log("[import] Atualizando modelo de", toUpdateModel.length, "motos");
+      await updateMotorcyclesModelBatch(toUpdateModel);
+    }
+
     const parts: string[] = [];
     if (created > 0)
       parts.push(
@@ -338,6 +356,10 @@ export async function importSpreadsheetAction(
     if (updated > 0)
       parts.push(
         `${updated} moto${updated > 1 ? "s" : ""} atualizada${updated > 1 ? "s" : ""}`,
+      );
+    if (linked > 0)
+      parts.push(
+        `${linked} moto${linked > 1 ? "s" : ""} vinculada${linked > 1 ? "s" : ""}`,
       );
     if (skipped > 0)
       parts.push(

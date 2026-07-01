@@ -22,6 +22,7 @@ export async function importMotorcyclesAction(
   try {
     const existingMotorcycles = await getAllMotorcyclesForImport();
     const motoByChassi = new Map(existingMotorcycles.map((m) => [m.chassi, m]));
+    const pendingChassis = new Set<string>();
 
     const toCreate: Array<{
       chassi: string;
@@ -43,18 +44,24 @@ export async function importMotorcyclesAction(
           continue;
         }
 
-        const existing = motoByChassi.get(row.chassis);
+        const existingInDb = motoByChassi.get(row.chassis);
 
-        if (existing) {
+        if (existingInDb) {
           if (row.date) {
             toUpdate.push({ chassi: row.chassis, forecastArrival: row.date });
           }
-        } else {
+        } else if (!pendingChassis.has(row.chassis)) {
+          pendingChassis.add(row.chassis);
           toCreate.push({
             chassi: row.chassis,
             model: row.model || "",
             forecastArrival: row.date ?? null,
           });
+        } else if (row.date) {
+          const pending = toCreate.find((e) => e.chassi === row.chassis);
+          if (pending) {
+            pending.forecastArrival = row.date;
+          }
         }
       } catch {
         skipped++;

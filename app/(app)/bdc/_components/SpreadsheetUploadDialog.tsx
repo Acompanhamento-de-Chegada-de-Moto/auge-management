@@ -34,6 +34,7 @@ const COLUMN_MAP: Record<string, string> = {
   MODELO: "modelo",
   CHASSI: "chassi",
   CONSULTOR: "consultor",
+  VENDEDOR: "consultor",
   CIDADE: "cidade",
 };
 
