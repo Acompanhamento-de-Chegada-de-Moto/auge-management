@@ -32,6 +32,7 @@ export type ClientMinAggregateOutputType = {
   sellersName: string | null
   billingDate: Date | null
   createdAt: Date | null
+  updatedAt: Date | null
 }
 
 export type ClientMaxAggregateOutputType = {
@@ -42,6 +43,7 @@ export type ClientMaxAggregateOutputType = {
   sellersName: string | null
   billingDate: Date | null
   createdAt: Date | null
+  updatedAt: Date | null
 }
 
 export type ClientCountAggregateOutputType = {
@@ -52,6 +54,7 @@ export type ClientCountAggregateOutputType = {
   sellersName: number
   billingDate: number
   createdAt: number
+  updatedAt: number
   _all: number
 }
 
@@ -64,6 +67,7 @@ export type ClientMinAggregateInputType = {
   sellersName?: true
   billingDate?: true
   createdAt?: true
+  updatedAt?: true
 }
 
 export type ClientMaxAggregateInputType = {
@@ -74,6 +78,7 @@ export type ClientMaxAggregateInputType = {
   sellersName?: true
   billingDate?: true
   createdAt?: true
+  updatedAt?: true
 }
 
 export type ClientCountAggregateInputType = {
@@ -84,6 +89,7 @@ export type ClientCountAggregateInputType = {
   sellersName?: true
   billingDate?: true
   createdAt?: true
+  updatedAt?: true
   _all?: true
 }
 
@@ -167,6 +173,7 @@ export type ClientGroupByOutputType = {
   sellersName: string
   billingDate: Date | null
   createdAt: Date
+  updatedAt: Date
   _count: ClientCountAggregateOutputType | null
   _min: ClientMinAggregateOutputType | null
   _max: ClientMaxAggregateOutputType | null
@@ -198,6 +205,7 @@ export type ClientWhereInput = {
   sellersName?: Prisma.StringFilter<"Client"> | string
   billingDate?: Prisma.DateTimeNullableFilter<"Client"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"Client"> | Date | string
+  updatedAt?: Prisma.DateTimeFilter<"Client"> | Date | string
   motorcycles?: Prisma.MotorcycleListRelationFilter
 }
 
@@ -209,6 +217,7 @@ export type ClientOrderByWithRelationInput = {
   sellersName?: Prisma.SortOrder
   billingDate?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+  updatedAt?: Prisma.SortOrder
   motorcycles?: Prisma.MotorcycleOrderByRelationAggregateInput
 }
 
@@ -223,6 +232,7 @@ export type ClientWhereUniqueInput = Prisma.AtLeast<{
   sellersName?: Prisma.StringFilter<"Client"> | string
   billingDate?: Prisma.DateTimeNullableFilter<"Client"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"Client"> | Date | string
+  updatedAt?: Prisma.DateTimeFilter<"Client"> | Date | string
   motorcycles?: Prisma.MotorcycleListRelationFilter
 }, "id" | "cpf">
 
@@ -234,6 +244,7 @@ export type ClientOrderByWithAggregationInput = {
   sellersName?: Prisma.SortOrder
   billingDate?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+  updatedAt?: Prisma.SortOrder
   _count?: Prisma.ClientCountOrderByAggregateInput
   _max?: Prisma.ClientMaxOrderByAggregateInput
   _min?: Prisma.ClientMinOrderByAggregateInput
@@ -250,6 +261,7 @@ export type ClientScalarWhereWithAggregatesInput = {
   sellersName?: Prisma.StringWithAggregatesFilter<"Client"> | string
   billingDate?: Prisma.DateTimeNullableWithAggregatesFilter<"Client"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Client"> | Date | string
+  updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Client"> | Date | string
 }
 
 export type ClientCreateInput = {
@@ -260,6 +272,7 @@ export type ClientCreateInput = {
   sellersName: string
   billingDate?: Date | string | null
   createdAt?: Date | string
+  updatedAt?: Date | string
   motorcycles?: Prisma.MotorcycleCreateNestedManyWithoutClientInput
 }
 
@@ -271,6 +284,7 @@ export type ClientUncheckedCreateInput = {
   sellersName: string
   billingDate?: Date | string | null
   createdAt?: Date | string
+  updatedAt?: Date | string
   motorcycles?: Prisma.MotorcycleUncheckedCreateNestedManyWithoutClientInput
 }
 
@@ -282,6 +296,7 @@ export type ClientUpdateInput = {
   sellersName?: Prisma.StringFieldUpdateOperationsInput | string
   billingDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   motorcycles?: Prisma.MotorcycleUpdateManyWithoutClientNestedInput
 }
 
@@ -293,6 +308,7 @@ export type ClientUncheckedUpdateInput = {
   sellersName?: Prisma.StringFieldUpdateOperationsInput | string
   billingDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   motorcycles?: Prisma.MotorcycleUncheckedUpdateManyWithoutClientNestedInput
 }
 
@@ -304,6 +320,7 @@ export type ClientCreateManyInput = {
   sellersName: string
   billingDate?: Date | string | null
   createdAt?: Date | string
+  updatedAt?: Date | string
 }
 
 export type ClientUpdateManyMutationInput = {
@@ -314,6 +331,7 @@ export type ClientUpdateManyMutationInput = {
   sellersName?: Prisma.StringFieldUpdateOperationsInput | string
   billingDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type ClientUncheckedUpdateManyInput = {
@@ -324,6 +342,7 @@ export type ClientUncheckedUpdateManyInput = {
   sellersName?: Prisma.StringFieldUpdateOperationsInput | string
   billingDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type ClientCountOrderByAggregateInput = {
@@ -334,6 +353,7 @@ export type ClientCountOrderByAggregateInput = {
   sellersName?: Prisma.SortOrder
   billingDate?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+  updatedAt?: Prisma.SortOrder
 }
 
 export type ClientMaxOrderByAggregateInput = {
@@ -344,6 +364,7 @@ export type ClientMaxOrderByAggregateInput = {
   sellersName?: Prisma.SortOrder
   billingDate?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+  updatedAt?: Prisma.SortOrder
 }
 
 export type ClientMinOrderByAggregateInput = {
@@ -354,6 +375,7 @@ export type ClientMinOrderByAggregateInput = {
   sellersName?: Prisma.SortOrder
   billingDate?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+  updatedAt?: Prisma.SortOrder
 }
 
 export type ClientNullableScalarRelationFilter = {
@@ -385,6 +407,7 @@ export type ClientCreateWithoutMotorcyclesInput = {
   sellersName: string
   billingDate?: Date | string | null
   createdAt?: Date | string
+  updatedAt?: Date | string
 }
 
 export type ClientUncheckedCreateWithoutMotorcyclesInput = {
@@ -395,6 +418,7 @@ export type ClientUncheckedCreateWithoutMotorcyclesInput = {
   sellersName: string
   billingDate?: Date | string | null
   createdAt?: Date | string
+  updatedAt?: Date | string
 }
 
 export type ClientCreateOrConnectWithoutMotorcyclesInput = {
@@ -421,6 +445,7 @@ export type ClientUpdateWithoutMotorcyclesInput = {
   sellersName?: Prisma.StringFieldUpdateOperationsInput | string
   billingDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type ClientUncheckedUpdateWithoutMotorcyclesInput = {
@@ -431,6 +456,7 @@ export type ClientUncheckedUpdateWithoutMotorcyclesInput = {
   sellersName?: Prisma.StringFieldUpdateOperationsInput | string
   billingDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 
@@ -472,6 +498,7 @@ export type ClientSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   sellersName?: boolean
   billingDate?: boolean
   createdAt?: boolean
+  updatedAt?: boolean
   motorcycles?: boolean | Prisma.Client$motorcyclesArgs<ExtArgs>
   _count?: boolean | Prisma.ClientCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["client"]>
@@ -484,6 +511,7 @@ export type ClientSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extens
   sellersName?: boolean
   billingDate?: boolean
   createdAt?: boolean
+  updatedAt?: boolean
 }, ExtArgs["result"]["client"]>
 
 export type ClientSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -494,6 +522,7 @@ export type ClientSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extens
   sellersName?: boolean
   billingDate?: boolean
   createdAt?: boolean
+  updatedAt?: boolean
 }, ExtArgs["result"]["client"]>
 
 export type ClientSelectScalar = {
@@ -504,9 +533,10 @@ export type ClientSelectScalar = {
   sellersName?: boolean
   billingDate?: boolean
   createdAt?: boolean
+  updatedAt?: boolean
 }
 
-export type ClientOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "cpf" | "city" | "sellersName" | "billingDate" | "createdAt", ExtArgs["result"]["client"]>
+export type ClientOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "cpf" | "city" | "sellersName" | "billingDate" | "createdAt" | "updatedAt", ExtArgs["result"]["client"]>
 export type ClientInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   motorcycles?: boolean | Prisma.Client$motorcyclesArgs<ExtArgs>
   _count?: boolean | Prisma.ClientCountOutputTypeDefaultArgs<ExtArgs>
@@ -527,6 +557,7 @@ export type $ClientPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
     sellersName: string
     billingDate: Date | null
     createdAt: Date
+    updatedAt: Date
   }, ExtArgs["result"]["client"]>
   composites: {}
 }
@@ -958,6 +989,7 @@ export interface ClientFieldRefs {
   readonly sellersName: Prisma.FieldRef<"Client", 'String'>
   readonly billingDate: Prisma.FieldRef<"Client", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"Client", 'DateTime'>
+  readonly updatedAt: Prisma.FieldRef<"Client", 'DateTime'>
 }
     
 

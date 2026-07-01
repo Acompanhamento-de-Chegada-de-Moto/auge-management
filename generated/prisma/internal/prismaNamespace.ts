@@ -1187,7 +1187,8 @@ export const ClientScalarFieldEnum = {
   city: 'city',
   sellersName: 'sellersName',
   billingDate: 'billingDate',
-  createdAt: 'createdAt'
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 } as const
 
 export type ClientScalarFieldEnum = (typeof ClientScalarFieldEnum)[keyof typeof ClientScalarFieldEnum]
@@ -1202,7 +1203,8 @@ export const MotorcycleScalarFieldEnum = {
   registrationStatus: 'registrationStatus',
   registrationDate: 'registrationDate',
   clientId: 'clientId',
-  createdAt: 'createdAt'
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 } as const
 
 export type MotorcycleScalarFieldEnum = (typeof MotorcycleScalarFieldEnum)[keyof typeof MotorcycleScalarFieldEnum]

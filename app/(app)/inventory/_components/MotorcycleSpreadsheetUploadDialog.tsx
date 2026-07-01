@@ -80,12 +80,12 @@ function parseSpreadsheet(file: File): Promise<{
           defval: "",
         }) as string[][];
 
-        if (json.length < 2) {
+        if (json.length < 3) {
           reject(new Error("Planilha vazia ou sem dados suficientes."));
           return;
         }
 
-        const headerRow = json[0];
+        const headerRow = json[1];
         const headers = headerRow.map((h: string) => {
           const trimmed = String(h).trim().toUpperCase();
           return COLUMN_MAP[trimmed] ?? trimmed;
@@ -96,7 +96,7 @@ function parseSpreadsheet(file: File): Promise<{
         const chassisIdx = headers.indexOf("chassis");
 
         const rows = [];
-        for (let i = 1; i < json.length; i++) {
+        for (let i = 2; i < json.length; i++) {
           const row = json[i];
           if (!row || row.every((cell) => !cell || String(cell).trim() === "")) {
             continue;
