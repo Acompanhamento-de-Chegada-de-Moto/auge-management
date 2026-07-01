@@ -1,11 +1,12 @@
 "use client";
 
 import dayjs from "dayjs";
-import { CheckIcon, ChevronLeft, ChevronRight, CopyIcon, PencilIcon, Trash2Icon } from "lucide-react";
+import { CheckIcon, ChevronLeft, ChevronRight, CopyIcon, PencilIcon, SearchIcon, Trash2Icon, XIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -86,6 +87,7 @@ interface MotorcycleTableProps {
   activeFilters: {
     model: string;
     status: string;
+    chassis: string;
   };
 }
 
@@ -102,6 +104,7 @@ export default function MotorcycleTable({
 
   const [isPending, startTransition] = useTransition();
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [chassisInput, setChassisInput] = useState(activeFilters.chassis);
 
   const handleCopy = (text: string, id: string) => {
     navigator.clipboard.writeText(text).then(() => {
@@ -125,7 +128,23 @@ export default function MotorcycleTable({
     });
   };
 
+  const updateChassisSearch = (value: string) => {
+    const params = new URLSearchParams(searchParams);
+
+    if (!value) {
+      params.delete("chassis");
+    } else {
+      params.set("chassis", value);
+    }
+    params.delete("page");
+
+    startTransition(() => {
+      router.replace(`${pathname}?${params.toString()}`);
+    });
+  };
+
   const clearFilters = () => {
+    setChassisInput("");
     startTransition(() => {
       router.replace(pathname);
     });
@@ -184,6 +203,34 @@ export default function MotorcycleTable({
             <SelectItem value="Atrasada">Atrasada</SelectItem>
           </SelectContent>
         </Select>
+
+        <div className="relative w-full sm:w-[200px]">
+          <SearchIcon className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+          <Input
+            placeholder="Buscar chassi"
+            value={chassisInput}
+            onChange={(e) => setChassisInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                updateChassisSearch(chassisInput);
+              }
+            }}
+            className="pl-8 pr-8"
+            disabled={isPending}
+          />
+          {chassisInput && (
+            <button
+              type="button"
+              onClick={() => {
+                setChassisInput("");
+                updateChassisSearch("");
+              }}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              <XIcon className="size-4" />
+            </button>
+          )}
+        </div>
 
         <Button variant="outline" onClick={clearFilters} disabled={isPending}>
           Limpar filtros

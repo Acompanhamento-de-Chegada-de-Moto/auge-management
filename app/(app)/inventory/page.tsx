@@ -59,6 +59,7 @@ async function RenderMotorcycles({
     page: Number(params.page) || 1,
     model: typeof params.model === "string" ? params.model : undefined,
     status: typeof params.status === "string" ? params.status : undefined,
+    chassisSearch: typeof params.chassis === "string" ? params.chassis : undefined,
   });
 
   if (result.rows.length === 0) {
@@ -81,6 +82,7 @@ async function RenderMotorcycles({
       activeFilters={{
         model: typeof params.model === "string" ? params.model : "",
         status: typeof params.status === "string" ? params.status : "",
+        chassis: typeof params.chassis === "string" ? params.chassis : "",
       }}
     />
   );

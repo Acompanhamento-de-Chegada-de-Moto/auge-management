@@ -29,6 +29,7 @@ interface BDCPageProps {
     sellerName?: string;
     city?: string;
     model?: string;
+    search?: string;
   }>;
 }
 
@@ -67,6 +68,7 @@ async function RenderClients({
     sellerName?: string;
     city?: string;
     model?: string;
+    search?: string;
   };
 }) {
   const result = await getClientsPaginatedAction({
@@ -74,6 +76,7 @@ async function RenderClients({
     sellerName: params.sellerName,
     city: params.city,
     model: params.model,
+    search: params.search,
   });
 
   if (result.rows.length === 0) {
@@ -97,6 +100,7 @@ async function RenderClients({
         sellerName: params.sellerName ?? "",
         city: params.city ?? "",
         model: params.model ?? "",
+        search: params.search ?? "",
       }}
     />
   );
