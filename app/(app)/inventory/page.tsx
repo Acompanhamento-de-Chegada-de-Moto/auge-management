@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { getMotorcyclesPaginatedAction } from "@/app/(app)/inventory/actions";
+import { MotorcycleSpreadsheetUploadDialog } from "@/app/(app)/inventory/_components/MotorcycleSpreadsheetUploadDialog";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -32,12 +33,16 @@ export default async function EstoquePage({
             Controle de motocicletas em estoque.
           </p>
         </div>
-        <Button asChild className="shrink-0">
-          <Link href="/inventory/motorcycle/new">
-            <PlusIcon className="mr-2 size-4" />
-            Adicionar Motocicleta
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <MotorcycleSpreadsheetUploadDialog />
+
+          <Button asChild className="shrink-0">
+            <Link href="/inventory/motorcycle/new">
+              <PlusIcon className="mr-2 size-4" />
+              Adicionar Motocicleta
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <Suspense fallback={<EstoquePageSkeletonLayout />}>

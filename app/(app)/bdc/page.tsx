@@ -29,6 +29,7 @@ interface BDCPageProps {
     city?: string;
     model?: string;
     search?: string;
+    arrived?: string;
   }>;
 }
 
@@ -68,6 +69,7 @@ async function RenderClients({
     city?: string;
     model?: string;
     search?: string;
+    arrived?: string;
   };
 }) {
   const result = await getClientsPaginatedAction({
@@ -76,6 +78,7 @@ async function RenderClients({
     city: params.city,
     model: params.model,
     search: params.search,
+    arrived: typeof params.arrived === "string" ? (params.arrived as "true" | "false") : undefined,
   });
 
   return (
@@ -89,6 +92,7 @@ async function RenderClients({
         city: params.city ?? "",
         model: params.model ?? "",
         search: params.search ?? "",
+        arrived: params.arrived ?? "",
       }}
     />
   );

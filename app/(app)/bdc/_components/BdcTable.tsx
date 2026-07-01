@@ -52,6 +52,7 @@ interface IBDCTableProps {
     city: string;
     model: string;
     search: string;
+    arrived: string;
   };
 }
 
@@ -69,7 +70,7 @@ export function BDCTable({
   const [searchInput, setSearchInput] = useState(activeFilters.search);
 
   const updateFilter = (
-    key: "sellerName" | "city" | "model",
+    key: "sellerName" | "city" | "model" | "arrived",
     value: string,
   ) => {
     const params = new URLSearchParams(searchParams);
@@ -170,8 +171,28 @@ export function BDCTable({
           </SelectContent>
         </Select>
 
+        <Select
+          value={activeFilters.arrived || "all"}
+          onValueChange={(value) => updateFilter("arrived", value)}
+        >
+          <SelectTrigger className="w-full sm:w-[180px]">
+            <SelectValue placeholder="Chegada" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas</SelectItem>
+            <SelectItem value="true">Chegou</SelectItem>
+            <SelectItem value="false">Não Chegou</SelectItem>
+          </SelectContent>
+        </Select>
+
         <div className="relative w-full sm:w-[220px]">
-          <SearchIcon className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+          <button
+            type="button"
+            onClick={() => updateSearch(searchInput)}
+            className="absolute left-2 top-1/2 -translate-y-1/2"
+          >
+            <SearchIcon className="size-4 text-muted-foreground hover:text-foreground" />
+          </button>
           <Input
             placeholder="Buscar nome, CPF ou chassi"
             value={searchInput}
