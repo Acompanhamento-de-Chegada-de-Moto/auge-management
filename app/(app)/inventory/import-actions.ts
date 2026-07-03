@@ -3,9 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { requireAuth } from "@/app/data/user/require-auth";
 import {
-  createMotorcyclesBatch,
+  createMotorcycle,
   getAllMotorcyclesForImport,
-  updateMotorcyclesBatch,
+  updateMotorcycleByChassis,
 } from "@/lib/data/motorcycle";
 
 interface ImportRow {
@@ -21,70 +21,78 @@ export async function importMotorcyclesAction(
 
   try {
     const existingMotorcycles = await getAllMotorcyclesForImport();
-    const motoByChassi = new Map(existingMotorcycles.map((m) => [m.chassi, m]));
-    const pendingChassis = new Set<string>();
+    const motoByChassi = new Map(
+      existingMotorcycles.map((m) => [m.chassi.trim().toUpperCase(), m]),
+    );
+    const processedChassis = new Set<string>();
 
-    const toCreate: Array<{
-      chassi: string;
-      model: string;
-      forecastArrival: Date | null;
-    }> = [];
-
-    const toUpdate: Array<{
-      chassi: string;
-      forecastArrival: Date;
-    }> = [];
-
+    let created = 0;
+    let updated = 0;
     let skipped = 0;
 
     for (const row of rows) {
-      try {
-        if (!row.chassis) {
-          skipped++;
-          continue;
-        }
+      const chassi = row.chassis.trim().toUpperCase();
+      const model = row.model.trim();
 
-        const existingInDb = motoByChassi.get(row.chassis);
-
-        if (existingInDb) {
-          if (row.date) {
-            toUpdate.push({ chassi: row.chassis, forecastArrival: row.date });
-          }
-        } else if (!pendingChassis.has(row.chassis)) {
-          pendingChassis.add(row.chassis);
-          toCreate.push({
-            chassi: row.chassis,
-            model: row.model || "",
-            forecastArrival: row.date ?? null,
-          });
-        } else if (row.date) {
-          const pending = toCreate.find((e) => e.chassi === row.chassis);
-          if (pending) {
-            pending.forecastArrival = row.date;
-          }
-        }
-      } catch {
+      if (!chassi) {
         skipped++;
+        continue;
       }
-    }
 
-    if (toCreate.length > 0) {
-      await createMotorcyclesBatch(toCreate);
-    }
+      if (processedChassis.has(chassi)) {
+        skipped++;
+        continue;
+      }
 
-    if (toUpdate.length > 0) {
-      await updateMotorcyclesBatch(toUpdate);
-    }
+      const existing = motoByChassi.get(chassi);
 
-    const parts: string[] = [];
-    if (toCreate.length > 0)
-      parts.push(`${toCreate.length} moto${toCreate.length > 1 ? "s" : ""} criada${toCreate.length > 1 ? "s" : ""}`);
-    if (toUpdate.length > 0)
-      parts.push(`${toUpdate.length} moto${toUpdate.length > 1 ? "s" : ""} atualizada${toUpdate.length > 1 ? "s" : ""}`);
-    if (skipped > 0)
-      parts.push(`${skipped} linha${skipped > 1 ? "s" : ""} ignorada${skipped > 1 ? "s" : ""}`);
+      if (existing) {
+        const shouldUpdate =
+          (row.date && !existing.forecastArrival) ||
+          (row.date &&
+            existing.forecastArrival &&
+            existing.forecastArrival.getTime() !== row.date.getTime()) ||
+          (model && existing.model !== model);
+
+        if (shouldUpdate) {
+          await updateMotorcycleByChassis(existing.chassi, {
+            model: model || existing.model,
+            forecastArrival: row.date ?? existing.forecastArrival ?? null,
+          });
+          updated++;
+        }
+      } else {
+        await createMotorcycle({
+          chassi,
+          model,
+          forecastArrival: row.date,
+        });
+        created++;
+      }
+
+      processedChassis.add(chassi);
+    }
 
     revalidatePath("/inventory");
+    revalidatePath("/bdc");
+    revalidatePath("/tracking", "layout");
+
+    const parts: string[] = [];
+    if (created > 0) {
+      parts.push(
+        `${created} moto${created > 1 ? "s" : ""} criada${created > 1 ? "s" : ""}`,
+      );
+    }
+    if (updated > 0) {
+      parts.push(
+        `${updated} moto${updated > 1 ? "s" : ""} atualizada${updated > 1 ? "s" : ""}`,
+      );
+    }
+    if (skipped > 0) {
+      parts.push(
+        `${skipped} linha${skipped > 1 ? "s" : ""} ignorada${skipped > 1 ? "s" : ""}`,
+      );
+    }
 
     return {
       status: "success",
@@ -94,7 +102,10 @@ export async function importMotorcyclesAction(
     console.error("[import] Erro fatal:", err);
     return {
       status: "error",
-      message: err instanceof Error ? err.message : "Erro interno ao importar planilha.",
+      message:
+        err instanceof Error
+          ? err.message
+          : "Erro interno ao importar planilha.",
     };
   }
 }
