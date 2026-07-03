@@ -1,6 +1,7 @@
 "use client";
 
 import { FileSpreadsheet, Loader2, Upload, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { toast } from "sonner";
@@ -16,7 +17,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useRouter } from "next/navigation";
 
 const ACCEPTED_TYPES = {
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [
@@ -27,20 +27,19 @@ const ACCEPTED_TYPES = {
   "text/csv": [".csv"],
 };
 
-const COLUMN_MAP: Record<string, string> = {
-  "DATA DE CHEGADA DE MOTO": "date",
-  MODELO: "model",
-  CHASSI: "chassis",
-};
+function normalizeText(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toUpperCase();
+}
 
 function parseDateValue(value: unknown): Date | null {
-  if (!value) return null;
-  const str = String(value).trim();
-  if (!str) return null;
+  if (value == null || value === "") return null;
 
-  if (/^\d{2}\/\d{2}\/\d{4}$/.test(str)) {
-    const [d, m, y] = str.split("/").map(Number);
-    return new Date(y, m - 1, d);
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return value;
   }
 
   if (typeof value === "number") {
@@ -50,12 +49,17 @@ function parseDateValue(value: unknown): Date | null {
     }
   }
 
-  const parsed = new Date(str);
-  if (!Number.isNaN(parsed.getTime())) {
-    return parsed;
+  const text = String(value).trim();
+  if (!text) return null;
+
+  const match = text.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (match) {
+    const [, d, m, y] = match;
+    return new Date(Number(y), Number(m) - 1, Number(d));
   }
 
-  return null;
+  const parsed = new Date(text);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
 function parseSpreadsheet(file: File): Promise<{
@@ -67,38 +71,56 @@ function parseSpreadsheet(file: File): Promise<{
 }> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = (e) => {
+
+    reader.onload = (event) => {
       try {
-        const data = new Uint8Array(e.target?.result as ArrayBuffer);
+        const data = new Uint8Array(event.target?.result as ArrayBuffer);
         const workbook = XLSX.read(data, { type: "array" });
+        const targetSheetName = workbook.SheetNames.find(
+          (sheetName) => normalizeText(sheetName) === "PAGINA2",
+        );
 
-        const sheetIndex = workbook.SheetNames.length > 1 ? 1 : 0;
-        const sheetName = workbook.SheetNames[sheetIndex];
-        const sheet = workbook.Sheets[sheetName];
-        const json = XLSX.utils.sheet_to_json<string[]>(sheet, {
-          header: 1,
-          defval: "",
-        }) as string[][];
-
-        if (json.length < 3) {
-          reject(new Error("Planilha vazia ou sem dados suficientes."));
+        if (!targetSheetName) {
+          reject(new Error('A aba "Página2" não foi encontrada.'));
           return;
         }
 
-        const headerRow = json[1];
-        const headers = headerRow.map((h: string) => {
-          const trimmed = String(h).trim().toUpperCase();
-          return COLUMN_MAP[trimmed] ?? trimmed;
-        });
+        const sheet = workbook.Sheets[targetSheetName];
+        const json = XLSX.utils.sheet_to_json<string[]>(sheet, {
+          header: 1,
+          defval: "",
+          blankrows: false,
+        }) as string[][];
 
-        const dateIdx = headers.indexOf("date");
-        const modelIdx = headers.indexOf("model");
-        const chassisIdx = headers.indexOf("chassis");
+        if (json.length < 2) {
+          reject(new Error("A aba Página2 está vazia ou sem cabeçalho."));
+          return;
+        }
 
-        const rows = [];
-        for (let i = 2; i < json.length; i++) {
+        const headerRow = json[0].map((cell) => normalizeText(String(cell)));
+        const dateIdx = headerRow.indexOf("DATA DE CHEGADA DA MOTO");
+        const modelIdx = headerRow.indexOf("MODELO");
+        const chassisIdx = headerRow.indexOf("CHASSI");
+
+        if (dateIdx === -1 || modelIdx === -1 || chassisIdx === -1) {
+          reject(
+            new Error("Cabeçalhos esperados não encontrados na aba Página2."),
+          );
+          return;
+        }
+
+        const rows: Array<{
+          chassis: string;
+          model: string;
+          date: Date | null;
+        }> = [];
+
+        for (let i = 1; i < json.length; i++) {
           const row = json[i];
-          if (!row || row.every((cell) => !cell || String(cell).trim() === "")) {
+          if (
+            !row ||
+            row.every((cell) => !cell || String(cell).trim() === "")
+          ) {
             continue;
           }
 
@@ -113,10 +135,11 @@ function parseSpreadsheet(file: File): Promise<{
         }
 
         resolve({ rows });
-      } catch (err) {
-        reject(err);
+      } catch (error) {
+        reject(error);
       }
     };
+
     reader.onerror = () => reject(new Error("Erro ao ler o arquivo."));
     reader.readAsArrayBuffer(file);
   });
@@ -158,7 +181,8 @@ export function MotorcycleSpreadsheetUploadDialog() {
     setIsUploading(true);
 
     try {
-      let rows;
+      let rows: Awaited<ReturnType<typeof parseSpreadsheet>>["rows"] = [];
+
       try {
         const parsed = await parseSpreadsheet(file);
         rows = parsed.rows;
@@ -176,7 +200,7 @@ export function MotorcycleSpreadsheetUploadDialog() {
       if (rows.length === 0) {
         toast.error("Nenhuma linha válida encontrada", {
           description:
-            "Verifique se a coluna CHASSI está preenchida.",
+            "Verifique se a aba Página2 tem a coluna CHASSI preenchida.",
         });
         return;
       }
@@ -220,8 +244,8 @@ export function MotorcycleSpreadsheetUploadDialog() {
         <DialogHeader>
           <DialogTitle>Importar Planilha</DialogTitle>
           <DialogDescription>
-            Envie uma planilha com os dados das motocicletas. Use a segunda aba
-            (Página 2) com as colunas: DATA DE CHEGADA DE MOTO, MODELO, CHASSI.
+            Envie a planilha usando a aba Página2 com as colunas: DATA DE
+            CHEGADA, MODELO, CHASSI.
           </DialogDescription>
         </DialogHeader>
 
