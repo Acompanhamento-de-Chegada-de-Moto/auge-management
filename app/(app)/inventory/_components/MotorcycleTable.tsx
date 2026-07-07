@@ -1,6 +1,5 @@
 "use client";
 
-import dayjs from "dayjs";
 import { CheckIcon, ChevronLeft, ChevronRight, CopyIcon, PencilIcon, SearchIcon, Trash2Icon, XIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -22,52 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-function getArrivalStatus(
-  forecastDate: Date | null,
-  arrivalStatus?: string | null,
-) {
-  if (arrivalStatus === "ARRIVED") {
-    return {
-      label: "Chegou",
-      color:
-        "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
-    };
-  }
-
-  if (arrivalStatus === "DELAYED") {
-    return {
-      label: "Atrasada",
-      color:
-        "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
-    };
-  }
-
-  if (!forecastDate) {
-    return {
-      label: "Em Trânsito",
-      color:
-        "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
-    };
-  }
-
-  const hoje = dayjs().startOf("day");
-  const arrival = dayjs(forecastDate).startOf("day");
-
-  if (arrival.isAfter(hoje)) {
-    return {
-      label: "Em Trânsito",
-      color:
-        "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
-    };
-  }
-
-  return {
-    label: "Chegou",
-    color:
-      "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
-  };
-}
+import { getArrivalStatus } from "@/lib/bdc-data";
 
 interface MotorcycleRow {
   id: string;

@@ -23,7 +23,6 @@ import {
   updateMotorcyclesModelBatch,
 } from "@/lib/data/motorcycle";
 import { prisma } from "@/lib/db";
-import type { ArrivalStatusValue } from "@/lib/bdc-data";
 import type { ApiResponse } from "@/lib/types";
 import {
   type CustomerFormData,
@@ -158,10 +157,12 @@ export async function EditClientAction(
 
 function parseDateStringDDMMAAA(value: string | null): Date | null {
   if (!value) return null;
-  const match = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  const match = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
   if (!match) return null;
   const [, d, m, y] = match;
-  return new Date(Number(y), Number(m) - 1, Number(d));
+  const dd = d.padStart(2, "0");
+  const mm = m.padStart(2, "0");
+  return new Date(`${y}-${mm}-${dd}T03:00:00.000Z`);
 }
 
 interface ImportRow {
@@ -393,7 +394,7 @@ export type ClientRow = {
     chassi: string;
     model: string;
     forecastArrival: Date | null;
-    forecastArrivalStatus: ArrivalStatusValue;
+    forecastArrivalStatus: string;
     registrationStatus: string | null;
     registrationDate: Date | null;
   } | null;
@@ -465,7 +466,7 @@ export async function getClientsPaginatedAction(params: {
         chassi: motorcycle.chassi,
         model: motorcycle.model,
         forecastArrival: motorcycle.forecastArrival,
-        forecastArrivalStatus: motorcycle.forecastArrivalStatus as ArrivalStatusValue,
+        forecastArrivalStatus: motorcycle.forecastArrivalStatus,
         registrationStatus: motorcycle.registrationStatus,
         registrationDate: motorcycle.registrationDate,
       },

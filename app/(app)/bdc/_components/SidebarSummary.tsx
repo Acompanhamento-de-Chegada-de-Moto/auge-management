@@ -15,7 +15,7 @@ import {
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { getForecastStatus } from "@/lib/bdc-data";
+import { getArrivalStatus } from "@/lib/bdc-data";
 
 interface SidebarSummaryProps {
   chassis: string;
@@ -39,7 +39,7 @@ function getStatusBadge(found: boolean, forecastDate?: Date | null, arrivalStatu
     };
   }
 
-  if (arrivalStatus === "ARRIVED") {
+  if (arrivalStatus === "Chegou") {
     return {
       label: "Chegou",
       color:
@@ -48,7 +48,7 @@ function getStatusBadge(found: boolean, forecastDate?: Date | null, arrivalStatu
     };
   }
 
-  if (arrivalStatus === "DELAYED") {
+  if (arrivalStatus === "Atrasada") {
     return {
       label: "Atrasada",
       color:
@@ -57,17 +57,11 @@ function getStatusBadge(found: boolean, forecastDate?: Date | null, arrivalStatu
     };
   }
 
-  const forecast = getForecastStatus(forecastDate);
-  const iconMap = {
-    "Sem Previsão": Clock,
-    "Previsão Futura": CalendarIcon,
-    "Previsão Passada": CalendarIcon,
-  } as const;
-
+  const status = getArrivalStatus(forecastDate, arrivalStatus);
   return {
-    label: forecast.label,
-    color: forecast.color,
-    icon: iconMap[forecast.label as keyof typeof iconMap] || Clock,
+    label: status.label,
+    color: status.color,
+    icon: status.label === "Em Trânsito" ? Clock : CalendarIcon,
   };
 }
 

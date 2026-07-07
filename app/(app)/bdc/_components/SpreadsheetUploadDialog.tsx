@@ -43,8 +43,9 @@ function parseDateDDMMAAA(value: unknown): string | null {
   const str = String(value).trim();
   if (!str) return null;
 
-  if (/^\d{2}\/\d{2}\/\d{4}$/.test(str)) {
-    return str;
+  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(str)) {
+    const [d, m, y] = str.split("/");
+    return `${d.padStart(2, "0")}/${m.padStart(2, "0")}/${y}`;
   }
 
   if (typeof value === "number") {
