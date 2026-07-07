@@ -1,5 +1,5 @@
 import * as z from "zod";
-import { validateCPF } from "@/lib/cpf";
+import { stripCPF, validateCPF } from "@/lib/cpf";
 
 export const customerSchema = z
   .object({
@@ -10,7 +10,8 @@ export const customerSchema = z
       .max(14, "CPF inválido")
       .refine((val) => validateCPF(val), {
         message: "CPF inválido",
-      }),
+      })
+      .transform((val) => stripCPF(val)),
     customerName: z.string().min(1, "Cliente é obrigatório"),
     sellerName: z.string().min(1, "Vendedor é obrigatório"),
     city: z.string().min(1, "Cidade é obrigatória"),

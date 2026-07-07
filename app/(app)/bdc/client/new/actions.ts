@@ -4,9 +4,9 @@ import { requireAuth } from "@/app/data/user/require-auth";
 import { prisma } from "@/lib/db";
 import type { ApiResponse } from "@/lib/types";
 import {
-  type ClientSchemaType,
-  clientSchema,
-} from "@/lib/zod-schemas/client-schema";
+  type CustomerFormData,
+  customerSchema,
+} from "@/validators/customer-schema";
 
 function mapRegistrationStatus(
   status: string | undefined,
@@ -32,12 +32,12 @@ function mapArrivalStatus(
 }
 
 export async function CreateClientAction(
-  values: ClientSchemaType,
+  values: CustomerFormData,
 ): Promise<ApiResponse> {
   await requireAuth();
 
   try {
-    const validation = clientSchema.safeParse(values);
+    const validation = customerSchema.safeParse(values);
 
     if (!validation.success) {
       return {

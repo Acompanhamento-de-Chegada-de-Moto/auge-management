@@ -17,6 +17,7 @@ export async function userGetMotorcycle(chassis: string) {
       client: true,
       clientId: true,
       forecastArrival: true,
+      forecastArrivalStatus: true,
       model: true,
       registrationStatus: true,
       createdAt: true,

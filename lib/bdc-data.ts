@@ -61,11 +61,9 @@ export function parseExcelDate(value: unknown): Date | undefined {
   return Number.isNaN(date.getTime()) ? undefined : date;
 }
 
-export type ArrivalStatusValue = "NO_INFORMATION" | "ARRIVED" | "DELAYED";
-
 export function getArrivalStatus(
   forecastDate: Date | null | undefined,
-  arrivalStatus?: ArrivalStatusValue | null,
+  arrivalStatus?: string | null,
 ) {
   if (arrivalStatus === "ARRIVED") {
     return {
@@ -111,7 +109,7 @@ export function getArrivalStatus(
 
 export function getForecastStatus(
   forecastDate: Date | null | undefined,
-  arrivalStatus?: ArrivalStatusValue | null,
+  arrivalStatus?: string | null,
 ) {
   if (arrivalStatus === "ARRIVED") {
     return {

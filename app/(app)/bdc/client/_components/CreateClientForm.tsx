@@ -43,13 +43,13 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import {
-  type ClientSchemaType,
-  clientSchema,
-} from "@/lib/zod-schemas/client-schema";
+  type CustomerFormData,
+  customerSchema,
+} from "@/validators/customer-schema";
 
 interface ICreateCustomerFormProps {
   action: (
-    data: ClientSchemaType,
+    data: CustomerFormData,
   ) => Promise<{ status: string; message: string }>;
   searchChassisAction: (chassis: string) => Promise<any>;
 }
@@ -66,8 +66,8 @@ export function CreateClientForm({
 
   const router = useRouter();
 
-  const form = useForm<ClientSchemaType>({
-    resolver: zodResolver(clientSchema),
+  const form = useForm<CustomerFormData>({
+    resolver: zodResolver(customerSchema),
     defaultValues: {
       customerName: "",
       cpf: "",
@@ -116,7 +116,7 @@ export function CreateClientForm({
     }
   };
 
-  const handleSubmit = (data: ClientSchemaType) => {
+  const handleSubmit = (data: CustomerFormData) => {
     startTransition(async () => {
       const result = await action(data);
 
