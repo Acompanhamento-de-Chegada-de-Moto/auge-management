@@ -44,3 +44,5 @@ next-env.d.ts
 
 #DEV
 /app/(auth)/sign-up
+
+/scripts
