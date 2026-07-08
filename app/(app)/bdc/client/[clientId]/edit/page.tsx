@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
+import { userGetMotorcycle } from "@/app/data/user/user-get-motorcycle";
 import { getClientById } from "@/lib/data/client";
 import { EditClientForm } from "./_components/EditClientForm";
 
@@ -41,7 +42,10 @@ export default async function EditarClientePage({
           <ArrowLeft className="size-4 mr-2" /> Voltar
         </Link>
       </div>
-      <EditClientForm client={client} />
+      <EditClientForm
+        client={client}
+        searchChassisAction={userGetMotorcycle}
+      />
     </div>
   );
 }

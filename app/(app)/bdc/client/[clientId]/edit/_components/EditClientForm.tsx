@@ -6,8 +6,10 @@ import dayjs from "dayjs";
 import {
   Bike,
   CalendarIcon,
+  CheckCircle2,
   Loader2,
   Plus,
+  SearchIcon,
   ShieldCheck,
   User,
 } from "lucide-react";
@@ -52,11 +54,16 @@ type Client = NonNullable<Awaited<ReturnType<typeof getClientById>>>;
 
 interface EditClientFormProps {
   client: Client;
+  searchChassisAction: (chassis: string) => Promise<any>;
 }
 
-export function EditClientForm({ client }: EditClientFormProps) {
+export function EditClientForm({ client, searchChassisAction }: EditClientFormProps) {
   const [pending, startTransition] = useTransition();
   const [showNewMotorcycle, setShowNewMotorcycle] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const [motorcycleFound, setMotorcycleFound] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
 
   const form = useForm<CustomerFormData>({
     resolver: zodResolver(customerSchema),
@@ -89,6 +96,38 @@ export function EditClientForm({ client }: EditClientFormProps) {
   });
 
   const watchedValues = form.watch();
+  const hasExistingMotorcycle = client.motorcycles.length > 0;
+
+  const handleBlurOrSearchChassis = async () => {
+    const chassisValue = form.getValues("chassis");
+    if (!chassisValue || chassisValue.trim() === "") return;
+
+    setSearchLoading(true);
+    setSearchError(null);
+
+    try {
+      const motorcycle = await searchChassisAction(chassisValue);
+      setHasSearched(true);
+
+      if (motorcycle) {
+        form.setValue("model", motorcycle.model);
+        form.setValue("city", motorcycle.city || "");
+        form.setValue(
+          "forecastDate",
+          motorcycle.forecastArrival
+            ? new Date(motorcycle.forecastArrival)
+            : undefined,
+        );
+        setMotorcycleFound(true);
+      } else {
+        setMotorcycleFound(false);
+      }
+    } catch {
+      setSearchError("Erro ao validar chassi no estoque.");
+    } finally {
+      setSearchLoading(false);
+    }
+  };
 
   const handleSubmit = async (formData: CustomerFormData) => {
     startTransition(async () => {
@@ -112,7 +151,7 @@ export function EditClientForm({ client }: EditClientFormProps) {
               <SectionHeader
                 icon={Bike}
                 title="Motocicleta"
-                description="Chassi localizado no estoque"
+                description={hasExistingMotorcycle ? "Chassi localizado no estoque" : "Informe o chassi para localizar no estoque"}
               />
 
               <FormField
@@ -121,18 +160,91 @@ export function EditClientForm({ client }: EditClientFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Chassi</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Número do chassi"
-                        className={cn("font-mono uppercase", client.motorcycles.length > 0 && "bg-muted text-muted-foreground")}
-                        {...field}
-                        readOnly={client.motorcycles.length > 0}
-                      />
-                    </FormControl>
+                    {hasExistingMotorcycle ? (
+                      <FormControl>
+                        <Input
+                          placeholder="Número do chassi"
+                          className="font-mono uppercase bg-muted text-muted-foreground"
+                          {...field}
+                          readOnly
+                        />
+                      </FormControl>
+                    ) : (
+                      <div className="flex gap-2">
+                        <FormControl>
+                          <div className="relative flex-1">
+                            <Input
+                              placeholder="Número do chassi"
+                              className={cn(
+                                "font-mono uppercase pr-9",
+                                hasSearched &&
+                                  motorcycleFound &&
+                                  "border-green-500 focus-visible:ring-green-500/30",
+                              )}
+                              {...field}
+                              onChange={(e) => {
+                                field.onChange(e.target.value.toUpperCase());
+                                setHasSearched(false);
+                                setMotorcycleFound(false);
+                              }}
+                            />
+                            {hasSearched && motorcycleFound && (
+                              <CheckCircle2 className="absolute right-2.5 top-1/2 size-4 -translate-y-1/2 text-green-600 dark:text-green-400" />
+                            )}
+                          </div>
+                        </FormControl>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          onClick={handleBlurOrSearchChassis}
+                          disabled={searchLoading}
+                          className="shrink-0 min-w-[136px]"
+                        >
+                          {searchLoading ? (
+                            <Loader2 className="size-4 mr-1.5 animate-spin" />
+                          ) : (
+                            <SearchIcon className="size-4 mr-1.5" />
+                          )}
+                          {searchLoading ? "Buscando..." : "Checar Estoque"}
+                        </Button>
+                      </div>
+                    )}
+                    {searchError && (
+                      <p className="text-xs font-medium text-destructive">
+                        {searchError}
+                      </p>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
+              {hasSearched && motorcycleFound && (
+                <div
+                  role="status"
+                  className="mt-3 flex items-start gap-2 rounded-lg border border-green-200/60 bg-green-50 p-3 text-sm text-green-800 dark:border-green-900/40 dark:bg-green-950/30 dark:text-green-400"
+                >
+                  <CheckCircle2 className="mt-0.5 size-4 shrink-0" />
+                  <span>
+                    Moto localizada no estoque. Modelo, cidade e previsão
+                    preenchidos automaticamente.
+                  </span>
+                </div>
+              )}
+
+              {watchedValues.chassis && !searchLoading && !motorcycleFound && !hasExistingMotorcycle && (
+                <div
+                  role="status"
+                  className="mt-3 flex items-start gap-2 rounded-lg border border-blue-200/60 bg-blue-50 p-3 text-sm text-blue-800 dark:border-blue-900/40 dark:bg-blue-950/40 dark:text-blue-400"
+                >
+                  <span aria-hidden className="mt-0.5">ℹ️</span>
+                  <span>
+                    Esta moto não está no estoque. O modelo e a previsão
+                    informados abaixo criarão um registro de previsão
+                    automaticamente.
+                  </span>
+                </div>
+              )}
 
               <div className="mt-4">
                 <FormField
@@ -142,7 +254,14 @@ export function EditClientForm({ client }: EditClientFormProps) {
                     <FormItem>
                       <FormLabel>Modelo</FormLabel>
                       <FormControl>
-                        <Input placeholder="Modelo da motocicleta" {...field} />
+                        <Input
+                          placeholder="Modelo da motocicleta"
+                          {...field}
+                          readOnly={motorcycleFound}
+                          className={cn(
+                            motorcycleFound && "bg-muted text-muted-foreground",
+                          )}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -288,6 +407,7 @@ export function EditClientForm({ client }: EditClientFormProps) {
                           <FormControl>
                             <Button
                               variant="outline"
+                              disabled={motorcycleFound}
                               className={cn(
                                 "w-full pl-3 text-left font-normal",
                                 !field.value && "text-muted-foreground",
@@ -547,7 +667,7 @@ export function EditClientForm({ client }: EditClientFormProps) {
 
       <SidebarSummary
         chassis={watchedValues.chassis}
-        found
+        found={hasExistingMotorcycle || motorcycleFound}
         model={watchedValues.model}
         city={watchedValues.city}
         customerName={watchedValues.customerName}
