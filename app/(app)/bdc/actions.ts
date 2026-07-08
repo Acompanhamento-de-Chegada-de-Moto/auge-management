@@ -88,6 +88,22 @@ export async function EditClientAction(
       billingDate: billingDate ?? null,
     });
 
+    const arrivalStatusMap: Record<
+      string,
+      "NO_INFORMATION" | "ARRIVED" | "DELAYED"
+    > = {
+      "Sem Informação": "NO_INFORMATION",
+      Chegou: "ARRIVED",
+      Atrasada: "DELAYED",
+    };
+
+    const resolutionStatus =
+      registrationStatus === "Emplacado"
+        ? "PLATED"
+        : registrationStatus === "Emplacando"
+          ? "PLATING"
+          : "NO_PLATE";
+
     const motorcycle = client.motorcycles[0];
     if (motorcycle) {
       if (chassis !== motorcycle.chassi) {
@@ -100,29 +116,48 @@ export async function EditClientAction(
         }
       }
 
-      const arrivalStatusMap: Record<
-        string,
-        "NO_INFORMATION" | "ARRIVED" | "DELAYED"
-      > = {
-        "Sem Informação": "NO_INFORMATION",
-        Chegou: "ARRIVED",
-        Atrasada: "DELAYED",
-      };
-
       await updateMotorcycle(motorcycle.id, {
         chassi: chassis,
         model,
         forecastArrival: forecastDate ?? null,
         forecastArrivalStatus:
           arrivalStatusMap[arrivalStatus ?? ""] ?? "NO_INFORMATION",
-        registrationStatus:
-          registrationStatus === "Emplacado"
-            ? "PLATED"
-            : registrationStatus === "Emplacando"
-              ? "PLATING"
-              : "NO_PLATE",
+        registrationStatus: resolutionStatus,
         registrationDate: registrationDate ?? null,
       });
+    } else if (chassis) {
+      const existingMoto = await getMotorcycleByChassis(chassis);
+      if (existingMoto) {
+        if (existingMoto.clientId && existingMoto.clientId !== clientId) {
+          return {
+            status: "error",
+            message: "Este chassi já está vinculado a outro cliente.",
+          };
+        }
+        await prisma.motorcycle.update({
+          where: { id: existingMoto.id },
+          data: {
+            clientId,
+            model,
+            forecastArrival: forecastDate ?? null,
+            forecastArrivalStatus:
+              arrivalStatusMap[arrivalStatus ?? ""] ?? "NO_INFORMATION",
+            registrationStatus: resolutionStatus,
+            registrationDate: registrationDate ?? null,
+          },
+        });
+      } else {
+        await createMotorcycle({
+          chassi: chassis,
+          model,
+          forecastArrival: forecastDate ?? null,
+          forecastArrivalStatus:
+            arrivalStatusMap[arrivalStatus ?? ""] ?? "NO_INFORMATION",
+          registrationStatus: resolutionStatus,
+          registrationDate: registrationDate ?? null,
+          clientId,
+        });
+      }
     }
 
     if (newChassis) {

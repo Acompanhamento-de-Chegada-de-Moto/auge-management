@@ -124,9 +124,9 @@ export function EditClientForm({ client }: EditClientFormProps) {
                     <FormControl>
                       <Input
                         placeholder="Número do chassi"
-                        className="font-mono uppercase bg-muted text-muted-foreground"
+                        className={cn("font-mono uppercase", client.motorcycles.length > 0 && "bg-muted text-muted-foreground")}
                         {...field}
-                        readOnly
+                        readOnly={client.motorcycles.length > 0}
                       />
                     </FormControl>
                     <FormMessage />
