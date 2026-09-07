@@ -1,7 +1,10 @@
 "use server";
 
 import { requireAuth } from "@/app/data/user/require-auth";
-import { getMotorcycleByIdWithClient, getMotorcyclesPaginated } from "@/lib/data/motorcycle";
+import {
+  getMotorcycleByIdWithClient,
+  getMotorcyclesPaginated,
+} from "@/lib/data/motorcycle";
 import { prisma } from "@/lib/db";
 
 export async function getMotorcycleByIdAction(id: string) {
@@ -13,9 +16,8 @@ export async function getMotorcyclesPaginatedAction(params: {
   page: number;
   pageSize?: number;
   model?: string;
-  status?: string;
   chassisSearch?: string;
-  arrived?: "true" | "false";
+  arrived?: "true" | "false" | "em-transito";
 }) {
   await requireAuth();
 
@@ -32,7 +34,6 @@ export async function getMotorcyclesPaginatedAction(params: {
       page: params.page,
       pageSize,
       model: params.model,
-      status: params.status as "Em Trânsito" | "Chegou" | "Atrasada" | undefined,
       chassisSearch: params.chassisSearch,
       arrived: params.arrived,
     }),

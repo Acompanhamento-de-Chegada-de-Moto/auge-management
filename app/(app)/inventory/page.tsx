@@ -2,8 +2,8 @@ import { PlusIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
-import { getMotorcyclesPaginatedAction } from "@/app/(app)/inventory/actions";
 import { MotorcycleSpreadsheetUploadDialog } from "@/app/(app)/inventory/_components/MotorcycleSpreadsheetUploadDialog";
+import { getMotorcyclesPaginatedAction } from "@/app/(app)/inventory/actions";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -62,9 +62,12 @@ async function RenderMotorcycles({
   const result = await getMotorcyclesPaginatedAction({
     page: Number(params.page) || 1,
     model: typeof params.model === "string" ? params.model : undefined,
-    status: typeof params.status === "string" ? params.status : undefined,
-    chassisSearch: typeof params.chassis === "string" ? params.chassis : undefined,
-    arrived: typeof params.arrived === "string" ? params.arrived as "true" | "false" : undefined,
+    chassisSearch:
+      typeof params.chassis === "string" ? params.chassis : undefined,
+    arrived:
+      typeof params.arrived === "string"
+        ? (params.arrived as "true" | "false" | "em-transito")
+        : undefined,
   });
 
   return (
@@ -75,7 +78,6 @@ async function RenderMotorcycles({
       filterOptions={result.filterOptions}
       activeFilters={{
         model: typeof params.model === "string" ? params.model : "",
-        status: typeof params.status === "string" ? params.status : "",
         chassis: typeof params.chassis === "string" ? params.chassis : "",
         arrived: typeof params.arrived === "string" ? params.arrived : "",
       }}

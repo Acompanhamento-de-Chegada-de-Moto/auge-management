@@ -35,9 +35,8 @@ export async function getMotorcyclesPaginated(params: {
   page: number;
   pageSize: number;
   model?: string;
-  status?: "Em Trânsito" | "Chegou" | "Atrasada";
   chassisSearch?: string;
-  arrived?: "true" | "false";
+  arrived?: "true" | "false" | "em-transito";
 }) {
   const where: Record<string, unknown> = {};
 
@@ -62,37 +61,17 @@ export async function getMotorcyclesPaginated(params: {
 
   const andConditions: Record<string, unknown>[] = [];
 
-  if (params.status) {
-    switch (params.status) {
-      case "Em Trânsito":
-        andConditions.push({
-          OR: [
-            { forecastArrival: null, forecastArrivalStatus: "NO_INFORMATION" },
-            {
-              forecastArrival: { gt: fimHoje },
-              forecastArrivalStatus: "NO_INFORMATION",
-            },
-          ],
-        });
-        break;
-      case "Chegou":
-        andConditions.push(chegouCondition);
-        break;
-      case "Atrasada":
-        andConditions.push({
-          OR: [
-            { forecastArrivalStatus: "DELAYED" },
-            {
-              forecastArrival: { lt: inicioHoje },
-              forecastArrivalStatus: "NO_INFORMATION",
-            },
-          ],
-        });
-        break;
-    }
-  }
-
-  if (params.arrived === "true") {
+  if (params.arrived === "em-transito") {
+    andConditions.push({
+      OR: [
+        { forecastArrival: null, forecastArrivalStatus: "NO_INFORMATION" },
+        {
+          forecastArrival: { gt: fimHoje },
+          forecastArrivalStatus: "NO_INFORMATION",
+        },
+      ],
+    });
+  } else if (params.arrived === "true") {
     andConditions.push(chegouCondition);
   } else if (params.arrived === "false") {
     andConditions.push({ NOT: chegouCondition });

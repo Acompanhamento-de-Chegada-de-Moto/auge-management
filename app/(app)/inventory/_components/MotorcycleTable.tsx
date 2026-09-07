@@ -1,6 +1,15 @@
 "use client";
 
-import { CheckIcon, ChevronLeft, ChevronRight, CopyIcon, PencilIcon, SearchIcon, Trash2Icon, XIcon } from "lucide-react";
+import {
+  CheckIcon,
+  ChevronLeft,
+  ChevronRight,
+  CopyIcon,
+  PencilIcon,
+  SearchIcon,
+  Trash2Icon,
+  XIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -40,7 +49,6 @@ interface MotorcycleTableProps {
   };
   activeFilters: {
     model: string;
-    status: string;
     chassis: string;
     arrived: string;
   };
@@ -68,7 +76,7 @@ export default function MotorcycleTable({
     });
   };
 
-  const updateFilter = (key: "model" | "status" | "arrived", value: string) => {
+  const updateFilter = (key: "model" | "arrived", value: string) => {
     const params = new URLSearchParams(searchParams);
 
     if (!value || value === "all") {
@@ -136,31 +144,16 @@ export default function MotorcycleTable({
         </Select>
 
         <Select
-          value={activeFilters.status || "all"}
-          onValueChange={(value) => updateFilter("status", value)}
-        >
-          <SelectTrigger className="w-full sm:w-[180px]">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-
-          <SelectContent>
-            <SelectItem value="all">Todos os status</SelectItem>
-            <SelectItem value="Em Trânsito">Em Trânsito</SelectItem>
-            <SelectItem value="Chegou">Chegou</SelectItem>
-            <SelectItem value="Atrasada">Atrasada</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Select
           value={activeFilters.arrived || "all"}
           onValueChange={(value) => updateFilter("arrived", value)}
         >
           <SelectTrigger className="w-full sm:w-[180px]">
-            <SelectValue placeholder="Chegada" />
+            <SelectValue placeholder="Todos os Status" />
           </SelectTrigger>
 
           <SelectContent>
-            <SelectItem value="all">Todas</SelectItem>
+            <SelectItem value="all">Todos os Status</SelectItem>
+            <SelectItem value="em-transito">Em Trânsito</SelectItem>
             <SelectItem value="true">Chegou</SelectItem>
             <SelectItem value="false">Não Chegou</SelectItem>
           </SelectContent>
@@ -211,12 +204,17 @@ export default function MotorcycleTable({
         </div>
       ) : (
         <div
-          className={isPending ? "pointer-events-none opacity-60 transition-opacity" : ""}
+          className={
+            isPending ? "pointer-events-none opacity-60 transition-opacity" : ""
+          }
         >
           {/* MOBILE: cards (abaixo de md) */}
           <div className="space-y-3 md:hidden">
             {motorcycles.map((motorcycle) => {
-              const status = getArrivalStatus(motorcycle.forecastArrival, motorcycle.forecastArrivalStatus);
+              const status = getArrivalStatus(
+                motorcycle.forecastArrival,
+                motorcycle.forecastArrivalStatus,
+              );
               return (
                 <div key={motorcycle.id} className="rounded-lg border p-4">
                   <div className="flex items-start justify-between gap-2">
@@ -224,7 +222,9 @@ export default function MotorcycleTable({
                       <p className="font-medium">{motorcycle.model}</p>
                       <button
                         type="button"
-                        onClick={() => handleCopy(motorcycle.chassi, motorcycle.id)}
+                        onClick={() =>
+                          handleCopy(motorcycle.chassi, motorcycle.id)
+                        }
                         aria-label={`Copiar chassi ${motorcycle.chassi}`}
                         className="group mt-1 inline-flex items-center gap-1.5 font-mono text-xs text-muted-foreground"
                       >
@@ -239,7 +239,9 @@ export default function MotorcycleTable({
                         ) : (
                           <>
                             <CopyIcon className="size-3.5" />
-                            <span className="underline">{motorcycle.chassi}</span>
+                            <span className="underline">
+                              {motorcycle.chassi}
+                            </span>
                           </>
                         )}
                       </button>
@@ -275,9 +277,9 @@ export default function MotorcycleTable({
                     <span className="text-xs text-muted-foreground">
                       Previsão:{" "}
                       {motorcycle.forecastArrival
-                        ? new Date(motorcycle.forecastArrival).toLocaleDateString(
-                            "pt-BR",
-                          )
+                        ? new Date(
+                            motorcycle.forecastArrival,
+                          ).toLocaleDateString("pt-BR")
                         : "—"}
                     </span>
                     <span
@@ -328,7 +330,10 @@ export default function MotorcycleTable({
               </TableHeader>
               <TableBody>
                 {motorcycles.map((motorcycle) => {
-                  const status = getArrivalStatus(motorcycle.forecastArrival, motorcycle.forecastArrivalStatus);
+                  const status = getArrivalStatus(
+                    motorcycle.forecastArrival,
+                    motorcycle.forecastArrivalStatus,
+                  );
                   return (
                     <TableRow key={motorcycle.id}>
                       <TableCell className="font-medium">
@@ -365,17 +370,17 @@ export default function MotorcycleTable({
                       </TableCell>
                       <TableCell>
                         {motorcycle.forecastArrival
-                          ? new Date(motorcycle.forecastArrival).toLocaleDateString(
-                              "pt-BR",
-                            )
+                          ? new Date(
+                              motorcycle.forecastArrival,
+                            ).toLocaleDateString("pt-BR")
                           : "—"}
                       </TableCell>
                       <TableCell>
-                      <span
-                        className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${status.color}`}
-                      >
-                        {status.label}
-                      </span>
+                        <span
+                          className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${status.color}`}
+                        >
+                          {status.label}
+                        </span>
                       </TableCell>
                       <TableCell>
                         <div className="flex h-full items-center gap-1 justify-end">
@@ -385,7 +390,8 @@ export default function MotorcycleTable({
                             className={buttonVariants({
                               variant: "ghost",
                               size: "icon",
-                              className: "rounded-full min-h-[44px] min-w-[44px]",
+                              className:
+                                "rounded-full min-h-[44px] min-w-[44px]",
                             })}
                           >
                             <PencilIcon className="size-4" />
@@ -396,7 +402,8 @@ export default function MotorcycleTable({
                             className={buttonVariants({
                               variant: "ghost",
                               size: "icon",
-                              className: "rounded-full min-h-[44px] min-w-[44px]",
+                              className:
+                                "rounded-full min-h-[44px] min-w-[44px]",
                             })}
                           >
                             <Trash2Icon className="size-4 text-red-500" />
