@@ -25,12 +25,18 @@ export default async function AcompanhamentoPage({
     <div className="flex min-h-full flex-col items-center bg-background px-4 py-12 sm:px-6 lg:px-8">
       <div className="flex w-full max-w-2xl flex-col items-center gap-8">
         <div className="flex flex-col items-center gap-2 text-center">
-          <Image src={logoUrl || "/logo-auge.png"} alt="Auge" width={80} height={80} className="size-20 object-contain" />
+          <Image
+            src={logoUrl || "/logo-auge.png"}
+            alt="Auge"
+            width={80}
+            height={80}
+            className="size-20 object-contain"
+          />
           <h1 className="text-2xl font-bold tracking-tight">
             Acompanhamento de Motocicletas
           </h1>
           <p className="text-muted-foreground">
-            Consulte o status da motocicleta pelo CPF do cliente.
+            Consulte o status da motocicleta pelo CPF ou CNPJ do cliente.
           </p>
         </div>
 

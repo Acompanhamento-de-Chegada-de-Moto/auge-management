@@ -76,8 +76,7 @@ export function getArrivalStatus(
   if (arrivalStatus === "DELAYED") {
     return {
       label: "Atrasada",
-      color:
-        "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
+      color: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
     };
   }
 
@@ -97,6 +96,13 @@ export function getArrivalStatus(
       label: "Em Trânsito",
       color:
         "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
+    };
+  }
+
+  if (arrival.isBefore(hoje)) {
+    return {
+      label: "Atrasada",
+      color: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
     };
   }
 

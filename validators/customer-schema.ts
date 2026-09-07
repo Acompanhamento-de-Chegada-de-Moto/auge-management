@@ -1,15 +1,16 @@
 import * as z from "zod";
-import { stripCPF, validateCPF } from "@/lib/cpf";
+import { stripCPF } from "@/lib/cpf";
+import { validateDocument } from "@/lib/document";
 
 export const customerSchema = z
   .object({
     chassis: z.string().min(1, "Chassi é obrigatório"),
     cpf: z
       .string()
-      .min(11, "CPF deve ter no mínimo 11 dígitos")
-      .max(14, "CPF inválido")
-      .refine((val) => validateCPF(val), {
-        message: "CPF inválido",
+      .min(11, "CPF ou CNPJ deve ter no mínimo 11 caracteres")
+      .max(18, "CPF ou CNPJ inválido")
+      .refine((val) => validateDocument(val), {
+        message: "CPF ou CNPJ inválido",
       })
       .transform((val) => stripCPF(val)),
     customerName: z.string().min(1, "Cliente é obrigatório"),

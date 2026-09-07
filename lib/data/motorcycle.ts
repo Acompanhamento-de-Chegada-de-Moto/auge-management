@@ -45,8 +45,20 @@ export async function getMotorcyclesPaginated(params: {
     where.model = params.model;
   }
 
-  const hoje = new Date();
-  hoje.setHours(23, 59, 59, 999);
+  const inicioHoje = new Date();
+  inicioHoje.setHours(0, 0, 0, 0);
+  const fimHoje = new Date();
+  fimHoje.setHours(23, 59, 59, 999);
+
+  const chegouCondition = {
+    OR: [
+      { forecastArrivalStatus: "ARRIVED" },
+      {
+        forecastArrival: { gte: inicioHoje, lte: fimHoje },
+        forecastArrivalStatus: "NO_INFORMATION",
+      },
+    ],
+  };
 
   const andConditions: Record<string, unknown>[] = [];
 
@@ -56,23 +68,24 @@ export async function getMotorcyclesPaginated(params: {
         andConditions.push({
           OR: [
             { forecastArrival: null, forecastArrivalStatus: "NO_INFORMATION" },
-            { forecastArrival: { gt: hoje }, forecastArrivalStatus: "NO_INFORMATION" },
+            {
+              forecastArrival: { gt: fimHoje },
+              forecastArrivalStatus: "NO_INFORMATION",
+            },
           ],
         });
         break;
       case "Chegou":
-        andConditions.push({
-          OR: [
-            { forecastArrivalStatus: "ARRIVED" },
-            { forecastArrival: { lte: hoje }, forecastArrivalStatus: "NO_INFORMATION" },
-          ],
-        });
+        andConditions.push(chegouCondition);
         break;
       case "Atrasada":
         andConditions.push({
           OR: [
             { forecastArrivalStatus: "DELAYED" },
-            { forecastArrival: { lt: hoje }, forecastArrivalStatus: "NO_INFORMATION" },
+            {
+              forecastArrival: { lt: inicioHoje },
+              forecastArrivalStatus: "NO_INFORMATION",
+            },
           ],
         });
         break;
@@ -80,21 +93,9 @@ export async function getMotorcyclesPaginated(params: {
   }
 
   if (params.arrived === "true") {
-    andConditions.push({
-      OR: [
-        { forecastArrivalStatus: "ARRIVED" },
-        { forecastArrival: { lte: hoje }, forecastArrivalStatus: "NO_INFORMATION" },
-      ],
-    });
+    andConditions.push(chegouCondition);
   } else if (params.arrived === "false") {
-    andConditions.push({
-      NOT: {
-        OR: [
-          { forecastArrivalStatus: "ARRIVED" },
-          { forecastArrival: { lte: hoje }, forecastArrivalStatus: "NO_INFORMATION" },
-        ],
-      },
-    });
+    andConditions.push({ NOT: chegouCondition });
   }
 
   if (andConditions.length > 0) {

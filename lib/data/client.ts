@@ -197,6 +197,7 @@ export async function getClientsPaginated(params: {
   model?: string;
   search?: string;
   arrived?: "true" | "false";
+  sortBilling?: "asc" | "desc";
 }) {
   const where: Record<string, unknown> = {};
 
@@ -213,17 +214,24 @@ export async function getClientsPaginated(params: {
   let motorcycleFilter: Record<string, unknown> | undefined;
 
   if (params.model) {
-    motorcycleFilter = { model: { contains: params.model, mode: "insensitive" } };
+    motorcycleFilter = {
+      model: { contains: params.model, mode: "insensitive" },
+    };
   }
 
   if (params.arrived === "true") {
     const chegou = {
       OR: [
         { forecastArrivalStatus: "ARRIVED" },
-        { forecastArrival: { lte: hoje }, forecastArrivalStatus: "NO_INFORMATION" },
+        {
+          forecastArrival: { lte: hoje },
+          forecastArrivalStatus: "NO_INFORMATION",
+        },
       ],
     };
-    motorcycleFilter = motorcycleFilter ? { AND: [motorcycleFilter, chegou] } : chegou;
+    motorcycleFilter = motorcycleFilter
+      ? { AND: [motorcycleFilter, chegou] }
+      : chegou;
   }
 
   if (motorcycleFilter) {
@@ -236,7 +244,10 @@ export async function getClientsPaginated(params: {
         some: {
           OR: [
             { forecastArrivalStatus: "ARRIVED" },
-            { forecastArrival: { lte: hoje }, forecastArrivalStatus: "NO_INFORMATION" },
+            {
+              forecastArrival: { lte: hoje },
+              forecastArrivalStatus: "NO_INFORMATION",
+            },
           ],
         },
       },
@@ -247,7 +258,11 @@ export async function getClientsPaginated(params: {
     where.OR = [
       { name: { contains: params.search, mode: "insensitive" } },
       { cpf: { contains: params.search } },
-      { motorcycles: { some: { chassi: { contains: params.search, mode: "insensitive" } } } },
+      {
+        motorcycles: {
+          some: { chassi: { contains: params.search, mode: "insensitive" } },
+        },
+      },
     ];
   }
 
@@ -275,7 +290,9 @@ export async function getClientsPaginated(params: {
           },
         },
       },
-      orderBy: { updatedAt: "desc" },
+      orderBy: params.sortBilling
+        ? { billingDate: { sort: params.sortBilling, nulls: "last" } }
+        : { updatedAt: "desc" },
     }),
     prisma.client.count({ where }),
   ]);

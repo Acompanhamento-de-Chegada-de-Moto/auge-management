@@ -30,6 +30,7 @@ interface BDCPageProps {
     model?: string;
     search?: string;
     arrived?: string;
+    sortBilling?: string;
   }>;
 }
 
@@ -39,7 +40,9 @@ export default async function BDCPage({ searchParams }: BDCPageProps) {
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-        <p className="text-muted-foreground block md:hidden">Acompanhamento de Clientes.</p>
+        <p className="text-muted-foreground block md:hidden">
+          Acompanhamento de Clientes.
+        </p>
 
         <div className="flex items-center gap-2 flex-wrap">
           <SpreadsheetUploadDialog />
@@ -70,6 +73,7 @@ async function RenderClients({
     model?: string;
     search?: string;
     arrived?: string;
+    sortBilling?: string;
   };
 }) {
   const result = await getClientsPaginatedAction({
@@ -78,7 +82,11 @@ async function RenderClients({
     city: params.city,
     model: params.model,
     search: params.search,
-    arrived: typeof params.arrived === "string" ? (params.arrived as "true" | "false") : undefined,
+    arrived:
+      typeof params.arrived === "string"
+        ? (params.arrived as "true" | "false")
+        : undefined,
+    sortBilling: params.sortBilling as "asc" | "desc" | undefined,
   });
 
   return (
@@ -93,6 +101,7 @@ async function RenderClients({
         model: params.model ?? "",
         search: params.search ?? "",
         arrived: params.arrived ?? "",
+        sortBilling: params.sortBilling ?? "",
       }}
     />
   );
@@ -115,7 +124,7 @@ function BDCPageSkeletonLayout() {
           <TableHeader>
             <TableRow>
               <TableHead>Cliente</TableHead>
-              <TableHead>CPF</TableHead>
+              <TableHead>CPF/CNPJ</TableHead>
               <TableHead>Vendedor</TableHead>
               <TableHead className="hidden md:table-cell">Cidade</TableHead>
               <TableHead>Modelo</TableHead>

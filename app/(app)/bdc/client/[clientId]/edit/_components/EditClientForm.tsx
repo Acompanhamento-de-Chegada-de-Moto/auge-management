@@ -17,8 +17,8 @@ import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { SidebarSummary } from "@/app/(app)/bdc/_components/SidebarSummary";
-import { SectionHeader } from "@/components/bdc/section-header";
 import { EditClientAction } from "@/app/(app)/bdc/actions";
+import { SectionHeader } from "@/components/bdc/section-header";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -42,13 +42,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { formatCPF } from "@/lib/cpf";
+import type { getClientById } from "@/lib/data/client";
+import { formatDocument, maskDocument } from "@/lib/document";
 import { cn } from "@/lib/utils";
 import {
   type CustomerFormData,
   customerSchema,
 } from "@/validators/customer-schema";
-import type { getClientById } from "@/lib/data/client";
 
 type Client = NonNullable<Awaited<ReturnType<typeof getClientById>>>;
 
@@ -57,7 +57,10 @@ interface EditClientFormProps {
   searchChassisAction: (chassis: string) => Promise<any>;
 }
 
-export function EditClientForm({ client, searchChassisAction }: EditClientFormProps) {
+export function EditClientForm({
+  client,
+  searchChassisAction,
+}: EditClientFormProps) {
   const [pending, startTransition] = useTransition();
   const [showNewMotorcycle, setShowNewMotorcycle] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
@@ -69,7 +72,7 @@ export function EditClientForm({ client, searchChassisAction }: EditClientFormPr
     resolver: zodResolver(customerSchema),
     defaultValues: {
       customerName: client.name ?? "",
-      cpf: formatCPF(client.cpf ?? ""),
+      cpf: formatDocument(client.cpf ?? ""),
       sellerName: client.sellersName ?? "",
       city: client.city ?? "",
       model: client.motorcycles[0]?.model ?? "",
@@ -151,7 +154,11 @@ export function EditClientForm({ client, searchChassisAction }: EditClientFormPr
               <SectionHeader
                 icon={Bike}
                 title="Motocicleta"
-                description={hasExistingMotorcycle ? "Chassi localizado no estoque" : "Informe o chassi para localizar no estoque"}
+                description={
+                  hasExistingMotorcycle
+                    ? "Chassi localizado no estoque"
+                    : "Informe o chassi para localizar no estoque"
+                }
               />
 
               <FormField
@@ -232,19 +239,24 @@ export function EditClientForm({ client, searchChassisAction }: EditClientFormPr
                 </div>
               )}
 
-              {watchedValues.chassis && !searchLoading && !motorcycleFound && !hasExistingMotorcycle && (
-                <div
-                  role="status"
-                  className="mt-3 flex items-start gap-2 rounded-lg border border-blue-200/60 bg-blue-50 p-3 text-sm text-blue-800 dark:border-blue-900/40 dark:bg-blue-950/40 dark:text-blue-400"
-                >
-                  <span aria-hidden className="mt-0.5">ℹ️</span>
-                  <span>
-                    Esta moto não está no estoque. O modelo e a previsão
-                    informados abaixo criarão um registro de previsão
-                    automaticamente.
-                  </span>
-                </div>
-              )}
+              {watchedValues.chassis &&
+                !searchLoading &&
+                !motorcycleFound &&
+                !hasExistingMotorcycle && (
+                  <div
+                    role="status"
+                    className="mt-3 flex items-start gap-2 rounded-lg border border-blue-200/60 bg-blue-50 p-3 text-sm text-blue-800 dark:border-blue-900/40 dark:bg-blue-950/40 dark:text-blue-400"
+                  >
+                    <span aria-hidden className="mt-0.5">
+                      ℹ️
+                    </span>
+                    <span>
+                      Esta moto não está no estoque. O modelo e a previsão
+                      informados abaixo criarão um registro de previsão
+                      automaticamente.
+                    </span>
+                  </div>
+                )}
 
               <div className="mt-4">
                 <FormField
@@ -293,25 +305,14 @@ export function EditClientForm({ client, searchChassisAction }: EditClientFormPr
                   name="cpf"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>CPF</FormLabel>
+                      <FormLabel>CPF ou CNPJ</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="000.000.000-00"
+                          placeholder="000.000.000-00 ou 00.000.000/0000-00"
                           inputMode="numeric"
                           {...field}
                           onChange={(e) => {
-                            const raw = e.target.value
-                              .replace(/\D/g, "")
-                              .slice(0, 11);
-                            const formatted = raw.replace(
-                              /(\d{3})(\d{3})(\d{3})(\d{0,2})/,
-                              (_, a, b, c, d) => {
-                                let result = `${a}.${b}.${c}`;
-                                if (d) result += `-${d}`;
-                                return result;
-                              },
-                            );
-                            field.onChange(formatted);
+                            field.onChange(maskDocument(e.target.value));
                           }}
                         />
                       </FormControl>
@@ -465,16 +466,20 @@ export function EditClientForm({ client, searchChassisAction }: EditClientFormPr
                 />
 
                 {watchedValues.forecastDate &&
-                  dayjs(watchedValues.forecastDate).startOf("day").isBefore(dayjs().startOf("day")) &&
+                  dayjs(watchedValues.forecastDate)
+                    .startOf("day")
+                    .isBefore(dayjs().startOf("day")) &&
                   watchedValues.arrivalStatus === "Sem Informação" && (
                     <div
                       role="alert"
                       className="sm:col-span-2 flex items-start gap-2 rounded-lg border border-amber-200/60 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-400"
                     >
-                      <span aria-hidden className="mt-0.5">⚠️</span>
+                      <span aria-hidden className="mt-0.5">
+                        ⚠️
+                      </span>
                       <span>
-                        A data prevista para chegada já passou. Confirme se a moto
-                        chegou ou está atrasada.
+                        A data prevista para chegada já passou. Confirme se a
+                        moto chegou ou está atrasada.
                       </span>
                     </div>
                   )}
@@ -563,9 +568,7 @@ export function EditClientForm({ client, searchChassisAction }: EditClientFormPr
                 className="w-full"
               >
                 <Plus className="size-4 mr-2" />
-                {showNewMotorcycle
-                  ? "Cancelar"
-                  : "Adicionar Outra Motocicleta"}
+                {showNewMotorcycle ? "Cancelar" : "Adicionar Outra Motocicleta"}
               </Button>
 
               {showNewMotorcycle && (
@@ -630,10 +633,7 @@ export function EditClientForm({ client, searchChassisAction }: EditClientFormPr
                               </Button>
                             </FormControl>
                           </PopoverTrigger>
-                          <PopoverContent
-                            className="w-auto p-0"
-                            align="start"
-                          >
+                          <PopoverContent className="w-auto p-0" align="start">
                             <Calendar
                               mode="single"
                               selected={field.value}

@@ -8,7 +8,6 @@ import {
   createClientsBatch,
   getAllClientsForImport,
   getBDCFilterOptions,
-  getClientByCpf,
   getClientById,
   getClientsPaginated,
   updateClient,
@@ -75,7 +74,7 @@ export async function EditClientAction(
       if (cpfExists) {
         return {
           status: "error",
-          message: "Este CPF já está cadastrado para outro cliente.",
+          message: "Este CPF ou CNPJ já está cadastrado para outro cliente.",
         };
       }
     }
@@ -230,12 +229,8 @@ export async function importSpreadsheetAction(
       existingMotorcycles.length,
     );
 
-    const clientByCpf = new Map(
-      existingClients.map((c) => [c.cpf, c]),
-    );
-    const motoByChassi = new Map(
-      existingMotorcycles.map((m) => [m.chassi, m]),
-    );
+    const clientByCpf = new Map(existingClients.map((c) => [c.cpf, c]));
+    const motoByChassi = new Map(existingMotorcycles.map((m) => [m.chassi, m]));
 
     const newClients: Array<{
       cpf: string;
@@ -308,7 +303,10 @@ export async function importSpreadsheetAction(
             toUpdateModel.push({ chassi: row.chassi, model: row.modelo });
             updated++;
           }
-          if (existingMoto.clientId && (!row.modelo || existingMoto.model === row.modelo)) {
+          if (
+            existingMoto.clientId &&
+            (!row.modelo || existingMoto.model === row.modelo)
+          ) {
             skipped++;
           }
         } else {
@@ -326,17 +324,23 @@ export async function importSpreadsheetAction(
       }
     }
 
-    console.log(
-      "[import] Classificação:",
-      { newClients: newClients.length, newMotorcycles: newMotorcycles.length, linkMotorcycles: linkMotorcycles.length, toUpdateModel: toUpdateModel.length, billingDateUpdates: billingDateUpdates.length, created, linked, updated, skipped },
-    );
+    console.log("[import] Classificação:", {
+      newClients: newClients.length,
+      newMotorcycles: newMotorcycles.length,
+      linkMotorcycles: linkMotorcycles.length,
+      toUpdateModel: toUpdateModel.length,
+      billingDateUpdates: billingDateUpdates.length,
+      created,
+      linked,
+      updated,
+      skipped,
+    });
 
     if (newClients.length > 0) {
       console.log("[import] Criando", newClients.length, "clientes em batch");
     }
-    const createdClients = newClients.length > 0
-      ? await createClientsBatch(newClients)
-      : [];
+    const createdClients =
+      newClients.length > 0 ? await createClientsBatch(newClients) : [];
 
     const clientIdByCpf = new Map<string, string>();
     for (const c of existingClients) clientIdByCpf.set(c.cpf, c.id);
@@ -368,7 +372,11 @@ export async function importSpreadsheetAction(
     }
 
     if (billingDateUpdates.length > 0) {
-      console.log("[import] Atualizando", billingDateUpdates.length, "billingDates");
+      console.log(
+        "[import] Atualizando",
+        billingDateUpdates.length,
+        "billingDates",
+      );
       await prisma.$transaction(
         billingDateUpdates.map((u) =>
           prisma.client.update({
@@ -380,7 +388,11 @@ export async function importSpreadsheetAction(
     }
 
     if (toUpdateModel.length > 0) {
-      console.log("[import] Atualizando modelo de", toUpdateModel.length, "motos");
+      console.log(
+        "[import] Atualizando modelo de",
+        toUpdateModel.length,
+        "motos",
+      );
       await updateMotorcyclesModelBatch(toUpdateModel);
     }
 
@@ -412,7 +424,10 @@ export async function importSpreadsheetAction(
     console.error("[import] Erro fatal:", err);
     return {
       status: "error",
-      message: err instanceof Error ? err.message : "Erro interno ao importar planilha.",
+      message:
+        err instanceof Error
+          ? err.message
+          : "Erro interno ao importar planilha.",
     };
   }
 }
@@ -456,6 +471,7 @@ export async function getClientsPaginatedAction(params: {
   model?: string;
   search?: string;
   arrived?: "true" | "false";
+  sortBilling?: "asc" | "desc";
 }): Promise<PaginatedResult> {
   await requireAuth();
 
@@ -470,6 +486,7 @@ export async function getClientsPaginatedAction(params: {
       model: params.model,
       search: params.search,
       arrived: params.arrived,
+      sortBilling: params.sortBilling,
     }),
     getBDCFilterOptions(),
   ]);

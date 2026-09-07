@@ -1,12 +1,20 @@
 "use client";
 
 import { format } from "date-fns";
-import { ChevronLeft, ChevronRight, PencilIcon, SearchIcon, Trash2Icon, XIcon } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  PencilIcon,
+  SearchIcon,
+  Trash2Icon,
+  XIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, useTransition } from "react";
 import type { ClientRow } from "@/app/(app)/bdc/actions";
 import { CopyText } from "@/components/general/CopyText";
+import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -24,7 +32,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import {
   Tooltip,
   TooltipContent,
@@ -36,7 +43,7 @@ import {
   getStatusColor,
   mapRegistrationStatusLabel,
 } from "@/lib/bdc-data";
-import { formatCPF } from "@/lib/cpf";
+import { formatDocument } from "@/lib/document";
 
 interface IBDCTableProps {
   rows: ClientRow[];
@@ -53,6 +60,7 @@ interface IBDCTableProps {
     model: string;
     search: string;
     arrived: string;
+    sortBilling: string;
   };
 }
 
@@ -70,7 +78,7 @@ export function BDCTable({
   const [searchInput, setSearchInput] = useState(activeFilters.search);
 
   const updateFilter = (
-    key: "sellerName" | "city" | "model" | "arrived",
+    key: "sellerName" | "city" | "model" | "arrived" | "sortBilling",
     value: string,
   ) => {
     const params = new URLSearchParams(searchParams);
@@ -185,6 +193,20 @@ export function BDCTable({
           </SelectContent>
         </Select>
 
+        <Select
+          value={activeFilters.sortBilling || "all"}
+          onValueChange={(value) => updateFilter("sortBilling", value)}
+        >
+          <SelectTrigger className="w-full sm:w-[180px]">
+            <SelectValue placeholder="Data Faturamento" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Sem ordenação</SelectItem>
+            <SelectItem value="desc">Mais recentes</SelectItem>
+            <SelectItem value="asc">Mais antigas</SelectItem>
+          </SelectContent>
+        </Select>
+
         <div className="relative w-full sm:w-[220px]">
           <button
             type="button"
@@ -234,7 +256,9 @@ export function BDCTable({
         </div>
       ) : (
         <div
-          className={isPending ? "pointer-events-none opacity-60 transition-opacity" : ""}
+          className={
+            isPending ? "pointer-events-none opacity-60 transition-opacity" : ""
+          }
         >
           <div className="md:hidden space-y-3">
             {rows.map((row) => {
@@ -245,7 +269,7 @@ export function BDCTable({
                     <div>
                       <p className="font-medium">{row.name}</p>
                       <p className="text-sm text-muted-foreground">
-                        {formatCPF(row.cpf)}
+                        {formatDocument(row.cpf)}
                       </p>
                     </div>
                     <div className="flex gap-1">
@@ -382,9 +406,11 @@ export function BDCTable({
                 <TableHeader>
                   <TableRow>
                     <TableHead>Cliente</TableHead>
-                    <TableHead>CPF</TableHead>
+                    <TableHead>CPF/CNPJ</TableHead>
                     <TableHead>Vendedor</TableHead>
-                    <TableHead className="hidden md:table-cell">Cidade</TableHead>
+                    <TableHead className="hidden md:table-cell">
+                      Cidade
+                    </TableHead>
                     <TableHead>Modelo</TableHead>
                     <TableHead>Chassi</TableHead>
                     <TableHead className="hidden md:table-cell">
@@ -408,7 +434,7 @@ export function BDCTable({
                         <TableCell>{row.name}</TableCell>
                         <TableCell>
                           <CopyText text={row.cpf}>
-                            <span>{formatCPF(row.cpf)}</span>
+                            <span>{formatDocument(row.cpf)}</span>
                           </CopyText>
                         </TableCell>
                         <TableCell>{row.sellersName}</TableCell>
