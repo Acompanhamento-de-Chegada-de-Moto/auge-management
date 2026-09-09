@@ -1,6 +1,12 @@
 "use client";
 
-import { CheckCircle2Icon, ImageIcon, Loader2, Trash2, Upload } from "lucide-react";
+import {
+  CheckCircle2Icon,
+  ImageIcon,
+  Loader2,
+  Trash2,
+  Upload,
+} from "lucide-react";
 import Image from "next/image";
 import { useId, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";

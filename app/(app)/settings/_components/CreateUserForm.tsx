@@ -136,7 +136,9 @@ export function CreateUserForm() {
         <Label>Função</Label>
         <Select
           value={selectedRole}
-          onValueChange={(v) => setValue("role", v as "USER" | "MANAGER" | "ADMIN")}
+          onValueChange={(v) =>
+            setValue("role", v as "USER" | "MANAGER" | "ADMIN")
+          }
           disabled={isSubmitting}
         >
           <SelectTrigger>

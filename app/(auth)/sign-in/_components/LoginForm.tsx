@@ -72,9 +72,7 @@ export default function LoginForm() {
               />
             </div>
             {errors.email && (
-              <p className="text-xs text-destructive">
-                {errors.email.message}
-              </p>
+              <p className="text-xs text-destructive">{errors.email.message}</p>
             )}
           </div>
           <div className="flex flex-col gap-2">

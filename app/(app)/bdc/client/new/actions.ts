@@ -87,7 +87,10 @@ export async function CreateClientAction(
       });
 
       if (existingMotorcycle) {
-        if (existingMotorcycle.clientId && existingMotorcycle.clientId !== clientId) {
+        if (
+          existingMotorcycle.clientId &&
+          existingMotorcycle.clientId !== clientId
+        ) {
           throw new Error("Este chassi já está vinculado a outro cliente.");
         }
         await tx.motorcycle.update({

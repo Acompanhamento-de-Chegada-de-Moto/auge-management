@@ -42,7 +42,10 @@ export default async function MotocicletaDetalhePage({
   const delayMessage = await getDelayMessage();
   const whatsappMessage = await getWhatsAppMessage();
 
-  const arrivalStatus = getArrivalStatus(motorcycle.forecastArrival, motorcycle.forecastArrivalStatus);
+  const arrivalStatus = getArrivalStatus(
+    motorcycle.forecastArrival,
+    motorcycle.forecastArrivalStatus,
+  );
   const statusLabel = mapRegistrationStatusLabel(motorcycle.registrationStatus);
   const statusColor = getStatusColor(statusLabel);
 
@@ -52,7 +55,14 @@ export default async function MotocicletaDetalhePage({
         {/* Cabeçalho */}
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
-            <Image src={logoUrl || "/logo-auge.png"} alt="" width={40} height={40} className="object-contain" aria-hidden="true" />
+            <Image
+              src={logoUrl || "/logo-auge.png"}
+              alt=""
+              width={40}
+              height={40}
+              className="object-contain"
+              aria-hidden="true"
+            />
             <h1 className="truncate text-lg font-bold sm:text-xl">
               Acompanhamento de Motocicleta
             </h1>

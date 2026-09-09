@@ -9,7 +9,12 @@ import { authClient } from "@/lib/auth-client";
 const allTabs = [
   { title: "Usuários", href: "/settings", icon: Users, adminOnly: true },
   { title: "Aparência", href: "/settings/cosmetics", icon: Palette },
-  { title: "Sistema", href: "/settings/system", icon: Settings2, adminOnly: true },
+  {
+    title: "Sistema",
+    href: "/settings/system",
+    icon: Settings2,
+    adminOnly: true,
+  },
 ];
 
 export default function SettingsLayout({

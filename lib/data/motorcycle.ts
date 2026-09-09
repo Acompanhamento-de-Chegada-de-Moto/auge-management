@@ -36,7 +36,7 @@ export async function getMotorcyclesPaginated(params: {
   pageSize: number;
   model?: string;
   chassisSearch?: string;
-  arrived?: "true" | "false" | "em-transito";
+  arrived?: "true" | "false" | "em-transito" | "atrasada";
 }) {
   const where: Record<string, unknown> = {};
 
@@ -44,37 +44,18 @@ export async function getMotorcyclesPaginated(params: {
     where.model = params.model;
   }
 
-  const inicioHoje = new Date();
-  inicioHoje.setHours(0, 0, 0, 0);
-  const fimHoje = new Date();
-  fimHoje.setHours(23, 59, 59, 999);
-
-  const chegouCondition = {
-    OR: [
-      { forecastArrivalStatus: "ARRIVED" },
-      {
-        forecastArrival: { gte: inicioHoje, lte: fimHoje },
-        forecastArrivalStatus: "NO_INFORMATION",
-      },
-    ],
-  };
-
   const andConditions: Record<string, unknown>[] = [];
 
   if (params.arrived === "em-transito") {
-    andConditions.push({
-      OR: [
-        { forecastArrival: null, forecastArrivalStatus: "NO_INFORMATION" },
-        {
-          forecastArrival: { gt: fimHoje },
-          forecastArrivalStatus: "NO_INFORMATION",
-        },
-      ],
-    });
+    andConditions.push({ forecastArrivalStatus: "NO_INFORMATION" });
+  } else if (params.arrived === "atrasada") {
+    andConditions.push({ forecastArrivalStatus: "DELAYED" });
   } else if (params.arrived === "true") {
-    andConditions.push(chegouCondition);
+    andConditions.push({ forecastArrivalStatus: "ARRIVED" });
   } else if (params.arrived === "false") {
-    andConditions.push({ NOT: chegouCondition });
+    andConditions.push({
+      forecastArrivalStatus: { not: "ARRIVED" },
+    });
   }
 
   if (andConditions.length > 0) {

@@ -21,9 +21,6 @@ export interface DashboardSummary {
 }
 
 export async function getDashboardSummary(): Promise<DashboardSummary> {
-  const hoje = new Date();
-  hoje.setHours(23, 59, 59, 999);
-
   const trintaDiasAtras = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
   const [
@@ -43,30 +40,15 @@ export async function getDashboardSummary(): Promise<DashboardSummary> {
     prisma.motorcycle.count(),
 
     prisma.motorcycle.count({
-      where: {
-        OR: [
-          { forecastArrival: null, forecastArrivalStatus: "NO_INFORMATION" },
-          { forecastArrival: { gt: hoje }, forecastArrivalStatus: "NO_INFORMATION" },
-        ],
-      },
+      where: { forecastArrivalStatus: "NO_INFORMATION" },
     }),
 
     prisma.motorcycle.count({
-      where: {
-        OR: [
-          { forecastArrivalStatus: "ARRIVED" },
-          { forecastArrival: { lte: hoje }, forecastArrivalStatus: "NO_INFORMATION" },
-        ],
-      },
+      where: { forecastArrivalStatus: "ARRIVED" },
     }),
 
     prisma.motorcycle.count({
-      where: {
-        OR: [
-          { forecastArrivalStatus: "DELAYED" },
-          { forecastArrival: { lt: hoje }, forecastArrivalStatus: "NO_INFORMATION" },
-        ],
-      },
+      where: { forecastArrivalStatus: "DELAYED" },
     }),
 
     prisma.motorcycle.groupBy({
@@ -111,9 +93,12 @@ export async function getDashboardSummary(): Promise<DashboardSummary> {
   };
 
   for (const item of registrationStatusCounts) {
-    if (item.registrationStatus === "NO_PLATE") registrationStatus.noPlate = item._count;
-    else if (item.registrationStatus === "PLATING") registrationStatus.plating = item._count;
-    else if (item.registrationStatus === "PLATED") registrationStatus.plated = item._count;
+    if (item.registrationStatus === "NO_PLATE")
+      registrationStatus.noPlate = item._count;
+    else if (item.registrationStatus === "PLATING")
+      registrationStatus.plating = item._count;
+    else if (item.registrationStatus === "PLATED")
+      registrationStatus.plated = item._count;
   }
 
   return {
@@ -121,7 +106,10 @@ export async function getDashboardSummary(): Promise<DashboardSummary> {
     totalMotorcycles,
     arrivalStatus: { emTransito, chegou, atrasada },
     registrationStatus,
-    topSellers: topSellers.map((s) => ({ sellersName: s.sellersName, count: s._count.id })),
+    topSellers: topSellers.map((s) => ({
+      sellersName: s.sellersName,
+      count: s._count.id,
+    })),
     models: models.map((m) => ({ model: m.model, count: m._count })),
     cities: cities.map((c) => ({ city: c.city, count: c._count.id })),
     recentClients,

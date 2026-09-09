@@ -208,9 +208,6 @@ export async function getClientsPaginated(params: {
     where.city = { contains: params.city, mode: "insensitive" };
   }
 
-  const hoje = new Date();
-  hoje.setHours(23, 59, 59, 999);
-
   let motorcycleFilter: Record<string, unknown> | undefined;
 
   if (params.model) {
@@ -220,15 +217,7 @@ export async function getClientsPaginated(params: {
   }
 
   if (params.arrived === "true") {
-    const chegou = {
-      OR: [
-        { forecastArrivalStatus: "ARRIVED" },
-        {
-          forecastArrival: { lte: hoje },
-          forecastArrivalStatus: "NO_INFORMATION",
-        },
-      ],
-    };
+    const chegou = { forecastArrivalStatus: "ARRIVED" };
     motorcycleFilter = motorcycleFilter
       ? { AND: [motorcycleFilter, chegou] }
       : chegou;
@@ -241,15 +230,7 @@ export async function getClientsPaginated(params: {
   if (params.arrived === "false") {
     where.NOT = {
       motorcycles: {
-        some: {
-          OR: [
-            { forecastArrivalStatus: "ARRIVED" },
-            {
-              forecastArrival: { lte: hoje },
-              forecastArrivalStatus: "NO_INFORMATION",
-            },
-          ],
-        },
+        some: { forecastArrivalStatus: "ARRIVED" },
       },
     };
   }

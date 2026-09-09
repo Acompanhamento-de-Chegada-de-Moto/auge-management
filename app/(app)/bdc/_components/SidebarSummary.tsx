@@ -29,7 +29,11 @@ interface SidebarSummaryProps {
   arrivalStatus?: string | null;
 }
 
-function getStatusBadge(found: boolean, forecastDate?: Date | null, arrivalStatus?: string | null) {
+function getStatusBadge(
+  found: boolean,
+  forecastDate?: Date | null,
+  arrivalStatus?: string | null,
+) {
   if (!found) {
     return {
       label: "Não Encontrado",
@@ -83,12 +87,12 @@ export function SidebarSummary({
   const StatusIcon = status.icon;
 
   return (
-          <aside
-            className={`relative shrink-0 transition-all duration-300 ease-out ${
-              collapsed ? "w-12" : "w-full lg:w-80"
-            }`}
-          >
-            <div className="sticky top-4 rounded-xl border bg-card p-6 shadow-sm">
+    <aside
+      className={`relative shrink-0 transition-all duration-300 ease-out ${
+        collapsed ? "w-12" : "w-full lg:w-80"
+      }`}
+    >
+      <div className="sticky top-4 rounded-xl border bg-card p-6 shadow-sm">
         <div className="mb-4 flex items-center justify-between">
           {!collapsed && <h3 className="text-sm font-semibold">Resumo</h3>}
           <Button

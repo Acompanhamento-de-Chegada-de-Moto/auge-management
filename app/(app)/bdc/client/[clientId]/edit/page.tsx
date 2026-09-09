@@ -42,10 +42,7 @@ export default async function EditarClientePage({
           <ArrowLeft className="size-4 mr-2" /> Voltar
         </Link>
       </div>
-      <EditClientForm
-        client={client}
-        searchChassisAction={userGetMotorcycle}
-      />
+      <EditClientForm client={client} searchChassisAction={userGetMotorcycle} />
     </div>
   );
 }

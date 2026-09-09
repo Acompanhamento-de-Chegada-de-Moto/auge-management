@@ -2,7 +2,10 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 
 import { requireManager } from "@/app/data/admin/require-manager";
-import { adminGetAllTickets, managerGetOwnTickets } from "@/app/data/admin/admin-get-tickets";
+import {
+  adminGetAllTickets,
+  managerGetOwnTickets,
+} from "@/app/data/admin/admin-get-tickets";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,

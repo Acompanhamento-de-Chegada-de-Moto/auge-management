@@ -61,7 +61,9 @@ function EditUserDialog({
   const [name, setName] = useState(user.name);
   const [newPassword, setNewPassword] = useState("");
   const [enablePassword, setEnablePassword] = useState(false);
-  const [imagePreview, setImagePreview] = useState<string | null>(user.image ?? null);
+  const [imagePreview, setImagePreview] = useState<string | null>(
+    user.image ?? null,
+  );
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -171,7 +173,9 @@ function EditUserDialog({
       <DialogContent className="sm:max-w-md" showCloseButton={false}>
         <DialogHeader>
           <DialogTitle>Editar usuário</DialogTitle>
-          <DialogDescription>Altere nome, senha ou foto do perfil</DialogDescription>
+          <DialogDescription>
+            Altere nome, senha ou foto do perfil
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">

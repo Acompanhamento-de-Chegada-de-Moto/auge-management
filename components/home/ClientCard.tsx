@@ -38,7 +38,10 @@ export function ClientCard({ client }: ClientCardProps) {
           </p>
         )}
         {client.motorcycles.map((motorcycle) => {
-          const arrivalStatus = getArrivalStatus(motorcycle.forecastArrival, motorcycle.forecastArrivalStatus);
+          const arrivalStatus = getArrivalStatus(
+            motorcycle.forecastArrival,
+            motorcycle.forecastArrivalStatus,
+          );
           const statusLabel = mapRegistrationStatusLabel(
             motorcycle.registrationStatus,
           );

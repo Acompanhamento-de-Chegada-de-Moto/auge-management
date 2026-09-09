@@ -185,7 +185,9 @@ export function CreateMotorcycleForm() {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="NO_INFORMATION">Sem Informação</SelectItem>
+                    <SelectItem value="NO_INFORMATION">
+                      Sem Informação
+                    </SelectItem>
                     <SelectItem value="ARRIVED">Chegou</SelectItem>
                     <SelectItem value="DELAYED">Atrasada</SelectItem>
                   </SelectContent>
@@ -196,13 +198,17 @@ export function CreateMotorcycleForm() {
           />
 
           {watchedValues.forecastArrival &&
-            dayjs(watchedValues.forecastArrival).startOf("day").isBefore(dayjs().startOf("day")) &&
+            dayjs(watchedValues.forecastArrival)
+              .startOf("day")
+              .isBefore(dayjs().startOf("day")) &&
             watchedValues.forecastArrivalStatus === "NO_INFORMATION" && (
               <div
                 role="alert"
                 className="flex items-start gap-2 rounded-lg border border-amber-200/60 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-400"
               >
-                <span aria-hidden className="mt-0.5">⚠️</span>
+                <span aria-hidden className="mt-0.5">
+                  ⚠️
+                </span>
                 <span>
                   A data prevista para chegada já passou. Confirme se a moto
                   chegou ou está atrasada.

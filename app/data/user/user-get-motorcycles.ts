@@ -16,33 +16,15 @@ export async function userGetMotorcycles(filters?: {
   }
 
   if (filters?.status) {
-    const hoje = new Date();
-    hoje.setHours(23, 59, 59, 999);
-
     switch (filters.status) {
       case "Em Trânsito":
-        where.OR = [
-          { forecastArrival: null, forecastArrivalStatus: "NO_INFORMATION" },
-          { forecastArrival: { gt: hoje }, forecastArrivalStatus: "NO_INFORMATION" },
-        ];
+        where.forecastArrivalStatus = "NO_INFORMATION";
         break;
       case "Chegou":
-        where.OR = [
-          { forecastArrivalStatus: "ARRIVED" },
-          {
-            forecastArrival: { lte: hoje },
-            forecastArrivalStatus: "NO_INFORMATION",
-          },
-        ];
+        where.forecastArrivalStatus = "ARRIVED";
         break;
       case "Atrasada":
-        where.OR = [
-          { forecastArrivalStatus: "DELAYED" },
-          {
-            forecastArrival: { lt: hoje },
-            forecastArrivalStatus: "NO_INFORMATION",
-          },
-        ];
+        where.forecastArrivalStatus = "DELAYED";
         break;
     }
   }

@@ -1,5 +1,3 @@
-import dayjs from "dayjs";
-
 export function parseExcelDate(value: unknown): Date | undefined {
   if (value == null || value === "") return undefined;
 
@@ -62,7 +60,7 @@ export function parseExcelDate(value: unknown): Date | undefined {
 }
 
 export function getArrivalStatus(
-  forecastDate: Date | null | undefined,
+  _forecastDate: Date | null | undefined,
   arrivalStatus?: string | null,
 ) {
   if (arrivalStatus === "ARRIVED") {
@@ -80,36 +78,10 @@ export function getArrivalStatus(
     };
   }
 
-  if (!forecastDate) {
-    return {
-      label: "Em Trânsito",
-      color:
-        "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
-    };
-  }
-
-  const hoje = dayjs().startOf("day");
-  const arrival = dayjs(forecastDate).startOf("day");
-
-  if (arrival.isAfter(hoje)) {
-    return {
-      label: "Em Trânsito",
-      color:
-        "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
-    };
-  }
-
-  if (arrival.isBefore(hoje)) {
-    return {
-      label: "Atrasada",
-      color: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
-    };
-  }
-
   return {
-    label: "Chegou",
+    label: "Em Trânsito",
     color:
-      "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+      "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
   };
 }
 
@@ -141,19 +113,8 @@ export function getForecastStatus(
     };
   }
 
-  const hoje = dayjs().startOf("day");
-  const forecast = dayjs(forecastDate).startOf("day");
-
-  if (forecast.isAfter(hoje)) {
-    return {
-      label: "Previsão Futura",
-      color:
-        "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400",
-    };
-  }
-
   return {
-    label: "Previsão Passada",
+    label: "Previsão",
     color:
       "bg-blue-100 text-blue-800 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400",
   };

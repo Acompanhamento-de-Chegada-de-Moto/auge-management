@@ -99,7 +99,10 @@ const Navbar = () => {
 
   const visibleNav = navigationData.filter((item) => {
     if (item.adminOnly) return session?.user?.role === "ADMIN";
-    if (item.managerOnly) return session?.user?.role === "ADMIN" || session?.user?.role === "MANAGER";
+    if (item.managerOnly)
+      return (
+        session?.user?.role === "ADMIN" || session?.user?.role === "MANAGER"
+      );
     return true;
   });
 
@@ -136,8 +139,7 @@ const Navbar = () => {
           <nav className="hidden md:flex items-center gap-1">
             {visibleNav.map((item) => {
               const isActive =
-                pathname === item.href ||
-                pathname.startsWith(`${item.href}/`);
+                pathname === item.href || pathname.startsWith(`${item.href}/`);
 
               return (
                 <Link
@@ -197,9 +199,7 @@ const Navbar = () => {
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="text-sm font-medium">
-                        {session.user.name}
-                      </p>
+                      <p className="text-sm font-medium">{session.user.name}</p>
                       <p className="text-xs text-muted-foreground truncate">
                         {session.user.email}
                       </p>

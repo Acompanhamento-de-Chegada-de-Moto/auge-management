@@ -26,7 +26,8 @@ export async function EditMotorcycleAction(
       };
     }
 
-    const { chassi, model, forecastArrival, forecastArrivalStatus } = validation.data;
+    const { chassi, model, forecastArrival, forecastArrivalStatus } =
+      validation.data;
 
     const currentMotorcycle = await prisma.motorcycle.findUnique({
       where: { id },
@@ -58,7 +59,8 @@ export async function EditMotorcycleAction(
         chassi,
         model,
         forecastArrival: forecastArrival ?? null,
-        forecastArrivalStatus: (forecastArrivalStatus ?? "NO_INFORMATION") as ArrivalStatus,
+        forecastArrivalStatus: (forecastArrivalStatus ??
+          "NO_INFORMATION") as ArrivalStatus,
       },
     });
 

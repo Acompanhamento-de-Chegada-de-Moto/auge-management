@@ -109,11 +109,7 @@ export function DashboardClient({ data }: DashboardClientProps) {
   return (
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiCard
-          title="Clientes"
-          value={data.totalClients}
-          icon={Users}
-        />
+        <KpiCard title="Clientes" value={data.totalClients} icon={Users} />
         <KpiCard
           title="Motocicletas"
           value={data.totalMotorcycles}
@@ -234,37 +230,23 @@ export function DashboardClient({ data }: DashboardClientProps) {
           <CardHeader className="flex-row items-center justify-between gap-4 space-y-0">
             <div>
               <CardTitle className="text-base">Resumo Geral</CardTitle>
-              <CardDescription>
-                Panorama consolidado do sistema
-              </CardDescription>
+              <CardDescription>Panorama consolidado do sistema</CardDescription>
             </div>
             <ChartNoAxesColumnIncreasing className="size-5 text-muted-foreground" />
           </CardHeader>
           <CardContent className="space-y-3">
-            <SummaryRow
-              label="Total de Clientes"
-              value={data.totalClients}
-            />
+            <SummaryRow label="Total de Clientes" value={data.totalClients} />
             <SummaryRow
               label="Total de Motocicletas"
               value={data.totalMotorcycles}
             />
-            <SummaryRow
-              label="Chegadas"
-              value={data.arrivalStatus.chegou}
-            />
+            <SummaryRow label="Chegadas" value={data.arrivalStatus.chegou} />
             <SummaryRow
               label="Em Trânsito"
               value={data.arrivalStatus.emTransito}
             />
-            <SummaryRow
-              label="Atrasadas"
-              value={data.arrivalStatus.atrasada}
-            />
-            <SummaryRow
-              label="Clientes (30 dias)"
-              value={data.recentClients}
-            />
+            <SummaryRow label="Atrasadas" value={data.arrivalStatus.atrasada} />
+            <SummaryRow label="Clientes (30 dias)" value={data.recentClients} />
             <SummaryRow
               label="Motos cadastradas (30 dias)"
               value={data.recentMotorcycles}
@@ -307,13 +289,7 @@ function StatusBar({
   );
 }
 
-function SummaryRow({
-  label,
-  value,
-}: {
-  label: string;
-  value: number;
-}) {
+function SummaryRow({ label, value }: { label: string; value: number }) {
   return (
     <div className="flex items-center justify-between">
       <span className="text-sm text-muted-foreground">{label}</span>

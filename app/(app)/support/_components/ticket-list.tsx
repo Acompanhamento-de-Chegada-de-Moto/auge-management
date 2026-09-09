@@ -18,7 +18,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { AdminTicket, ManagerTicket } from "@/app/data/admin/admin-get-tickets";
+import type {
+  AdminTicket,
+  ManagerTicket,
+} from "@/app/data/admin/admin-get-tickets";
 import { updateTicketStatusAction } from "@/app/(app)/support/actions";
 import { TicketDialog } from "./ticket-dialog";
 

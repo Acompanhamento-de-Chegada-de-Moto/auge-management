@@ -30,7 +30,8 @@ export async function EditMotorcycleAction(
   }
 
   try {
-    const { chassi, model, forecastArrival, forecastArrivalStatus } = parsed.data;
+    const { chassi, model, forecastArrival, forecastArrivalStatus } =
+      parsed.data;
 
     if (!chassi || !model) {
       return {
@@ -63,7 +64,8 @@ export async function EditMotorcycleAction(
       chassi,
       model,
       forecastArrival: forecastArrival ?? null,
-      forecastArrivalStatus: (forecastArrivalStatus ?? "NO_INFORMATION") as ArrivalStatus,
+      forecastArrivalStatus: (forecastArrivalStatus ??
+        "NO_INFORMATION") as ArrivalStatus,
     });
 
     revalidatePath("/inventory");

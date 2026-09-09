@@ -109,7 +109,10 @@ function parseSpreadsheet(file: File): Promise<{
         const rows = [];
         for (let i = 2; i < json.length; i++) {
           const row = json[i];
-          if (!row || row.every((cell) => !cell || String(cell).trim() === "")) {
+          if (
+            !row ||
+            row.every((cell) => !cell || String(cell).trim() === "")
+          ) {
             continue;
           }
 

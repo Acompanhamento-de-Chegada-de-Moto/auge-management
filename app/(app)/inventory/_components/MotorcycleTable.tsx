@@ -155,6 +155,7 @@ export default function MotorcycleTable({
             <SelectItem value="all">Todos os Status</SelectItem>
             <SelectItem value="em-transito">Em Trânsito</SelectItem>
             <SelectItem value="true">Chegou</SelectItem>
+            <SelectItem value="atrasada">Atrasada</SelectItem>
             <SelectItem value="false">Não Chegou</SelectItem>
           </SelectContent>
         </Select>

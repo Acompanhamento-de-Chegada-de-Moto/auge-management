@@ -14,7 +14,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import type { AdminTicket, ManagerTicket } from "@/app/data/admin/admin-get-tickets";
+import type {
+  AdminTicket,
+  ManagerTicket,
+} from "@/app/data/admin/admin-get-tickets";
 import { addTicketMessageAction } from "@/app/(app)/support/actions";
 
 type Ticket = AdminTicket | ManagerTicket;
@@ -119,7 +122,10 @@ export function TicketDialog({ ticket, children }: TicketDialogProps) {
       }}
     >
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col" showCloseButton={false}>
+      <DialogContent
+        className="sm:max-w-2xl max-h-[90vh] flex flex-col"
+        showCloseButton={false}
+      >
         <DialogHeader>
           <div className="flex items-center gap-2">
             <code className="rounded bg-muted px-2 py-0.5 text-xs font-mono text-muted-foreground">
@@ -249,7 +255,8 @@ export function TicketDialog({ ticket, children }: TicketDialogProps) {
 
         {ticket.status !== "OPEN" && ticket.status !== "IN_PROGRESS" && (
           <div className="border-t pt-4 text-center text-sm text-muted-foreground">
-            Este ticket está {statusConfig[ticket.status]?.label.toLowerCase() ?? "fechado"}.
+            Este ticket está{" "}
+            {statusConfig[ticket.status]?.label.toLowerCase() ?? "fechado"}.
           </div>
         )}
       </DialogContent>
