@@ -17,15 +17,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-
-const ACCEPTED_TYPES = {
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [
-    ".xlsx",
-  ],
-  "application/vnd.ms-excel": [".xls"],
-  "application/vnd.oasis.opendocument.spreadsheet": [".ods"],
-  "text/csv": [".csv"],
-};
+import { ACCEPTED_SPREADSHEET_TYPES } from "@/lib/constants";
 
 function normalizeText(value: string) {
   return value
@@ -166,7 +158,7 @@ export function MotorcycleSpreadsheetUploadDialog() {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     onDropRejected,
-    accept: ACCEPTED_TYPES,
+    accept: ACCEPTED_SPREADSHEET_TYPES,
     maxFiles: 1,
     multiple: false,
   });

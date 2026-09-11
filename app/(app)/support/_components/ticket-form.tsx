@@ -3,6 +3,7 @@
 import { Loader2, MessageSquarePlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
+import { createTicketAction } from "@/app/(app)/support/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,13 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { createTicketAction } from "@/app/(app)/support/actions";
-
-const priorityLabels: Record<string, string> = {
-  NORMAL: "Normal",
-  HIGH: "Alta",
-  URGENT: "Urgente",
-};
+import { priorityConfig } from "./tickets-config";
 
 export function TicketForm() {
   const router = useRouter();
@@ -113,9 +108,9 @@ export function TicketForm() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {Object.entries(priorityLabels).map(([value, label]) => (
+            {Object.entries(priorityConfig).map(([value, config]) => (
               <SelectItem key={value} value={value}>
-                {label}
+                {config.label}
               </SelectItem>
             ))}
           </SelectContent>

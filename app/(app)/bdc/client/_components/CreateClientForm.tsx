@@ -41,6 +41,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { maskCPFIncremental } from "@/lib/cpf";
 import { cn } from "@/lib/utils";
 import {
   type CustomerFormData,
@@ -296,18 +297,7 @@ export function CreateClientForm({
                           inputMode="numeric"
                           {...field}
                           onChange={(e) => {
-                            const raw = e.target.value
-                              .replace(/\D/g, "")
-                              .slice(0, 11);
-                            const formatted = raw.replace(
-                              /(\d{3})(\d{3})(\d{3})(\d{0,2})/,
-                              (_, a, b, c, d) => {
-                                let result = `${a}.${b}.${c}`;
-                                if (d) result += `-${d}`;
-                                return result;
-                              },
-                            );
-                            field.onChange(formatted);
+                            field.onChange(maskCPFIncremental(e.target.value));
                           }}
                         />
                       </FormControl>
@@ -462,16 +452,20 @@ export function CreateClientForm({
                 />
 
                 {watchedValues.forecastDate &&
-                  dayjs(watchedValues.forecastDate).startOf("day").isBefore(dayjs().startOf("day")) &&
+                  dayjs(watchedValues.forecastDate)
+                    .startOf("day")
+                    .isBefore(dayjs().startOf("day")) &&
                   watchedValues.arrivalStatus === "Sem Informação" && (
                     <div
                       role="alert"
                       className="sm:col-span-2 flex items-start gap-2 rounded-lg border border-amber-200/60 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-400"
                     >
-                      <span aria-hidden className="mt-0.5">⚠️</span>
+                      <span aria-hidden className="mt-0.5">
+                        ⚠️
+                      </span>
                       <span>
-                        A data prevista para chegada já passou. Confirme se a moto
-                        chegou ou está atrasada.
+                        A data prevista para chegada já passou. Confirme se a
+                        moto chegou ou está atrasada.
                       </span>
                     </div>
                   )}

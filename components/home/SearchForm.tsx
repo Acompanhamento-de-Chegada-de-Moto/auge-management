@@ -6,6 +6,7 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { maskCPFIncremental } from "@/lib/cpf";
 
 interface SearchFormProps {
   defaultValue?: string;
@@ -16,16 +17,7 @@ export function SearchForm({ defaultValue = "" }: SearchFormProps) {
   const router = useRouter();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value.replace(/\D/g, "").slice(0, 11);
-    const formatted = raw.replace(
-      /(\d{3})(\d{3})(\d{3})(\d{0,2})/,
-      (_, a, b, c, d) => {
-        let result = `${a}.${b}.${c}`;
-        if (d) result += `-${d}`;
-        return result;
-      },
-    );
-    setQuery(formatted);
+    setQuery(maskCPFIncremental(e.target.value));
   };
 
   const handleSubmit = (e: React.FormEvent) => {

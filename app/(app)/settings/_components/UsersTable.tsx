@@ -11,6 +11,8 @@ import {
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCallback, useId, useRef, useState } from "react";
+import { updateUserAction } from "@/app/(app)/settings/actions";
+import type { adminGetUsers } from "@/app/data/admin/admin-get-users";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -32,21 +34,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { adminGetUsers } from "@/app/data/admin/admin-get-users";
-import { updateUserAction } from "@/app/(app)/settings/actions";
+import { initialsOf } from "@/lib/utils";
 
 type User = Awaited<ReturnType<typeof adminGetUsers>>[number];
 
 interface UsersTableProps {
   users: User[];
-}
-
-function initialsOf(name: string) {
-  return name
-    .split(" ")
-    .slice(0, 2)
-    .map((p) => p[0]?.toUpperCase())
-    .join("");
 }
 
 function EditUserDialog({
@@ -61,7 +54,9 @@ function EditUserDialog({
   const [name, setName] = useState(user.name);
   const [newPassword, setNewPassword] = useState("");
   const [enablePassword, setEnablePassword] = useState(false);
-  const [imagePreview, setImagePreview] = useState<string | null>(user.image ?? null);
+  const [imagePreview, setImagePreview] = useState<string | null>(
+    user.image ?? null,
+  );
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -171,7 +166,9 @@ function EditUserDialog({
       <DialogContent className="sm:max-w-md" showCloseButton={false}>
         <DialogHeader>
           <DialogTitle>Editar usuário</DialogTitle>
-          <DialogDescription>Altere nome, senha ou foto do perfil</DialogDescription>
+          <DialogDescription>
+            Altere nome, senha ou foto do perfil
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">

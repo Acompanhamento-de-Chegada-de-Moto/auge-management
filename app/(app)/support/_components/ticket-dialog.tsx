@@ -3,6 +3,11 @@
 import { Loader2, SendHorizonal } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
+import { addTicketMessageAction } from "@/app/(app)/support/actions";
+import type {
+  AdminTicket,
+  ManagerTicket,
+} from "@/app/data/admin/admin-get-tickets";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,59 +19,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import type { AdminTicket, ManagerTicket } from "@/app/data/admin/admin-get-tickets";
-import { addTicketMessageAction } from "@/app/(app)/support/actions";
+import { initialsOf } from "@/lib/utils";
+import { priorityConfig, statusConfig } from "./tickets-config";
 
 type Ticket = AdminTicket | ManagerTicket;
-
-const priorityConfig: Record<string, { label: string; className: string }> = {
-  NORMAL: {
-    label: "Normal",
-    className:
-      "border-blue-200 bg-blue-50 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
-  },
-  HIGH: {
-    label: "Alta",
-    className:
-      "border-amber-200 bg-amber-50 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
-  },
-  URGENT: {
-    label: "Urgente",
-    className:
-      "border-red-200 bg-red-50 text-red-800 dark:bg-red-900/30 dark:text-red-400",
-  },
-};
-
-const statusConfig: Record<string, { label: string; className: string }> = {
-  OPEN: {
-    label: "Aberto",
-    className:
-      "border-green-200 bg-green-50 text-green-800 dark:bg-green-900/30 dark:text-green-400",
-  },
-  IN_PROGRESS: {
-    label: "Em Andamento",
-    className:
-      "border-blue-200 bg-blue-50 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
-  },
-  RESOLVED: {
-    label: "Resolvido",
-    className:
-      "border-gray-200 bg-gray-50 text-gray-800 dark:bg-gray-800 dark:text-gray-400",
-  },
-  CLOSED: {
-    label: "Fechado",
-    className:
-      "border-gray-200 bg-gray-50 text-gray-800 dark:bg-gray-800 dark:text-gray-400",
-  },
-};
-
-function initialsOf(name: string) {
-  return name
-    .split(" ")
-    .slice(0, 2)
-    .map((p) => p[0]?.toUpperCase())
-    .join("");
-}
 
 interface TicketDialogProps {
   ticket: Ticket;
@@ -119,7 +75,10 @@ export function TicketDialog({ ticket, children }: TicketDialogProps) {
       }}
     >
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col" showCloseButton={false}>
+      <DialogContent
+        className="sm:max-w-2xl max-h-[90vh] flex flex-col"
+        showCloseButton={false}
+      >
         <DialogHeader>
           <div className="flex items-center gap-2">
             <code className="rounded bg-muted px-2 py-0.5 text-xs font-mono text-muted-foreground">
@@ -249,7 +208,8 @@ export function TicketDialog({ ticket, children }: TicketDialogProps) {
 
         {ticket.status !== "OPEN" && ticket.status !== "IN_PROGRESS" && (
           <div className="border-t pt-4 text-center text-sm text-muted-foreground">
-            Este ticket está {statusConfig[ticket.status]?.label.toLowerCase() ?? "fechado"}.
+            Este ticket está{" "}
+            {statusConfig[ticket.status]?.label.toLowerCase() ?? "fechado"}.
           </div>
         )}
       </DialogContent>

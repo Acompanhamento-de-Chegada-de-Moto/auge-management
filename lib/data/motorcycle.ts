@@ -1,3 +1,9 @@
+import type { Prisma } from "@/generated/prisma/client";
+import {
+  arrivalArrivedWhere,
+  arrivalDelayedWhere,
+  arrivalInTransitWhere,
+} from "@/lib/data/arrival-status";
 import { prisma } from "@/lib/db";
 
 type RegistrationStatus = "NO_PLATE" | "PLATING" | "PLATED";
@@ -39,61 +45,33 @@ export async function getMotorcyclesPaginated(params: {
   chassisSearch?: string;
   arrived?: "true" | "false";
 }) {
-  const where: Record<string, unknown> = {};
+  const where: Prisma.MotorcycleWhereInput = {};
 
   if (params.model) {
     where.model = params.model;
   }
 
-  const hoje = new Date();
-  hoje.setHours(23, 59, 59, 999);
-
-  const andConditions: Record<string, unknown>[] = [];
+  const andConditions: Prisma.MotorcycleWhereInput[] = [];
 
   if (params.status) {
     switch (params.status) {
       case "Em Trânsito":
-        andConditions.push({
-          OR: [
-            { forecastArrival: null, forecastArrivalStatus: "NO_INFORMATION" },
-            { forecastArrival: { gt: hoje }, forecastArrivalStatus: "NO_INFORMATION" },
-          ],
-        });
+        andConditions.push(arrivalInTransitWhere());
         break;
       case "Chegou":
-        andConditions.push({
-          OR: [
-            { forecastArrivalStatus: "ARRIVED" },
-            { forecastArrival: { lte: hoje }, forecastArrivalStatus: "NO_INFORMATION" },
-          ],
-        });
+        andConditions.push(arrivalArrivedWhere());
         break;
       case "Atrasada":
-        andConditions.push({
-          OR: [
-            { forecastArrivalStatus: "DELAYED" },
-            { forecastArrival: { lt: hoje }, forecastArrivalStatus: "NO_INFORMATION" },
-          ],
-        });
+        andConditions.push(arrivalDelayedWhere());
         break;
     }
   }
 
   if (params.arrived === "true") {
-    andConditions.push({
-      OR: [
-        { forecastArrivalStatus: "ARRIVED" },
-        { forecastArrival: { lte: hoje }, forecastArrivalStatus: "NO_INFORMATION" },
-      ],
-    });
+    andConditions.push(arrivalArrivedWhere());
   } else if (params.arrived === "false") {
     andConditions.push({
-      NOT: {
-        OR: [
-          { forecastArrivalStatus: "ARRIVED" },
-          { forecastArrival: { lte: hoje }, forecastArrivalStatus: "NO_INFORMATION" },
-        ],
-      },
+      NOT: arrivalArrivedWhere(),
     });
   }
 
