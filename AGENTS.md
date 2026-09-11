@@ -404,6 +404,7 @@ arrivalDate: Date (optional)
 - Usa **better-auth** com Prisma adapter
 - Login: email + senha
 - Campo extra no User: `role` (enum USER / ADMIN)
+- **Cadastro público bloqueado** (`emailAndPassword.disableSignUp: true` em `lib/auth.ts`) — primeiro ADMIN via `prisma/seed.ts` (ver "Bootstrap do primeiro ADMIN")
 - Guards server-side:
   - `requireAuth()` — exige login (qualquer role)
   - `requireUser()` — exige ADMIN
@@ -485,6 +486,19 @@ pnpm format       # biome format --write
 - `DATABASE_URL` — PostgreSQL connection string
 - `BETTER_AUTH_SECRET` — chave secreta do auth
 - `BETTER_AUTH_URL` — URL base do app
+- `ADMIN_NAME` / `ADMIN_EMAIL` / `ADMIN_PASSWORD` — dados do primeiro ADMIN (usado pelo seed)
+
+### Bootstrap do primeiro ADMIN
+O cadastro público (`/sign-up`) está **bloqueado** (`disableSignUp: true` em `lib/auth.ts`). Para criar o primeiro usuário ADMIN:
+
+```bash
+# 1. Defina no .env:
+#    ADMIN_NAME, ADMIN_EMAIL e ADMIN_PASSWORD
+# 2. Rode o seed (idempotente — reexecutar não duplica)
+pnpm db:seed
+```
+
+O seed (`prisma/seed.ts`) reusa `createUser` de `lib/data/user.ts` (via `auth.api.createUser`) com `role: "ADMIN"`. Depois disso, novos usuários são criados pelo ADMIN em `/settings`.
 
 ---
 

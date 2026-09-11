@@ -2,7 +2,6 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowRight, Lock, Mail } from "lucide-react";
-import Link from "next/link";
 import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -108,15 +107,6 @@ export default function LoginForm() {
             Entrar na Plataforma
             <ArrowRight className="size-4" />
           </Button>
-          <p className="text-center text-sm text-muted-foreground">
-            Não tem uma conta?{" "}
-            <Link
-              href="/sign-up"
-              className="font-medium text-primary hover:underline"
-            >
-              Crie uma agora
-            </Link>
-          </p>
         </form>
       </CardContent>
     </Card>

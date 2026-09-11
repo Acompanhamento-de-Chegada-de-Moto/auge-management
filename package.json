@@ -12,7 +12,8 @@
     "start": "next start",
     "lint": "biome check",
     "typecheck": "tsc --noEmit",
-    "format": "biome format --write"
+    "format": "biome format --write",
+    "db:seed": "prisma db seed"
   },
   "dependencies": {
     "@better-auth/prisma-adapter": "^1.6.11",
@@ -58,6 +59,7 @@
     "babel-plugin-react-compiler": "1.0.0",
     "prisma": "^7.8.0",
     "tailwindcss": "^4",
+    "tsx": "^4.23.13",
     "typescript": "^5"
   }
 }
