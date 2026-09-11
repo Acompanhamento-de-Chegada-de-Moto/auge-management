@@ -17,7 +17,7 @@ import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { SidebarSummary } from "@/app/(app)/bdc/_components/SidebarSummary";
-import { SectionHeader } from "@/components/bdc/section-header";
+import { SectionHeader } from "../../_components/SectionHeader";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {

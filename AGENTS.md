@@ -41,71 +41,84 @@ Sistema de gerenciamento de concessionária de motocicletas. Módulos atuais:
 app/
   (app)/                    # Rotas autenticadas (protegidas por requireAuth)
     bdc/
-      _components/
-        bdc-page-client.tsx # Client Component com fetch paginado via URL params
-      page.tsx              # Server Component shell (metadata) + <BDCPageClient />
-      actions.ts            # Server Actions: getClients, getClientsPaginated, getBDCFilterOptions, searchChassis, deleteClient
-      cliente/
-        novo/
-          page.tsx          # Cadastro de cliente (2 steps)
-          actions.ts        # Server Action: createClient
-        editar/
-          page.tsx          # Edição de cliente (fetch server-side, form direto)
-          actions.ts        # Server Action: updateClient
-    estoque/
-      _components/
-        estoque-page-client.tsx # Client Component com fetch paginado via URL params
-      page.tsx              # Server Component shell (metadata) + <EstoquePageClient />
-      actions.ts            # Server Actions: getMotorcycles, getMotorcyclesPaginated, getEstoqueFilterOptions, deleteMotorcycle
-      motocicleta/
-        novo/
-          page.tsx          # Cadastro de motocicleta
-          actions.ts        # Server Action: createMotorcycle
-        editar/
-          page.tsx          # Edição de motocicleta
-          actions.ts        # Server Action: updateMotorcycle
-    configuracoes/
-      page.tsx              # Gerenciar usuários
-      actions.ts            # Server Action: createUser
+      _components/          # BdcTable, SidebarSummary, SpreadsheetUploadDialog, SectionHeader, CopyText
+      page.tsx              # Server Component shell + <BdcPageClient />
+      actions.ts            # Server Actions: getClients, getBDCFilterOptions, searchChassis, deleteClient, importSpreadsheet
+      client/
+        new/                # page.tsx + actions.ts (createClient)
+        [clientId]/edit/    # page.tsx + _components/EditClientForm.tsx + actions.ts (updateClient)
+        [clientId]/delete/  # page.tsx + actions.ts (deleteClient)
+    dashboard/
+      _components/          # dashboard-client, dashboard-skeleton
+      page.tsx
+    inventory/
+      _components/          # MotorcycleTable, MotorcycleSpreadsheetUploadDialog
+      page.tsx              # + actions.ts, import-actions.ts
+      motorcycle/
+        new/                # page.tsx + _components/CreateMotorcycleForm.tsx + actions.ts
+        [motorcycleId]/edit/    # page.tsx + _components/EditMotorcycleForm.tsx + actions.ts
+        [motorcycleId]/delete/  # page.tsx + actions.ts
+    settings/
+      _components/          # UsersTable, CreateUserForm, SidebarNav, ContactSettingsForm
+      cosmetics/_components/    # LogoUploadForm
+      system/
+      layout.tsx / page.tsx / actions.ts
+    support/
+      _components/          # ticket-list, ticket-form, ticket-dialog, ticket-skeleton, tickets-config
+      page.tsx / actions.ts
+    layout.tsx              # @/(app)/layout — requireAuth, Header/Navbar do shell
   (auth)/                   # Rotas públicas (sem proteção)
-    sign-in/
-    sign-up/
-  api/auth/[...all]/        # Better Auth API routes
-  data/require-user.ts      # Guards: requireAuth (qualquer logado) + requireUser (ADMIN)
+    sign-in/                # + _components/LoginForm.tsx
+  (public)/
+    tracking/               # Página pública de acompanhamento ("home")
+      page.tsx
+      _components/          # ClientCard, SearchForm, CopyLinkButton, DelayAlert, LastUpdated, ReloadButton
+      client/[clientId]/    # page.tsx
+      motorcycle/[motorcycleId]/ # page.tsx
+      unavailable/
+  api/
+    auth/[...all]/          # Better Auth API routes
+    upload/avatar/
+  data/                     # Guards + DAL de rotas
+    admin/                  # require-admin, require-manager, admin-get-users, admin-get-tickets
+    public/                 # public-get-client-by-cpf, public-get-motorcycle
+    user/                   # require-auth, user-get-motorcycle
+  data/require-user.ts      # Guards (ver app/data/*)
+  layout.tsx / page.tsx
 
-components/
-  bdc/                      # Componentes de domínio BDC
-    chassis-step.tsx        # Step 1: consulta chassi no banco
-    customer-data-step.tsx  # Step 2: dados do cliente
-    customer-form.tsx       # Wrapper com stepper (create) ou direto (edit)
-    sidebar-resumo.tsx      # Sidebar colapsável com status da moto
-    spreadsheet-upload-dialog.tsx # Dialog de importação de planilha
-  estoque/                # Componentes de domínio Estoque
-    motorcycle-table.tsx    # Tabela de motos (presentation-only, recebe props)
-    motorcycle-form.tsx     # Form de cadastro de moto
-    motorcycle-edit-form.tsx # Form de edição de moto (chassi editável)
-  layout/                   # Navbar, Header
-  shadcn-studio/table/      # Tabela customizada (BDC)
+# Convenção: componentes usados por UMA única rota ficam em app/<rota>/_components/,
+# importados por caminho relativo. Só fica em components/ o que é realmente compartilhado.
+
+components/                 # APENAS compartilhados/globais
   ui/                       # shadcn/ui components (NEVER edit directly)
+  layout/                   # header.tsx, navbar.tsx (shell do app — usados por app/(app)/layout)
+  providers/                # query-provider.tsx
+  ThemeProvider.tsx         # ThemeColorSync, ModeToggle, CookieConsentBanner (layout raiz / globais)
 
 lib/
   data/                     # DAL — Data Access Layer
     client.ts               # CRUD Client + getClientsPaginated + getBDCFilterOptions
     motorcycle.ts           # CRUD Motorcycle + getMotorcyclesPaginated + getEstoqueFilterOptions
+    arrival-status.ts       # Where clauses de status de chegada (Em Trânsito/Chegou/Atrasada)
+    settings.ts
   bdc-data.ts               # Helpers: getStatusChegada(), mapRegistrationStatusLabel(), getSituacaoColor()
-  cpf.ts                    # CPF validation: validateCPF(), formatCPF(), stripCPF()
+  constants.ts              # Constantes compartilhadas (ex: ACCEPTED_SPREADSHEET_TYPES)
+  cpf.ts / utils.ts         # Validação/helper s: validateCPF(), maskCPFIncremental(), initialsOf()
   db.ts                     # Prisma client
   auth.ts                   # Better Auth server config
   auth-client.ts            # Better Auth client
 
 validators/
   customer-schema.ts        # Zod schema do formulário BDC
-  motorcycle-schema.ts      # Zod schema do formulário Estoque
-  login-schema.ts
-  create-user-schema.ts
+  login-schema.ts           # Zod schema de login
+  create-user-schema.ts     # Zod schema de criação de usuário
+  update-user-schema.ts     # Zod schema de atualização de usuário
 
 prisma/
-  schema.prisma             # Schema do banco (User, Session, Account, Verification, Client, Motorcycle, Setting)
+  schema.prisma             # Schema do banco (User, Session, Account, Verification, Client, Motorcycle, Setting, Ticket, TicketMessage)
+  seed.ts                   # Bootstrap do primeiro ADMIN (via auth.api.createUser, idempotente)
+  migrations/
+prisma.config.ts            # Config do Prisma 7 (datasource + migrations.seed)
 ```
 
 ---
@@ -520,6 +533,7 @@ O seed (`prisma/seed.ts`) reusa `createUser` de `lib/data/user.ts` (via `auth.ap
 14. **Tabelas (BDCTable/MotorcycleTable)**: puramente apresentação. Props: dados, opções de filtro, filtros ativos, totalRows, page, totalPages, e callbacks (`onFilterChange`, `onPageChange`, etc.). Sem fetch, sem `useMemo` para filtro, sem estado de paginação.
 15. **Client indexes**: `Client` tem `@@index([sellerName])`, `@@index([city])`, `@@index([createdAt])` para performance dos filtros server-side.
 16. **EM CIMA DO ARQUIVO ATUAL 2025**: o schema Prisma tem `deliveryForecast` em `Client` e `forecastDate` em `Motorcycle`. Ambos são usados. `forecastDate` é a "previsão de chegada" da moto. `deliveryForecast` no Client é um campo legado não utilizado pelo frontend.
+17. **Co-locação de componentes**: componentes usados por UMA única rota ficam em `app/<rota>/_components/`, importados por caminho relativo. `components/` é reservado ao que é compartilhado (ui/, layout do app, providers/theme da raiz). Arquivos em `_components/` seguem PascalCase (ex: `BdcTable.tsx`).
 
 ---
 
