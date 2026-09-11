@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { redirect } from "next/navigation";
 import { publicGetMotorcycleById } from "@/app/data/public/public-get-motorcycle";
-import { DelayAlert } from "@/components/home/DelayAlert";
-import { ReloadButton } from "@/components/home/ReloadButton";
+import { DelayAlert } from "../../_components/DelayAlert";
+import { ReloadButton } from "../../_components/ReloadButton";
 import {
   getArrivalStatus,
   getStatusColor,

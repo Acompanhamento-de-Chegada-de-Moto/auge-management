@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { ClientCard } from "@/components/home/ClientCard";
-import { SearchForm } from "@/components/home/SearchForm";
+import { ClientCard } from "./_components/ClientCard";
+import { SearchForm } from "./_components/SearchForm";
 import { searchClients } from "@/lib/data/client";
 import { getSetting } from "@/lib/data/settings";
 

@@ -15,9 +15,9 @@ import {
 } from "@/lib/bdc-data";
 import { formatCPF } from "@/lib/cpf";
 import { maskChassis } from "@/lib/utils";
-import { LastUpdated } from "@/components/home/LastUpdated";
-import { ReloadButton } from "@/components/home/ReloadButton";
-import { DelayAlert } from "@/components/home/DelayAlert";
+import { LastUpdated } from "../../_components/LastUpdated";
+import { ReloadButton } from "../../_components/ReloadButton";
+import { DelayAlert } from "../../_components/DelayAlert";
 
 export const metadata: Metadata = {
   title: "Detalhes do Cliente",

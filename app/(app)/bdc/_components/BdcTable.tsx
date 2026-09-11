@@ -6,7 +6,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, useTransition } from "react";
 import type { ClientRow } from "@/app/(app)/bdc/actions";
-import { CopyText } from "@/components/general/CopyText";
+import { CopyText } from "./CopyText";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
