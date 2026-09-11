@@ -3,9 +3,14 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/app/data/admin/require-admin";
 import { requireManager } from "@/app/data/admin/require-manager";
-import { getUsers, createUser, updateUser, setUserPassword, deleteUser } from "@/lib/data/user";
-import { getSetting, upsertSetting } from "@/lib/data/settings";
 import { uploadLogo } from "@/lib/cloudinary";
+import { getSetting, upsertSetting } from "@/lib/data/settings";
+import {
+  createUser,
+  deleteUser,
+  setUserPassword,
+  updateUser,
+} from "@/lib/data/user";
 import {
   type CreateUserInput,
   createUserSchema,
@@ -14,11 +19,6 @@ import {
   type UpdateUserInput,
   updateUserSchema,
 } from "@/validators/update-user-schema";
-
-export async function getUsersAction() {
-  await requireAdmin();
-  return getUsers();
-}
 
 export async function createUserAction(data: CreateUserInput) {
   await requireAdmin();
@@ -161,7 +161,10 @@ export async function uploadLogoAction(formData: FormData) {
 
     revalidatePath("/settings/cosmetics");
 
-    return { status: "success" as const, message: "Logo atualizada com sucesso." };
+    return {
+      status: "success" as const,
+      message: "Logo atualizada com sucesso.",
+    };
   } catch (error) {
     console.error("Erro ao fazer upload da logo:", error);
 
@@ -180,7 +183,10 @@ export async function removeLogoAction() {
 
     revalidatePath("/settings/cosmetics");
 
-    return { status: "success" as const, message: "Logo removida. A logo padrão será usada." };
+    return {
+      status: "success" as const,
+      message: "Logo removida. A logo padrão será usada.",
+    };
   } catch (error) {
     console.error("Erro ao remover logo:", error);
 

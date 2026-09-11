@@ -1,6 +1,7 @@
 "use client";
 
 import { FileSpreadsheet, Loader2, Upload, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { toast } from "sonner";
@@ -16,16 +17,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useRouter } from "next/navigation";
-
-const ACCEPTED_TYPES = {
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [
-    ".xlsx",
-  ],
-  "application/vnd.ms-excel": [".xls"],
-  "application/vnd.oasis.opendocument.spreadsheet": [".ods"],
-  "text/csv": [".csv"],
-};
+import { ACCEPTED_SPREADSHEET_TYPES } from "@/lib/constants";
 
 const COLUMN_MAP: Record<string, string> = {
   CLIENTE: "cliente",
@@ -109,7 +101,10 @@ function parseSpreadsheet(file: File): Promise<{
         const rows = [];
         for (let i = 2; i < json.length; i++) {
           const row = json[i];
-          if (!row || row.every((cell) => !cell || String(cell).trim() === "")) {
+          if (
+            !row ||
+            row.every((cell) => !cell || String(cell).trim() === "")
+          ) {
             continue;
           }
 
@@ -162,7 +157,7 @@ export function SpreadsheetUploadDialog() {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     onDropRejected,
-    accept: ACCEPTED_TYPES,
+    accept: ACCEPTED_SPREADSHEET_TYPES,
     maxFiles: 1,
     multiple: false,
   });

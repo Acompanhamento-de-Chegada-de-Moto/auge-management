@@ -1,13 +1,10 @@
 "use server";
 
 import { requireAuth } from "@/app/data/user/require-auth";
-import { getMotorcycleByIdWithClient, getMotorcyclesPaginated } from "@/lib/data/motorcycle";
-import { prisma } from "@/lib/db";
-
-export async function getMotorcycleByIdAction(id: string) {
-  await requireAuth();
-  return getMotorcycleByIdWithClient(id);
-}
+import {
+  getEstoqueFilterOptions,
+  getMotorcyclesPaginated,
+} from "@/lib/data/motorcycle";
 
 export async function getMotorcyclesPaginatedAction(params: {
   page: number;
@@ -21,18 +18,17 @@ export async function getMotorcyclesPaginatedAction(params: {
 
   const pageSize = params.pageSize ?? 10;
 
-  const [modelsResult, paginated] = await Promise.all([
-    prisma.motorcycle.findMany({
-      select: { model: true },
-      distinct: ["model"],
-      where: { model: { not: "" } },
-      orderBy: { model: "asc" },
-    }),
+  const [filterOptions, paginated] = await Promise.all([
+    getEstoqueFilterOptions(),
     getMotorcyclesPaginated({
       page: params.page,
       pageSize,
       model: params.model,
-      status: params.status as "Em Trânsito" | "Chegou" | "Atrasada" | undefined,
+      status: params.status as
+        | "Em Trânsito"
+        | "Chegou"
+        | "Atrasada"
+        | undefined,
       chassisSearch: params.chassisSearch,
       arrived: params.arrived,
     }),
@@ -43,8 +39,6 @@ export async function getMotorcyclesPaginatedAction(params: {
     total: paginated.total,
     totalPages: paginated.totalPages,
     page: params.page,
-    filterOptions: {
-      models: modelsResult.map((m) => m.model),
-    },
+    filterOptions,
   };
 }

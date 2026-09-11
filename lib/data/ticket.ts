@@ -17,43 +17,6 @@ export async function createTicket(data: {
   });
 }
 
-export async function getTicketsByUser(userId: string) {
-  return prisma.ticket.findMany({
-    where: { createdById: userId },
-    orderBy: { createdAt: "desc" },
-  });
-}
-
-export async function getAllTickets() {
-  return prisma.ticket.findMany({
-    include: {
-      createdBy: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-        },
-      },
-    },
-    orderBy: { createdAt: "desc" },
-  });
-}
-
-export async function getTicketById(id: string) {
-  return prisma.ticket.findUnique({
-    where: { id },
-    include: {
-      createdBy: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-        },
-      },
-    },
-  });
-}
-
 export async function updateTicketStatus(id: string, status: string) {
   return prisma.ticket.update({
     where: { id },
@@ -81,21 +44,5 @@ export async function createTicketMessage(data: {
         },
       },
     },
-  });
-}
-
-export async function getTicketMessages(ticketId: string) {
-  return prisma.ticketMessage.findMany({
-    where: { ticketId },
-    include: {
-      user: {
-        select: {
-          id: true,
-          name: true,
-          image: true,
-        },
-      },
-    },
-    orderBy: { createdAt: "asc" },
   });
 }

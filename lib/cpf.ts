@@ -8,6 +8,18 @@ export function formatCPF(cpf: string): string {
   return digits.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
 }
 
+export function maskCPFIncremental(value: string): string {
+  const digits = stripCPF(value).slice(0, 11);
+  return digits.replace(
+    /(\d{3})(\d{3})(\d{3})(\d{0,2})/,
+    (_, a: string, b: string, c: string, d: string) => {
+      let result = `${a}.${b}.${c}`;
+      if (d) result += `-${d}`;
+      return result;
+    },
+  );
+}
+
 export function validateCPF(cpf: string): boolean {
   const digits = stripCPF(cpf);
 
