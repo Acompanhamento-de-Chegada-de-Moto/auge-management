@@ -13,10 +13,13 @@ export const metadata: Metadata = {
 
 export default async function EditarClientePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ clientId: string }>;
+  searchParams: Promise<{ motorcycleId?: string }>;
 }) {
   const { clientId } = await params;
+  const { motorcycleId } = await searchParams;
 
   if (!clientId) {
     notFound();
@@ -27,6 +30,11 @@ export default async function EditarClientePage({
   if (!client) {
     notFound();
   }
+
+  const selectedMotorcycle =
+    (motorcycleId
+      ? client.motorcycles.find((m) => m.id === motorcycleId)
+      : undefined) ?? client.motorcycles[0] ?? null;
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
@@ -44,6 +52,7 @@ export default async function EditarClientePage({
       </div>
       <EditClientForm
         client={client}
+        selectedMotorcycle={selectedMotorcycle}
         searchChassisAction={userGetMotorcycle}
       />
     </div>

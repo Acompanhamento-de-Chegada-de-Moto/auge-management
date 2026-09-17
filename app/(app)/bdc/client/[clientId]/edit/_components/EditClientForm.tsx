@@ -54,11 +54,13 @@ type Client = NonNullable<Awaited<ReturnType<typeof getClientById>>>;
 
 interface EditClientFormProps {
   client: Client;
+  selectedMotorcycle: Client["motorcycles"][number] | null;
   searchChassisAction: (chassis: string) => Promise<any>;
 }
 
 export function EditClientForm({
   client,
+  selectedMotorcycle,
   searchChassisAction,
 }: EditClientFormProps) {
   const [pending, startTransition] = useTransition();
@@ -75,21 +77,21 @@ export function EditClientForm({
       cpf: formatCPF(client.cpf ?? ""),
       sellerName: client.sellersName ?? "",
       city: client.city ?? "",
-      model: client.motorcycles[0]?.model ?? "",
-      chassis: client.motorcycles[0]?.chassi ?? "",
+      model: selectedMotorcycle?.model ?? "",
+      chassis: selectedMotorcycle?.chassi ?? "",
       billingDate: client.billingDate ?? undefined,
-      forecastDate: client.motorcycles[0]?.forecastArrival ?? undefined,
+      forecastDate: selectedMotorcycle?.forecastArrival ?? undefined,
       registrationStatus:
-        client.motorcycles[0]?.registrationStatus === "PLATED"
+        selectedMotorcycle?.registrationStatus === "PLATED"
           ? "Emplacado"
-          : client.motorcycles[0]?.registrationStatus === "PLATING"
+          : selectedMotorcycle?.registrationStatus === "PLATING"
             ? "Emplacando"
             : "Sem Emplacamento",
-      registrationDate: client.motorcycles[0]?.registrationDate ?? undefined,
+      registrationDate: selectedMotorcycle?.registrationDate ?? undefined,
       arrivalStatus:
-        client.motorcycles[0]?.forecastArrivalStatus === "ARRIVED"
+        selectedMotorcycle?.forecastArrivalStatus === "ARRIVED"
           ? "Chegou"
-          : client.motorcycles[0]?.forecastArrivalStatus === "DELAYED"
+          : selectedMotorcycle?.forecastArrivalStatus === "DELAYED"
             ? "Atrasada"
             : "Sem Informação",
       newChassis: "",
@@ -99,7 +101,7 @@ export function EditClientForm({
   });
 
   const watchedValues = form.watch();
-  const hasExistingMotorcycle = client.motorcycles.length > 0;
+  const hasExistingMotorcycle = !!selectedMotorcycle;
 
   const handleBlurOrSearchChassis = async () => {
     const chassisValue = form.getValues("chassis");
@@ -145,7 +147,11 @@ export function EditClientForm({
 
   const handleSubmit = async (formData: CustomerFormData) => {
     startTransition(async () => {
-      const result = await EditClientAction(client.id, formData);
+      const result = await EditClientAction(
+        client.id,
+        selectedMotorcycle?.id ?? null,
+        formData,
+      );
 
       if (result.status === "error") {
         toast.error(result.message);

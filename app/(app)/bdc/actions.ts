@@ -31,6 +31,7 @@ import {
 
 export async function EditClientAction(
   clientId: string,
+  motorcycleId: string | null,
   values: CustomerFormData,
 ): Promise<ApiResponse> {
   await requireAuth();
@@ -117,7 +118,17 @@ export async function EditClientAction(
           ? "PLATING"
           : "NO_PLATE";
 
-    const motorcycle = client.motorcycles[0];
+    const motorcycle = motorcycleId
+      ? client.motorcycles.find((m) => m.id === motorcycleId)
+      : client.motorcycles[0];
+
+    if (motorcycleId && !motorcycle) {
+      return {
+        status: "error",
+        message: "Motocicleta não encontrada para este cliente.",
+      };
+    }
+
     if (motorcycle) {
       if (chassis !== motorcycle.chassi) {
         const chassiExists = await getMotorcycleByChassis(chassis);

@@ -108,7 +108,9 @@ export async function getClientById(id: string) {
   return prisma.client.findUnique({
     where: { id },
     include: {
-      motorcycles: true,
+      motorcycles: {
+        orderBy: { createdAt: "asc" },
+      },
     },
   });
 }
@@ -269,6 +271,7 @@ export async function getClientsPaginated(params: {
             registrationStatus: true,
             registrationDate: true,
           },
+          orderBy: { createdAt: "asc" },
         },
       },
       orderBy: { updatedAt: "desc" },
