@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { requireAuth } from "@/app/data/user/require-auth";
 import { prisma } from "@/lib/db";
 import type { ApiResponse } from "@/lib/types";
@@ -22,7 +23,15 @@ function mapRegistrationStatus(
 
 function mapArrivalStatus(
   status: string | undefined,
+  current?: "NO_INFORMATION" | "ARRIVED" | "DELAYED" | null,
 ): "NO_INFORMATION" | "ARRIVED" | "DELAYED" {
+  if (
+    (!status || status === "Sem Informação") &&
+    current &&
+    current !== "NO_INFORMATION"
+  ) {
+    return current;
+  }
   const map: Record<string, "NO_INFORMATION" | "ARRIVED" | "DELAYED"> = {
     "Sem Informação": "NO_INFORMATION",
     Chegou: "ARRIVED",
@@ -94,7 +103,10 @@ export async function CreateClientAction(
           where: { id: existingMotorcycle.id },
           data: {
             clientId,
-            forecastArrivalStatus: mapArrivalStatus(arrivalStatus),
+            forecastArrivalStatus: mapArrivalStatus(
+              arrivalStatus,
+              existingMotorcycle.forecastArrivalStatus,
+            ),
             registrationDate: registrationDate ?? null,
           },
         });
@@ -113,6 +125,9 @@ export async function CreateClientAction(
         },
       });
     });
+
+    revalidatePath("/bdc");
+    revalidatePath("/inventory");
 
     return {
       status: "success",

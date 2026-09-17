@@ -121,6 +121,17 @@ export function EditClientForm({
             ? new Date(motorcycle.forecastArrival)
             : undefined,
         );
+        if (
+          motorcycle.forecastArrivalStatus &&
+          motorcycle.forecastArrivalStatus !== "NO_INFORMATION"
+        ) {
+          form.setValue(
+            "arrivalStatus",
+            motorcycle.forecastArrivalStatus === "ARRIVED"
+              ? "Chegou"
+              : "Atrasada",
+          );
+        }
         setMotorcycleFound(true);
       } else {
         setMotorcycleFound(false);
@@ -445,7 +456,7 @@ export function EditClientForm({
                       <FormLabel>Status de Chegada</FormLabel>
                       <Select
                         onValueChange={(value) => field.onChange(value)}
-                        defaultValue={field.value}
+                        value={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>

@@ -88,13 +88,26 @@ export async function EditClientAction(
       billingDate: billingDate ?? null,
     });
 
-    const arrivalStatusMap: Record<
-      string,
-      "NO_INFORMATION" | "ARRIVED" | "DELAYED"
-    > = {
-      "Sem Informação": "NO_INFORMATION",
-      Chegou: "ARRIVED",
-      Atrasada: "DELAYED",
+    const resolveArrivalStatus = (
+      submitted: string | undefined,
+      current: "NO_INFORMATION" | "ARRIVED" | "DELAYED" | undefined | null,
+    ): "NO_INFORMATION" | "ARRIVED" | "DELAYED" => {
+      if (
+        (!submitted || submitted === "Sem Informação") &&
+        current &&
+        current !== "NO_INFORMATION"
+      ) {
+        return current;
+      }
+      const map: Record<
+        string,
+        "NO_INFORMATION" | "ARRIVED" | "DELAYED"
+      > = {
+        "Sem Informação": "NO_INFORMATION",
+        Chegou: "ARRIVED",
+        Atrasada: "DELAYED",
+      };
+      return map[submitted ?? ""] ?? "NO_INFORMATION";
     };
 
     const resolutionStatus =
@@ -120,8 +133,10 @@ export async function EditClientAction(
         chassi: chassis,
         model,
         forecastArrival: forecastDate ?? null,
-        forecastArrivalStatus:
-          arrivalStatusMap[arrivalStatus ?? ""] ?? "NO_INFORMATION",
+        forecastArrivalStatus: resolveArrivalStatus(
+          arrivalStatus,
+          motorcycle.forecastArrivalStatus,
+        ),
         registrationStatus: resolutionStatus,
         registrationDate: registrationDate ?? null,
       });
@@ -140,8 +155,10 @@ export async function EditClientAction(
             clientId,
             model,
             forecastArrival: forecastDate ?? null,
-            forecastArrivalStatus:
-              arrivalStatusMap[arrivalStatus ?? ""] ?? "NO_INFORMATION",
+            forecastArrivalStatus: resolveArrivalStatus(
+              arrivalStatus,
+              existingMoto.forecastArrivalStatus,
+            ),
             registrationStatus: resolutionStatus,
             registrationDate: registrationDate ?? null,
           },
@@ -151,8 +168,10 @@ export async function EditClientAction(
           chassi: chassis,
           model,
           forecastArrival: forecastDate ?? null,
-          forecastArrivalStatus:
-            arrivalStatusMap[arrivalStatus ?? ""] ?? "NO_INFORMATION",
+          forecastArrivalStatus: resolveArrivalStatus(
+            arrivalStatus,
+            null,
+          ),
           registrationStatus: resolutionStatus,
           registrationDate: registrationDate ?? null,
           clientId,
@@ -178,6 +197,7 @@ export async function EditClientAction(
     }
 
     revalidatePath("/bdc");
+    revalidatePath("/inventory");
     revalidatePath("/tracking", "layout");
   } catch (error) {
     console.error("Erro ao editar cliente:", error);
