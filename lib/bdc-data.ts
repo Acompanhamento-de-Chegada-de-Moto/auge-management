@@ -39,9 +39,9 @@ export function getArrivalStatus(
   }
 
   return {
-    label: "Chegou",
+    label: "Aguardando Confirmação",
     color:
-      "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+      "bg-slate-100 text-slate-800 dark:bg-slate-900/30 dark:text-slate-400",
   };
 }
 

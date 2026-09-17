@@ -1,12 +1,18 @@
 "use client";
 
-import { format } from "date-fns";
-import { ChevronLeft, ChevronRight, PencilIcon, SearchIcon, Trash2Icon, XIcon } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  PencilIcon,
+  SearchIcon,
+  Trash2Icon,
+  XIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, useTransition } from "react";
 import type { ClientRow } from "@/app/(app)/bdc/actions";
-import { CopyText } from "./CopyText";
+import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -24,7 +30,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import {
   Tooltip,
   TooltipContent,
@@ -37,6 +42,8 @@ import {
   mapRegistrationStatusLabel,
 } from "@/lib/bdc-data";
 import { formatCPF } from "@/lib/cpf";
+import { formatDateBR } from "@/lib/utils";
+import { CopyText } from "./CopyText";
 
 interface IBDCTableProps {
   rows: ClientRow[];
@@ -234,7 +241,9 @@ export function BDCTable({
         </div>
       ) : (
         <div
-          className={isPending ? "pointer-events-none opacity-60 transition-opacity" : ""}
+          className={
+            isPending ? "pointer-events-none opacity-60 transition-opacity" : ""
+          }
         >
           <div className="md:hidden space-y-3">
             {rows.map((row) => {
@@ -309,9 +318,8 @@ export function BDCTable({
                             </Badge>
                           </TooltipTrigger>
                           <TooltipContent>
-                            {motorcycle?.forecastArrival
-                              ? format(motorcycle.forecastArrival, "dd/MM/yyyy")
-                              : "Sem previsão"}
+                            {formatDateBR(motorcycle?.forecastArrival) ??
+                              "Sem previsão"}
                           </TooltipContent>
                         </Tooltip>
                       </dd>
@@ -338,9 +346,8 @@ export function BDCTable({
                           </Badge>
                         </TooltipTrigger>
                         <TooltipContent>
-                          {motorcycle.registrationDate
-                            ? format(motorcycle.registrationDate, "dd/MM/yyyy")
-                            : "Sem data de emplacamento"}
+                          {formatDateBR(motorcycle.registrationDate) ??
+                            "Sem data de emplacamento"}
                         </TooltipContent>
                       </Tooltip>
                     ) : (
@@ -384,7 +391,9 @@ export function BDCTable({
                     <TableHead>Cliente</TableHead>
                     <TableHead>CPF</TableHead>
                     <TableHead>Vendedor</TableHead>
-                    <TableHead className="hidden md:table-cell">Cidade</TableHead>
+                    <TableHead className="hidden md:table-cell">
+                      Cidade
+                    </TableHead>
                     <TableHead>Modelo</TableHead>
                     <TableHead>Chassi</TableHead>
                     <TableHead className="hidden md:table-cell">
@@ -426,9 +435,7 @@ export function BDCTable({
                           )}
                         </TableCell>
                         <TableCell className="hidden md:table-cell">
-                          {row.billingDate
-                            ? format(row.billingDate, "dd/MM/yyyy")
-                            : "—"}
+                          {formatDateBR(row.billingDate) ?? "—"}
                         </TableCell>
                         <TableCell>
                           <Tooltip>
@@ -450,12 +457,8 @@ export function BDCTable({
                               </Badge>
                             </TooltipTrigger>
                             <TooltipContent>
-                              {motorcycle?.forecastArrival
-                                ? format(
-                                    motorcycle.forecastArrival,
-                                    "dd/MM/yyyy",
-                                  )
-                                : "Sem previsão"}
+                              {formatDateBR(motorcycle?.forecastArrival) ??
+                                "Sem previsão"}
                             </TooltipContent>
                           </Tooltip>
                         </TableCell>
@@ -476,12 +479,8 @@ export function BDCTable({
                                 </Badge>
                               </TooltipTrigger>
                               <TooltipContent>
-                                {motorcycle.registrationDate
-                                  ? format(
-                                      motorcycle.registrationDate,
-                                      "dd/MM/yyyy",
-                                    )
-                                  : "Sem data de emplacamento"}
+                                {formatDateBR(motorcycle.registrationDate) ??
+                                  "Sem data de emplacamento"}
                               </TooltipContent>
                             </Tooltip>
                           ) : (

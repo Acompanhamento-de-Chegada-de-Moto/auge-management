@@ -3,8 +3,6 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { redirect } from "next/navigation";
 import { publicGetMotorcycleById } from "@/app/data/public/public-get-motorcycle";
-import { DelayAlert } from "../../_components/DelayAlert";
-import { ReloadButton } from "../../_components/ReloadButton";
 import {
   getArrivalStatus,
   getStatusColor,
@@ -17,7 +15,9 @@ import {
   getSetting,
   getWhatsAppMessage,
 } from "@/lib/data/settings";
-import { maskChassis } from "@/lib/utils";
+import { formatDateBR, maskChassis } from "@/lib/utils";
+import { DelayAlert } from "../../_components/DelayAlert";
+import { ReloadButton } from "../../_components/ReloadButton";
 
 export const metadata: Metadata = {
   title: "Detalhes da Motocicleta",
@@ -42,7 +42,10 @@ export default async function MotocicletaDetalhePage({
   const delayMessage = await getDelayMessage();
   const whatsappMessage = await getWhatsAppMessage();
 
-  const arrivalStatus = getArrivalStatus(motorcycle.forecastArrival, motorcycle.forecastArrivalStatus);
+  const arrivalStatus = getArrivalStatus(
+    motorcycle.forecastArrival,
+    motorcycle.forecastArrivalStatus,
+  );
   const statusLabel = mapRegistrationStatusLabel(motorcycle.registrationStatus);
   const statusColor = getStatusColor(statusLabel);
 
@@ -52,7 +55,14 @@ export default async function MotocicletaDetalhePage({
         {/* Cabeçalho */}
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
-            <Image src={logoUrl || "/logo-auge.png"} alt="" width={40} height={40} className="object-contain" aria-hidden="true" />
+            <Image
+              src={logoUrl || "/logo-auge.png"}
+              alt=""
+              width={40}
+              height={40}
+              className="object-contain"
+              aria-hidden="true"
+            />
             <h1 className="truncate text-lg font-bold sm:text-xl">
               Acompanhamento de Motocicleta
             </h1>
@@ -142,7 +152,7 @@ export default async function MotocicletaDetalhePage({
                   Data de Faturamento
                 </dt>
                 <dd className="mt-1 font-medium">
-                  {new Date(client.billingDate).toLocaleDateString("pt-BR")}
+                  {formatDateBR(client.billingDate) ?? "—"}
                 </dd>
               </div>
             )}
@@ -153,11 +163,7 @@ export default async function MotocicletaDetalhePage({
                 Previsão de Chegada
               </dt>
               <dd className="mt-1 font-medium">
-                {motorcycle.forecastArrival
-                  ? new Date(motorcycle.forecastArrival).toLocaleDateString(
-                      "pt-BR",
-                    )
-                  : "—"}
+                {formatDateBR(motorcycle.forecastArrival) ?? "—"}
               </dd>
             </div>
 

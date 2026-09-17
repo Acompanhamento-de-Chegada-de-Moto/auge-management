@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import {
+  getArrivalStatus,
+  getStatusColor,
+  mapRegistrationStatusLabel,
+} from "@/lib/bdc-data";
+import { formatCPF } from "@/lib/cpf";
 import { getClientById } from "@/lib/data/client";
 import {
   getContactPhone,
@@ -8,16 +14,9 @@ import {
   getSetting,
   getWhatsAppMessage,
 } from "@/lib/data/settings";
-import {
-  getArrivalStatus,
-  getStatusColor,
-  mapRegistrationStatusLabel,
-} from "@/lib/bdc-data";
-import { formatCPF } from "@/lib/cpf";
-import { maskChassis } from "@/lib/utils";
-import { LastUpdated } from "../../_components/LastUpdated";
-import { ReloadButton } from "../../_components/ReloadButton";
+import { formatDateBR, maskChassis } from "@/lib/utils";
 import { DelayAlert } from "../../_components/DelayAlert";
+import { ReloadButton } from "../../_components/ReloadButton";
 
 export const metadata: Metadata = {
   title: "Detalhes do Cliente",
@@ -45,7 +44,13 @@ export default async function ClienteDetalhePage({
       <div className="flex w-full max-w-2xl flex-col gap-6">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
-            <Image src={logoUrl || "/logo-auge.png"} alt="" width={40} height={40} className="object-contain" />
+            <Image
+              src={logoUrl || "/logo-auge.png"}
+              alt=""
+              width={40}
+              height={40}
+              className="object-contain"
+            />
             <h1 className="text-xl font-bold">Acompanhamento de Motocicleta</h1>
           </div>
           <div className="flex items-center gap-2 shrink-0">
@@ -74,7 +79,10 @@ export default async function ClienteDetalhePage({
 
           <div className="space-y-4">
             {client.motorcycles.map((moto) => {
-              const arrivalStatus = getArrivalStatus(moto.forecastArrival, moto.forecastArrivalStatus);
+              const arrivalStatus = getArrivalStatus(
+                moto.forecastArrival,
+                moto.forecastArrivalStatus,
+              );
               const statusLabel = mapRegistrationStatusLabel(
                 moto.registrationStatus,
               );
@@ -113,9 +121,7 @@ export default async function ClienteDetalhePage({
                             Data de Faturamento
                           </span>
                           <p className="font-medium">
-                            {new Date(client.billingDate).toLocaleDateString(
-                              "pt-BR",
-                            )}
+                            {formatDateBR(client.billingDate) ?? "—"}
                           </p>
                         </div>
                       )}
@@ -124,11 +130,7 @@ export default async function ClienteDetalhePage({
                           Previsão de Chegada
                         </span>
                         <p className="font-medium">
-                          {moto.forecastArrival
-                            ? new Date(moto.forecastArrival).toLocaleDateString(
-                                "pt-BR",
-                              )
-                            : "—"}
+                          {formatDateBR(moto.forecastArrival) ?? "—"}
                         </p>
                       </div>
                       <div>

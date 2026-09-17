@@ -1,6 +1,15 @@
 "use client";
 
-import { CheckIcon, ChevronLeft, ChevronRight, CopyIcon, PencilIcon, SearchIcon, Trash2Icon, XIcon } from "lucide-react";
+import {
+  CheckIcon,
+  ChevronLeft,
+  ChevronRight,
+  CopyIcon,
+  PencilIcon,
+  SearchIcon,
+  Trash2Icon,
+  XIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -22,6 +31,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getArrivalStatus } from "@/lib/bdc-data";
+import { formatDateBR } from "@/lib/utils";
 
 interface MotorcycleRow {
   id: string;
@@ -211,12 +221,17 @@ export default function MotorcycleTable({
         </div>
       ) : (
         <div
-          className={isPending ? "pointer-events-none opacity-60 transition-opacity" : ""}
+          className={
+            isPending ? "pointer-events-none opacity-60 transition-opacity" : ""
+          }
         >
           {/* MOBILE: cards (abaixo de md) */}
           <div className="space-y-3 md:hidden">
             {motorcycles.map((motorcycle) => {
-              const status = getArrivalStatus(motorcycle.forecastArrival, motorcycle.forecastArrivalStatus);
+              const status = getArrivalStatus(
+                motorcycle.forecastArrival,
+                motorcycle.forecastArrivalStatus,
+              );
               return (
                 <div key={motorcycle.id} className="rounded-lg border p-4">
                   <div className="flex items-start justify-between gap-2">
@@ -224,7 +239,9 @@ export default function MotorcycleTable({
                       <p className="font-medium">{motorcycle.model}</p>
                       <button
                         type="button"
-                        onClick={() => handleCopy(motorcycle.chassi, motorcycle.id)}
+                        onClick={() =>
+                          handleCopy(motorcycle.chassi, motorcycle.id)
+                        }
                         aria-label={`Copiar chassi ${motorcycle.chassi}`}
                         className="group mt-1 inline-flex items-center gap-1.5 font-mono text-xs text-muted-foreground"
                       >
@@ -239,7 +256,9 @@ export default function MotorcycleTable({
                         ) : (
                           <>
                             <CopyIcon className="size-3.5" />
-                            <span className="underline">{motorcycle.chassi}</span>
+                            <span className="underline">
+                              {motorcycle.chassi}
+                            </span>
                           </>
                         )}
                       </button>
@@ -274,11 +293,7 @@ export default function MotorcycleTable({
                   <div className="mt-3 flex items-center justify-between border-t pt-2">
                     <span className="text-xs text-muted-foreground">
                       Previsão:{" "}
-                      {motorcycle.forecastArrival
-                        ? new Date(motorcycle.forecastArrival).toLocaleDateString(
-                            "pt-BR",
-                          )
-                        : "—"}
+                      {formatDateBR(motorcycle.forecastArrival) ?? "—"}
                     </span>
                     <span
                       className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${status.color}`}
@@ -328,7 +343,10 @@ export default function MotorcycleTable({
               </TableHeader>
               <TableBody>
                 {motorcycles.map((motorcycle) => {
-                  const status = getArrivalStatus(motorcycle.forecastArrival, motorcycle.forecastArrivalStatus);
+                  const status = getArrivalStatus(
+                    motorcycle.forecastArrival,
+                    motorcycle.forecastArrivalStatus,
+                  );
                   return (
                     <TableRow key={motorcycle.id}>
                       <TableCell className="font-medium">
@@ -364,18 +382,14 @@ export default function MotorcycleTable({
                         </button>
                       </TableCell>
                       <TableCell>
-                        {motorcycle.forecastArrival
-                          ? new Date(motorcycle.forecastArrival).toLocaleDateString(
-                              "pt-BR",
-                            )
-                          : "—"}
+                        {formatDateBR(motorcycle.forecastArrival) ?? "—"}
                       </TableCell>
                       <TableCell>
-                      <span
-                        className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${status.color}`}
-                      >
-                        {status.label}
-                      </span>
+                        <span
+                          className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${status.color}`}
+                        >
+                          {status.label}
+                        </span>
                       </TableCell>
                       <TableCell>
                         <div className="flex h-full items-center gap-1 justify-end">
@@ -385,7 +399,8 @@ export default function MotorcycleTable({
                             className={buttonVariants({
                               variant: "ghost",
                               size: "icon",
-                              className: "rounded-full min-h-[44px] min-w-[44px]",
+                              className:
+                                "rounded-full min-h-[44px] min-w-[44px]",
                             })}
                           >
                             <PencilIcon className="size-4" />
@@ -396,7 +411,8 @@ export default function MotorcycleTable({
                             className={buttonVariants({
                               variant: "ghost",
                               size: "icon",
-                              className: "rounded-full min-h-[44px] min-w-[44px]",
+                              className:
+                                "rounded-full min-h-[44px] min-w-[44px]",
                             })}
                           >
                             <Trash2Icon className="size-4 text-red-500" />

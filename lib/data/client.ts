@@ -1,4 +1,5 @@
 import { stripCPF } from "@/lib/cpf";
+import { arrivalArrivedWhere } from "@/lib/data/arrival-status";
 import { prisma } from "@/lib/db";
 
 export async function createClient(data: {
@@ -207,23 +208,19 @@ export async function getClientsPaginated(params: {
     where.city = { contains: params.city, mode: "insensitive" };
   }
 
-  const hoje = new Date();
-  hoje.setHours(23, 59, 59, 999);
-
   let motorcycleFilter: Record<string, unknown> | undefined;
 
   if (params.model) {
-    motorcycleFilter = { model: { contains: params.model, mode: "insensitive" } };
+    motorcycleFilter = {
+      model: { contains: params.model, mode: "insensitive" },
+    };
   }
 
   if (params.arrived === "true") {
-    const chegou = {
-      OR: [
-        { forecastArrivalStatus: "ARRIVED" },
-        { forecastArrival: { lte: hoje }, forecastArrivalStatus: "NO_INFORMATION" },
-      ],
-    };
-    motorcycleFilter = motorcycleFilter ? { AND: [motorcycleFilter, chegou] } : chegou;
+    const chegou = arrivalArrivedWhere();
+    motorcycleFilter = motorcycleFilter
+      ? { AND: [motorcycleFilter, chegou] }
+      : chegou;
   }
 
   if (motorcycleFilter) {
@@ -233,12 +230,7 @@ export async function getClientsPaginated(params: {
   if (params.arrived === "false") {
     where.NOT = {
       motorcycles: {
-        some: {
-          OR: [
-            { forecastArrivalStatus: "ARRIVED" },
-            { forecastArrival: { lte: hoje }, forecastArrivalStatus: "NO_INFORMATION" },
-          ],
-        },
+        some: arrivalArrivedWhere(),
       },
     };
   }
@@ -247,7 +239,11 @@ export async function getClientsPaginated(params: {
     where.OR = [
       { name: { contains: params.search, mode: "insensitive" } },
       { cpf: { contains: params.search } },
-      { motorcycles: { some: { chassi: { contains: params.search, mode: "insensitive" } } } },
+      {
+        motorcycles: {
+          some: { chassi: { contains: params.search, mode: "insensitive" } },
+        },
+      },
     ];
   }
 

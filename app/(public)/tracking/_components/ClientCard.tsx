@@ -1,4 +1,7 @@
+import { ExternalLink } from "lucide-react";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -7,16 +10,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
-  getStatusColor,
   getArrivalStatus,
+  getStatusColor,
   mapRegistrationStatusLabel,
 } from "@/lib/bdc-data";
 import type { searchClients } from "@/lib/data/client";
-import { maskChassis } from "@/lib/utils";
+import { formatDateBR, maskChassis } from "@/lib/utils";
 import { CopyLinkButton } from "./CopyLinkButton";
-import Link from "next/link";
-import { ExternalLink } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 type ClientWithMotorcycles = Awaited<ReturnType<typeof searchClients>>[number];
 
@@ -38,7 +38,10 @@ export function ClientCard({ client }: ClientCardProps) {
           </p>
         )}
         {client.motorcycles.map((motorcycle) => {
-          const arrivalStatus = getArrivalStatus(motorcycle.forecastArrival, motorcycle.forecastArrivalStatus);
+          const arrivalStatus = getArrivalStatus(
+            motorcycle.forecastArrival,
+            motorcycle.forecastArrivalStatus,
+          );
           const statusLabel = mapRegistrationStatusLabel(
             motorcycle.registrationStatus,
           );
@@ -64,11 +67,7 @@ export function ClientCard({ client }: ClientCardProps) {
                   Previsão de Chegada
                 </span>
                 <span className="text-sm font-medium">
-                  {motorcycle.forecastArrival
-                    ? new Date(motorcycle.forecastArrival).toLocaleDateString(
-                        "pt-BR",
-                      )
-                    : "—"}
+                  {formatDateBR(motorcycle.forecastArrival) ?? "—"}
                 </span>
               </div>
               <div className="flex items-center justify-between">
