@@ -177,7 +177,7 @@ export function CreateMotorcycleForm() {
                 <FormLabel>Status de Chegada</FormLabel>
                 <Select
                   onValueChange={(value) => field.onChange(value)}
-                  defaultValue={field.value}
+                  value={field.value}
                 >
                   <FormControl>
                     <SelectTrigger>

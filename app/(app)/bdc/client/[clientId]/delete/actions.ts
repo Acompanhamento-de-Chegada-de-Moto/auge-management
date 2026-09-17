@@ -18,6 +18,7 @@ export async function DeleteClientAction(
     });
 
     revalidatePath("/bdc");
+    revalidatePath("/inventory");
     revalidatePath("/tracking", "layout");
 
     return {

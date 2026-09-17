@@ -259,7 +259,11 @@ export function BDCTable({
                     </div>
                     <div className="flex gap-1">
                       <Link
-                        href={`/bdc/client/${row.id}/edit`}
+                        href={
+                          motorcycle
+                            ? `/bdc/client/${row.id}/edit?motorcycleId=${motorcycle.id}`
+                            : `/bdc/client/${row.id}/edit`
+                        }
                         aria-label={`Editar cliente ${row.name}`}
                         className={buttonVariants({
                           variant: "ghost",
@@ -490,7 +494,11 @@ export function BDCTable({
                         <TableCell>
                           <div className="flex h-full items-center gap-1">
                             <Link
-                              href={`/bdc/client/${row.id}/edit`}
+                              href={
+                                motorcycle
+                                  ? `/bdc/client/${row.id}/edit?motorcycleId=${motorcycle.id}`
+                                  : `/bdc/client/${row.id}/edit`
+                              }
                               aria-label={`editar-${row.id}`}
                               className={buttonVariants({
                                 variant: "ghost",
