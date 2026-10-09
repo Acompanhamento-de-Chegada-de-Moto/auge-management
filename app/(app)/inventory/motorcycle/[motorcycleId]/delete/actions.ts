@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAuth } from "@/app/data/user/require-auth";
-import { prisma } from "@/lib/db";
+import { deleteMotorcycle, getMotorcycleById } from "@/lib/data/motorcycle";
 import type { ApiResponse } from "@/lib/types";
 
 export async function DeleteMotorcycleAction(
@@ -11,9 +11,7 @@ export async function DeleteMotorcycleAction(
   await requireAuth();
 
   try {
-    const motorcycle = await prisma.motorcycle.findUnique({
-      where: { id: motorcycleId },
-    });
+    const motorcycle = await getMotorcycleById(motorcycleId);
 
     if (!motorcycle) {
       return {
@@ -22,12 +20,7 @@ export async function DeleteMotorcycleAction(
       };
     }
 
-    // Remove do banco de dados
-    await prisma.motorcycle.delete({
-      where: {
-        id: motorcycleId,
-      },
-    });
+    await deleteMotorcycle(motorcycleId);
 
     revalidatePath("/inventory");
     revalidatePath("/tracking", "layout");

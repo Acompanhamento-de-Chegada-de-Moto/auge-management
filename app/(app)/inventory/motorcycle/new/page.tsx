@@ -10,25 +10,26 @@ export const metadata: Metadata = {
 
 export default function NovaMotocicletaPage() {
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-2">
-        <div>
-          <h1 className="text-2xl font-bold">Cadastro de Motocicleta</h1>
-          <p className="text-muted-foreground">
-            Cadastre uma nova motocicleta no estoque.
+    <main className="min-w-0 space-y-6 p-4 sm:p-6 lg:p-8">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-semibold tracking-tight">
+            Adicionar motocicleta
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Cadastre os dados da unidade e acompanhe a previsão de chegada.
           </p>
         </div>
         <Link
-          title="voltar"
           href="/inventory"
           className={buttonVariants({
-            variant: "secondary",
+            variant: "outline",
           })}
         >
-          <ArrowLeft className="size-4 mr-2" /> Voltar
+          <ArrowLeft className="mr-2 size-4" /> Voltar ao estoque
         </Link>
-      </div>
+      </header>
       <CreateMotorcycleForm />
-    </div>
+    </main>
   );
 }

@@ -25,30 +25,30 @@ export default async function EstoquePage({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
-        <div className="block md:hidden">
-          <h1 className="text-2xl font-bold">Estoque</h1>
-          <p className="text-muted-foreground mt-1">
-            Controle de motocicletas em estoque.
+    <main className="min-w-0 space-y-6 p-4 sm:p-6 lg:p-8">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-semibold tracking-tight">Estoque</h1>
+          <p className="text-sm text-muted-foreground">
+            Acompanhe chegadas, prazos e motocicletas disponíveis.
           </p>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex flex-wrap items-center gap-2">
           <MotorcycleSpreadsheetUploadDialog />
 
-          <Button asChild className="shrink-0">
+          <Button asChild>
             <Link href="/inventory/motorcycle/new">
               <PlusIcon className="mr-2 size-4" />
-              Adicionar Motocicleta
+              Adicionar motocicleta
             </Link>
           </Button>
         </div>
-      </div>
+      </header>
 
       <Suspense fallback={<EstoquePageSkeletonLayout />}>
         <RenderMotorcycles searchParams={searchParams} />
       </Suspense>
-    </div>
+    </main>
   );
 }
 
@@ -63,21 +63,22 @@ async function RenderMotorcycles({
     page: Number(params.page) || 1,
     model: typeof params.model === "string" ? params.model : undefined,
     status: typeof params.status === "string" ? params.status : undefined,
-    chassisSearch: typeof params.chassis === "string" ? params.chassis : undefined,
-    arrived: typeof params.arrived === "string" ? params.arrived as "true" | "false" : undefined,
+    chassisSearch:
+      typeof params.chassis === "string" ? params.chassis : undefined,
   });
 
   return (
     <MotorcycleTable
       motorcycles={result.rows}
+      total={result.total}
       totalPages={result.totalPages}
       page={result.page}
+      statusCounts={result.statusCounts}
       filterOptions={result.filterOptions}
       activeFilters={{
         model: typeof params.model === "string" ? params.model : "",
         status: typeof params.status === "string" ? params.status : "",
         chassis: typeof params.chassis === "string" ? params.chassis : "",
-        arrived: typeof params.arrived === "string" ? params.arrived : "",
       }}
     />
   );

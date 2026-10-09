@@ -28,21 +28,28 @@ export default async function EditarMotocicletaPage({
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-        <h1 className="text-2xl font-bold">Editar Motocicleta</h1>
+    <main className="min-w-0 space-y-6 p-4 sm:p-6 lg:p-8">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-semibold tracking-tight">
+            Editar motocicleta
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {motorcycle.model} ·{" "}
+            <span className="font-mono">{motorcycle.chassi}</span>
+          </p>
+        </div>
         <Link
-          title="voltar"
           href="/inventory"
           className={buttonVariants({
-            variant: "secondary",
+            variant: "outline",
           })}
         >
-          <ArrowLeft className="size-4 mr-2" /> Voltar
+          <ArrowLeft className="mr-2 size-4" /> Voltar ao estoque
         </Link>
-      </div>
+      </header>
 
       <EditMotorcycleForm motorcycle={motorcycle} />
-    </div>
+    </main>
   );
 }

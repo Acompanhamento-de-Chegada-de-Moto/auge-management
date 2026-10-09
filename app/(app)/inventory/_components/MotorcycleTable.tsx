@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Bike,
   CheckIcon,
   ChevronLeft,
   ChevronRight,
@@ -43,157 +44,170 @@ interface MotorcycleRow {
 
 interface MotorcycleTableProps {
   motorcycles: MotorcycleRow[];
+  total: number;
   totalPages: number;
   page: number;
-  filterOptions: {
-    models: string[];
+  statusCounts: {
+    total: number;
+    inTransit: number;
+    arrived: number;
+    delayed: number;
   };
+  filterOptions: { models: string[] };
   activeFilters: {
     model: string;
     status: string;
     chassis: string;
-    arrived: string;
   };
 }
 
+const statusViews = [
+  { label: "Todas", value: "all", countKey: "total" },
+  { label: "Em trânsito", value: "Em Trânsito", countKey: "inTransit" },
+  { label: "Chegou", value: "Chegou", countKey: "arrived" },
+  { label: "Atrasadas", value: "Atrasada", countKey: "delayed" },
+] as const;
+
 export default function MotorcycleTable({
   motorcycles,
+  total,
   totalPages,
   page,
+  statusCounts,
   filterOptions,
   activeFilters,
 }: MotorcycleTableProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-
   const [isPending, startTransition] = useTransition();
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [chassisInput, setChassisInput] = useState(activeFilters.chassis);
 
-  const handleCopy = (text: string, id: string) => {
-    navigator.clipboard.writeText(text).then(() => {
-      setCopiedId(id);
-      setTimeout(() => setCopiedId(null), 2000);
-    });
-  };
-
-  const updateFilter = (key: "model" | "status" | "arrived", value: string) => {
-    const params = new URLSearchParams(searchParams);
-
-    if (!value || value === "all") {
-      params.delete(key);
-    } else {
-      params.set(key, value);
+  function navigate(updates: Record<string, string | null>, resetPage = true) {
+    const params = new URLSearchParams(searchParams.toString());
+    for (const [key, value] of Object.entries(updates)) {
+      if (!value || value === "all") params.delete(key);
+      else params.set(key, value);
     }
-    params.delete("page");
-
+    if (resetPage) params.delete("page");
     startTransition(() => {
-      router.replace(`${pathname}?${params.toString()}`);
+      const query = params.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname);
     });
-  };
+  }
 
-  const updateChassisSearch = (value: string) => {
-    const params = new URLSearchParams(searchParams);
-
-    if (!value) {
-      params.delete("chassis");
-    } else {
-      params.set("chassis", value);
-    }
-    params.delete("page");
-
-    startTransition(() => {
-      router.replace(`${pathname}?${params.toString()}`);
-    });
-  };
-
-  const clearFilters = () => {
+  function clearFilters() {
     setChassisInput("");
-    startTransition(() => {
-      router.replace(pathname);
-    });
-  };
+    startTransition(() => router.replace(pathname));
+  }
 
-  const handlePageChange = (newPage: number) => {
-    const params = new URLSearchParams(searchParams);
-    params.set("page", String(newPage));
-    startTransition(() => {
-      router.replace(`${pathname}?${params.toString()}`);
+  function copyChassis(motorcycle: MotorcycleRow) {
+    void navigator.clipboard.writeText(motorcycle.chassi).then(() => {
+      setCopiedId(motorcycle.id);
+      window.setTimeout(() => setCopiedId(null), 2000);
     });
-  };
+  }
+
+  function renderChassis(motorcycle: MotorcycleRow) {
+    const copied = copiedId === motorcycle.id;
+    return (
+      <button
+        type="button"
+        onClick={() => copyChassis(motorcycle)}
+        aria-label={
+          copied ? "Chassi copiado" : `Copiar chassi ${motorcycle.chassi}`
+        }
+        className="inline-flex min-h-11 items-center gap-2 rounded-md font-mono text-xs text-muted-foreground hover:text-foreground"
+      >
+        {copied ? (
+          <>
+            <CheckIcon className="size-3.5 text-green-600" />
+            <span role="status">Copiado</span>
+          </>
+        ) : (
+          <>
+            <CopyIcon className="size-3.5" />
+            <span>{motorcycle.chassi}</span>
+          </>
+        )}
+      </button>
+    );
+  }
+
+  function renderActions(motorcycle: MotorcycleRow) {
+    return (
+      <div className="flex items-center justify-end gap-1">
+        <Link
+          href={`/inventory/motorcycle/${motorcycle.id}/edit`}
+          aria-label={`Editar ${motorcycle.model}`}
+          className={buttonVariants({
+            variant: "outline",
+            size: "sm",
+            className: "min-h-10",
+          })}
+        >
+          <PencilIcon className="mr-2 size-4" />
+          <span className="hidden lg:inline">Editar</span>
+        </Link>
+        <Link
+          href={`/inventory/motorcycle/${motorcycle.id}/delete`}
+          aria-label={`Excluir ${motorcycle.model}`}
+          className={buttonVariants({
+            variant: "ghost",
+            size: "icon",
+            className: "min-h-10 min-w-10 text-destructive",
+          })}
+        >
+          <Trash2Icon className="size-4" />
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">
-      <div className="mb-4 flex flex-wrap items-center gap-2">
-        <Select
-          value={activeFilters.model || "all"}
-          onValueChange={(value) => updateFilter("model", value)}
-        >
-          <SelectTrigger className="w-full sm:w-[180px]">
-            <SelectValue placeholder="Modelo" />
-          </SelectTrigger>
+      <div className="mb-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+        {statusViews.map((view) => {
+          const selected = (activeFilters.status || "all") === view.value;
+          return (
+            <button
+              key={view.value}
+              type="button"
+              aria-pressed={selected}
+              onClick={() => navigate({ status: view.value, arrived: null })}
+              disabled={isPending}
+              className={`flex min-h-16 items-center justify-between rounded-xl border px-4 text-left transition-colors ${
+                selected
+                  ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                  : "bg-card hover:bg-muted/50"
+              }`}
+            >
+              <span
+                className={`text-sm ${selected ? "font-medium text-foreground" : "text-muted-foreground"}`}
+              >
+                {view.label}
+              </span>
+              <span className="text-lg font-semibold tabular-nums">
+                {statusCounts[view.countKey]}
+              </span>
+            </button>
+          );
+        })}
+      </div>
 
-          <SelectContent>
-            <SelectItem value="all">Todos os modelos</SelectItem>
-
-            {filterOptions.models.map((model) => (
-              <SelectItem key={model} value={model}>
-                {model}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select
-          value={activeFilters.status || "all"}
-          onValueChange={(value) => updateFilter("status", value)}
-        >
-          <SelectTrigger className="w-full sm:w-[180px]">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-
-          <SelectContent>
-            <SelectItem value="all">Todos os status</SelectItem>
-            <SelectItem value="Em Trânsito">Em Trânsito</SelectItem>
-            <SelectItem value="Chegou">Chegou</SelectItem>
-            <SelectItem value="Atrasada">Atrasada</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Select
-          value={activeFilters.arrived || "all"}
-          onValueChange={(value) => updateFilter("arrived", value)}
-        >
-          <SelectTrigger className="w-full sm:w-[180px]">
-            <SelectValue placeholder="Chegada" />
-          </SelectTrigger>
-
-          <SelectContent>
-            <SelectItem value="all">Todas</SelectItem>
-            <SelectItem value="true">Chegou</SelectItem>
-            <SelectItem value="false">Não Chegou</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <div className="relative w-full sm:w-[200px]">
-          <button
-            type="button"
-            onClick={() => updateChassisSearch(chassisInput)}
-            className="absolute left-2 top-1/2 -translate-y-1/2"
-          >
-            <SearchIcon className="size-4 text-muted-foreground hover:text-foreground" />
-          </button>
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="relative w-full sm:max-w-sm">
+          <SearchIcon className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Buscar chassi"
+            placeholder="Buscar pelo chassi"
             value={chassisInput}
-            onChange={(e) => setChassisInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                updateChassisSearch(chassisInput);
-              }
+            onChange={(event) => setChassisInput(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter")
+                navigate({ chassis: chassisInput.trim() });
             }}
-            className="pl-8 pr-8"
+            className="pl-9 pr-9"
             disabled={isPending}
           />
           {chassisInput && (
@@ -201,23 +215,74 @@ export default function MotorcycleTable({
               type="button"
               onClick={() => {
                 setChassisInput("");
-                updateChassisSearch("");
+                navigate({ chassis: null });
               }}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              aria-label="Limpar busca"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
             >
               <XIcon className="size-4" />
             </button>
           )}
         </div>
-
-        <Button variant="outline" onClick={clearFilters} disabled={isPending}>
-          Limpar filtros
+        <Select
+          value={activeFilters.model || "all"}
+          onValueChange={(value) => navigate({ model: value })}
+          disabled={isPending}
+        >
+          <SelectTrigger className="w-full sm:w-56">
+            <SelectValue placeholder="Todos os modelos" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os modelos</SelectItem>
+            {filterOptions.models.map((model) => (
+              <SelectItem key={model} value={model}>
+                {model}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button
+          variant="outline"
+          onClick={() => navigate({ chassis: chassisInput.trim() })}
+          disabled={isPending}
+        >
+          Buscar
         </Button>
+        {(activeFilters.model ||
+          activeFilters.status ||
+          activeFilters.chassis) && (
+          <Button variant="ghost" onClick={clearFilters} disabled={isPending}>
+            Limpar filtros
+          </Button>
+        )}
+      </div>
+
+      <div className="mb-3 flex items-center justify-between text-sm text-muted-foreground">
+        <span>
+          {total} {total === 1 ? "motocicleta" : "motocicletas"}
+        </span>
+        {isPending && <span role="status">Atualizando lista…</span>}
       </div>
 
       {motorcycles.length === 0 ? (
-        <div className="rounded-sm border py-8 text-center text-muted-foreground">
-          Nenhuma motocicleta encontrada.
+        <div className="flex flex-col items-center rounded-xl border border-dashed px-6 py-14 text-center">
+          <div className="mb-4 flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
+            <Bike className="size-5" />
+          </div>
+          <h2 className="font-medium">
+            Nenhuma motocicleta nesta visualização
+          </h2>
+          <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+            Ajuste os filtros ou cadastre uma motocicleta para começar a
+            acompanhar o estoque.
+          </p>
+          {(activeFilters.model ||
+            activeFilters.status ||
+            activeFilters.chassis) && (
+            <Button variant="outline" className="mt-4" onClick={clearFilters}>
+              Limpar filtros
+            </Button>
+          )}
         </div>
       ) : (
         <div
@@ -225,7 +290,6 @@ export default function MotorcycleTable({
             isPending ? "pointer-events-none opacity-60 transition-opacity" : ""
           }
         >
-          {/* MOBILE: cards (abaixo de md) */}
           <div className="space-y-3 md:hidden">
             {motorcycles.map((motorcycle) => {
               const status = getArrivalStatus(
@@ -233,112 +297,44 @@ export default function MotorcycleTable({
                 motorcycle.forecastArrivalStatus,
               );
               return (
-                <div key={motorcycle.id} className="rounded-lg border p-4">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <p className="font-medium">{motorcycle.model}</p>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleCopy(motorcycle.chassi, motorcycle.id)
-                        }
-                        aria-label={`Copiar chassi ${motorcycle.chassi}`}
-                        className="group mt-1 inline-flex items-center gap-1.5 font-mono text-xs text-muted-foreground"
-                      >
-                        {copiedId === motorcycle.id ? (
-                          <span
-                            role="status"
-                            className="flex items-center gap-1 text-green-600 dark:text-green-400"
-                          >
-                            <CheckIcon className="size-3.5" />
-                            Copiado!
-                          </span>
-                        ) : (
-                          <>
-                            <CopyIcon className="size-3.5" />
-                            <span className="underline">
-                              {motorcycle.chassi}
-                            </span>
-                          </>
-                        )}
-                      </button>
+                <article
+                  key={motorcycle.id}
+                  className="rounded-xl border bg-card p-4"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <h3 className="truncate font-medium">
+                        {motorcycle.model}
+                      </h3>
+                      {renderChassis(motorcycle)}
                     </div>
-
-                    <div className="flex gap-1">
-                      <Link
-                        href={`/inventory/motorcycle/${motorcycle.id}/edit`}
-                        aria-label={`Editar motocicleta ${motorcycle.model}`}
-                        className={buttonVariants({
-                          variant: "ghost",
-                          size: "icon",
-                          className: "rounded-full min-h-[44px] min-w-[44px]",
-                        })}
-                      >
-                        <PencilIcon className="size-4" />
-                      </Link>
-                      <Link
-                        href={`/inventory/motorcycle/${motorcycle.id}/delete`}
-                        aria-label={`Excluir motocicleta ${motorcycle.model}`}
-                        className={buttonVariants({
-                          variant: "ghost",
-                          size: "icon",
-                          className: "rounded-full min-h-[44px] min-w-[44px]",
-                        })}
-                      >
-                        <Trash2Icon className="size-4 text-red-500" />
-                      </Link>
-                    </div>
+                    {renderActions(motorcycle)}
                   </div>
-
-                  <div className="mt-3 flex items-center justify-between border-t pt-2">
-                    <span className="text-xs text-muted-foreground">
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t pt-3">
+                    <span className="text-sm text-muted-foreground">
                       Previsão:{" "}
-                      {formatDateBR(motorcycle.forecastArrival) ?? "—"}
+                      {formatDateBR(motorcycle.forecastArrival) ?? "Sem data"}
                     </span>
                     <span
-                      className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${status.color}`}
+                      className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${status.color}`}
                     >
                       {status.label}
                     </span>
                   </div>
-                </div>
+                </article>
               );
             })}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 pt-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page <= 1 || isPending}
-                  onClick={() => handlePageChange(page - 1)}
-                >
-                  <ChevronLeft className="size-4" />
-                </Button>
-                <span className="text-sm text-muted-foreground">
-                  Página {page} de {totalPages}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page >= totalPages || isPending}
-                  onClick={() => handlePageChange(page + 1)}
-                >
-                  <ChevronRight className="size-4" />
-                </Button>
-              </div>
-            )}
           </div>
 
-          {/* DESKTOP: tabela (md e acima) */}
-          <div className="hidden rounded-sm border shadow-sm md:block">
+          <div className="hidden overflow-hidden rounded-xl border bg-card md:block">
             <Table>
               <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead>Modelo</TableHead>
+                <TableRow>
+                  <TableHead>Motocicleta</TableHead>
                   <TableHead>Chassi</TableHead>
-                  <TableHead>Previsão de Chegada</TableHead>
+                  <TableHead>Previsão de chegada</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="w-0 pr-4 text-end">Ações</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -352,105 +348,51 @@ export default function MotorcycleTable({
                       <TableCell className="font-medium">
                         {motorcycle.model}
                       </TableCell>
+                      <TableCell>{renderChassis(motorcycle)}</TableCell>
                       <TableCell>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            handleCopy(motorcycle.chassi, motorcycle.id)
-                          }
-                          className="group inline-flex items-center gap-1.5 font-mono text-xs transition-colors min-h-[44px]"
-                          title="Clique para copiar o chassi"
-                        >
-                          {copiedId === motorcycle.id ? (
-                            <>
-                              <CheckIcon className="size-3.5 text-green-600 dark:text-green-400" />
-                              <span
-                                role="status"
-                                className="text-green-600 dark:text-green-400"
-                              >
-                                Copiado!
-                              </span>
-                            </>
-                          ) : (
-                            <>
-                              <CopyIcon className="size-3.5 opacity-0 transition-opacity group-hover:opacity-100" />
-                              <span className="hover:underline">
-                                {motorcycle.chassi}
-                              </span>
-                            </>
-                          )}
-                        </button>
-                      </TableCell>
-                      <TableCell>
-                        {formatDateBR(motorcycle.forecastArrival) ?? "—"}
+                        {formatDateBR(motorcycle.forecastArrival) ?? "Sem data"}
                       </TableCell>
                       <TableCell>
                         <span
-                          className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${status.color}`}
+                          className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${status.color}`}
                         >
                           {status.label}
                         </span>
                       </TableCell>
-                      <TableCell>
-                        <div className="flex h-full items-center gap-1 justify-end">
-                          <Link
-                            href={`/inventory/motorcycle/${motorcycle.id}/edit`}
-                            aria-label={`editar-${motorcycle.id}`}
-                            className={buttonVariants({
-                              variant: "ghost",
-                              size: "icon",
-                              className:
-                                "rounded-full min-h-[44px] min-w-[44px]",
-                            })}
-                          >
-                            <PencilIcon className="size-4" />
-                          </Link>
-                          <Link
-                            href={`/inventory/motorcycle/${motorcycle.id}/delete`}
-                            aria-label={`deletar-${motorcycle.id}`}
-                            className={buttonVariants({
-                              variant: "ghost",
-                              size: "icon",
-                              className:
-                                "rounded-full min-h-[44px] min-w-[44px]",
-                            })}
-                          >
-                            <Trash2Icon className="size-4 text-red-500" />
-                          </Link>
-                        </div>
-                      </TableCell>
+                      <TableCell>{renderActions(motorcycle)}</TableCell>
                     </TableRow>
                   );
                 })}
               </TableBody>
             </Table>
-
-            {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-4 px-4 py-3 border-t">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page <= 1 || isPending}
-                  onClick={() => handlePageChange(page - 1)}
-                >
-                  <ChevronLeft className="mr-1 size-4" />
-                  Anterior
-                </Button>
-                <span className="text-sm text-muted-foreground">
-                  Página {page} de {totalPages}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page >= totalPages || isPending}
-                  onClick={() => handlePageChange(page + 1)}
-                >
-                  Próximo
-                  <ChevronRight className="ml-1 size-4" />
-                </Button>
-              </div>
-            )}
           </div>
+
+          {totalPages > 1 && (
+            <nav
+              aria-label="Paginação do estoque"
+              className="flex items-center justify-center gap-4 border-t py-4"
+            >
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page <= 1 || isPending}
+                onClick={() => navigate({ page: String(page - 1) }, false)}
+              >
+                <ChevronLeft className="mr-1 size-4" /> Anterior
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                Página {page} de {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page >= totalPages || isPending}
+                onClick={() => navigate({ page: String(page + 1) }, false)}
+              >
+                Próxima <ChevronRight className="ml-1 size-4" />
+              </Button>
+            </nav>
+          )}
         </div>
       )}
     </div>

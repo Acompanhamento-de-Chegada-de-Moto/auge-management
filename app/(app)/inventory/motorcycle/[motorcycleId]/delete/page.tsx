@@ -1,84 +1,25 @@
-"use client";
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { getMotorcycleById } from "@/lib/data/motorcycle";
+import { DeleteMotorcycleConfirmation } from "./_components/DeleteMotorcycleConfirmation";
 
-import { Loader2, Trash2 } from "lucide-react";
-import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
-import { useTransition } from "react";
-import { toast } from "sonner";
-import { Button, buttonVariants } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { tryCatch } from "@/lib/try-catch";
-import { DeleteMotorcycleAction } from "./actions";
+export const metadata: Metadata = {
+  title: "Excluir motocicleta",
+};
 
-export default function DeleteMotorcyclePage() {
-  const { motorcycleId } = useParams<{ motorcycleId: string }>();
-  const router = useRouter();
+export default async function DeleteMotorcyclePage({
+  params,
+}: {
+  params: Promise<{ motorcycleId: string }>;
+}) {
+  const { motorcycleId } = await params;
+  const motorcycle = await getMotorcycleById(motorcycleId);
 
-  const [pending, startTransition] = useTransition();
-
-  function onSubmit() {
-    startTransition(async () => {
-      const { data: result, error } = await tryCatch(
-        DeleteMotorcycleAction(motorcycleId),
-      );
-
-      if (error) {
-        toast.error("Ocorreu um erro inesperado. Por favor, tente novamente.");
-        return;
-      }
-
-      if (result.status === "success") {
-        toast.success(result.message);
-        router.push("/inventory");
-      } else if (result.status === "error") {
-        toast.error(result.message);
-      }
-    });
-  }
+  if (!motorcycle) notFound();
 
   return (
-    <div className="max-w-xl mx-auto w-full">
-      <Card className="mt-32">
-        <CardHeader>
-          <CardTitle>
-            Tem certeza que deseja excluir esta motocicleta?
-          </CardTitle>
-          <CardDescription>
-            Esta ação não poderá ser desfeita. O registro do veículo será
-            removido permanentemente do estoque do sistema.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex items-center justify-between">
-          <Link
-            href="/inventory"
-            className={buttonVariants({
-              variant: "outline",
-            })}
-          >
-            Cancelar
-          </Link>
-
-          <Button variant="destructive" disabled={pending} onClick={onSubmit}>
-            {pending ? (
-              <>
-                <Loader2 className="size-4 animate-spin" />
-                Excluindo...
-              </>
-            ) : (
-              <>
-                <Trash2 className="size-4" />
-                Excluir Motocicleta
-              </>
-            )}
-          </Button>
-        </CardContent>
-      </Card>
-    </div>
+    <main className="min-w-0 p-4 sm:p-6 lg:p-8">
+      <DeleteMotorcycleConfirmation motorcycle={motorcycle} />
+    </main>
   );
 }

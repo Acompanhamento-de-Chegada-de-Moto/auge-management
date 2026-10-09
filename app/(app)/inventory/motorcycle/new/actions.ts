@@ -2,12 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAuth } from "@/app/data/user/require-auth";
-import { prisma } from "@/lib/db";
+import {
+  createMotorcycle,
+  getMotorcycleByChassis,
+} from "@/lib/data/motorcycle";
 import type { ApiResponse } from "@/lib/types";
-import type {
-  ArrivalStatus,
-  RegistrationStatus,
-} from "@/generated/prisma/enums";
 import {
   type CreateMotorcycleType,
   createMotorcycleSchema,
@@ -38,9 +37,7 @@ export async function CreateMotorcycleAction(
       clientId,
     } = validation.data;
 
-    const existingMotorcycle = await prisma.motorcycle.findUnique({
-      where: { chassi },
-    });
+    const existingMotorcycle = await getMotorcycleByChassis(chassi);
 
     if (existingMotorcycle) {
       return {
@@ -49,17 +46,14 @@ export async function CreateMotorcycleAction(
       };
     }
 
-    await prisma.motorcycle.create({
-      data: {
-        chassi,
-        model,
-        forecastArrival: forecastArrival ?? null,
-        forecastArrivalStatus: forecastArrivalStatus as ArrivalStatus,
-        registrationStatus:
-          (registrationStatus as RegistrationStatus | null) ?? null,
-        registrationDate: registrationDate ?? null,
-        clientId: clientId ?? null,
-      },
+    await createMotorcycle({
+      chassi,
+      model,
+      forecastArrival: forecastArrival ?? null,
+      forecastArrivalStatus,
+      registrationStatus: registrationStatus ?? undefined,
+      registrationDate: registrationDate ?? null,
+      clientId: clientId ?? undefined,
     });
 
     revalidatePath("/inventory");

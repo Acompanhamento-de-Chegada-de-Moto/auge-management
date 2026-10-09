@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { requireAuth } from "@/app/data/user/require-auth";
 import {
   getMotorcycleByIdWithClient,
@@ -9,7 +8,6 @@ import {
   getMotorcycleByChassis,
 } from "@/lib/data/motorcycle";
 import type { ApiResponse } from "@/lib/types";
-import type { ArrivalStatus } from "@/generated/prisma/enums";
 import {
   type CreateMotorcycleType,
   createMotorcycleSchema,
@@ -30,7 +28,8 @@ export async function EditMotorcycleAction(
   }
 
   try {
-    const { chassi, model, forecastArrival, forecastArrivalStatus } = parsed.data;
+    const { chassi, model, forecastArrival, forecastArrivalStatus } =
+      parsed.data;
 
     if (!chassi || !model) {
       return {
@@ -63,11 +62,15 @@ export async function EditMotorcycleAction(
       chassi,
       model,
       forecastArrival: forecastArrival ?? null,
-      forecastArrivalStatus: (forecastArrivalStatus ?? "NO_INFORMATION") as ArrivalStatus,
+      forecastArrivalStatus: forecastArrivalStatus ?? "NO_INFORMATION",
     });
 
     revalidatePath("/inventory");
     revalidatePath("/tracking", "layout");
+    return {
+      status: "success",
+      message: "Motocicleta atualizada com sucesso.",
+    };
   } catch (error) {
     console.error("Erro ao editar motocicleta:", error);
 
@@ -76,6 +79,4 @@ export async function EditMotorcycleAction(
       message: "Erro interno ao atualizar os dados da motocicleta.",
     };
   }
-
-  redirect("/inventory");
 }

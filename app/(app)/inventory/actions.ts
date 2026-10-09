@@ -3,6 +3,7 @@
 import { requireAuth } from "@/app/data/user/require-auth";
 import {
   getEstoqueFilterOptions,
+  getMotorcycleStatusCounts,
   getMotorcyclesPaginated,
 } from "@/lib/data/motorcycle";
 
@@ -18,8 +19,9 @@ export async function getMotorcyclesPaginatedAction(params: {
 
   const pageSize = params.pageSize ?? 10;
 
-  const [filterOptions, paginated] = await Promise.all([
+  const [filterOptions, statusCounts, paginated] = await Promise.all([
     getEstoqueFilterOptions(),
+    getMotorcycleStatusCounts(),
     getMotorcyclesPaginated({
       page: params.page,
       pageSize,
@@ -39,6 +41,7 @@ export async function getMotorcyclesPaginatedAction(params: {
     total: paginated.total,
     totalPages: paginated.totalPages,
     page: params.page,
+    statusCounts,
     filterOptions,
   };
 }

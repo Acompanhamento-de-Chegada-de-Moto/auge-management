@@ -37,6 +37,19 @@ export async function getEstoqueFilterOptions() {
   };
 }
 
+export async function getMotorcycleStatusCounts() {
+  const [total, inTransit, arrived, delayed] = await Promise.all([
+    prisma.motorcycle.count(),
+    prisma.motorcycle.count({
+      where: { forecastArrivalStatus: "NO_INFORMATION" },
+    }),
+    prisma.motorcycle.count({ where: { forecastArrivalStatus: "ARRIVED" } }),
+    prisma.motorcycle.count({ where: { forecastArrivalStatus: "DELAYED" } }),
+  ]);
+
+  return { total, inTransit, arrived, delayed };
+}
+
 export async function getMotorcyclesPaginated(params: {
   page: number;
   pageSize: number;
