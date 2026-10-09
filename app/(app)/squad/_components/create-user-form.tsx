@@ -1,9 +1,17 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CheckCircle2Icon, Loader2, UserPlus } from "lucide-react";
-import { useId, useState } from "react";
+import { Loader2, UserPlus } from "lucide-react";
+import { useId } from "react";
 import { useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+
+import { createUserAction } from "@/app/(app)/squad/actions";
+import {
+  type CreateUserInput,
+  createUserSchema,
+} from "@/validators/create-user-schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,17 +22,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  type CreateUserInput,
-  createUserSchema,
-} from "@/validators/create-user-schema";
-import { createUserAction } from "@/app/(app)/settings/actions";
 
 export function CreateUserForm() {
-  const [success, setSuccess] = useState(false);
+  const router = useRouter();
   const nameId = useId();
   const emailId = useId();
   const passwordId = useId();
+  const roleId = useId();
 
   const {
     register,
@@ -36,85 +40,80 @@ export function CreateUserForm() {
     formState: { errors, isSubmitting },
   } = useForm<CreateUserInput>({
     resolver: zodResolver(createUserSchema),
-    defaultValues: { role: "USER" },
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+      role: "USER",
+    },
   });
 
   const selectedRole = watch("role");
 
-  const onSubmit = async (data: CreateUserInput) => {
-    const result = await createUserAction(data);
+  async function onSubmit(data: CreateUserInput) {
+    try {
+      const result = await createUserAction(data);
 
-    if (result.status === "success") {
-      setSuccess(true);
+      if (result.status !== "success") {
+        setError("root", { message: result.message });
+        return;
+      }
+
+      toast.success(result.message ?? "Usuário criado com sucesso.");
       reset();
-      setTimeout(() => setSuccess(false), 3000);
-    } else {
-      setError("root", { message: result.message });
+      router.refresh();
+    } catch {
+      toast.error("Não foi possível criar o usuário.");
     }
-  };
+  }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      {success && (
-        <div
-          role="status"
-          className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800 dark:border-green-900/50 dark:bg-green-900/20 dark:text-green-300"
-        >
-          <CheckCircle2Icon className="size-4 shrink-0" />
-          Usuário criado com sucesso!
-        </div>
-      )}
-
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
       {errors.root && (
-        <p role="alert" className="text-sm font-medium text-red-600">
+        <p role="alert" className="text-sm font-medium text-destructive">
           {errors.root.message}
         </p>
       )}
 
       <div className="space-y-1.5">
-        <label htmlFor={nameId} className="text-sm font-medium">
-          Nome
-        </label>
+        <Label htmlFor={nameId}>Nome</Label>
         <Input
           id={nameId}
           {...register("name")}
-          type="text"
           placeholder="Nome completo"
+          autoComplete="name"
           disabled={isSubmitting}
           aria-invalid={!!errors.name}
           aria-describedby={errors.name ? `${nameId}-error` : undefined}
         />
         {errors.name && (
-          <p id={`${nameId}-error`} className="text-xs text-red-600">
+          <p id={`${nameId}-error`} className="text-sm text-destructive">
             {errors.name.message}
           </p>
         )}
       </div>
 
       <div className="space-y-1.5">
-        <label htmlFor={emailId} className="text-sm font-medium">
-          E-mail
-        </label>
+        <Label htmlFor={emailId}>E-mail</Label>
         <Input
           id={emailId}
           {...register("email")}
           type="email"
           placeholder="nome@empresa.com"
+          autoComplete="email"
           disabled={isSubmitting}
           aria-invalid={!!errors.email}
           aria-describedby={errors.email ? `${emailId}-error` : undefined}
         />
         {errors.email && (
-          <p id={`${emailId}-error`} className="text-xs text-red-600">
+          <p id={`${emailId}-error`} className="text-sm text-destructive">
             {errors.email.message}
           </p>
         )}
       </div>
 
       <div className="space-y-1.5">
-        <label htmlFor={passwordId} className="text-sm font-medium">
-          Senha
-        </label>
+        <Label htmlFor={passwordId}>Senha</Label>
         <Input
           id={passwordId}
           {...register("password")}
@@ -126,21 +125,28 @@ export function CreateUserForm() {
           aria-describedby={errors.password ? `${passwordId}-error` : undefined}
         />
         {errors.password && (
-          <p id={`${passwordId}-error`} className="text-xs text-red-600">
+          <p id={`${passwordId}-error`} className="text-sm text-destructive">
             {errors.password.message}
           </p>
         )}
       </div>
 
       <div className="space-y-1.5">
-        <Label>Função</Label>
+        <Label htmlFor={roleId}>Função</Label>
         <Select
           value={selectedRole}
-          onValueChange={(v) => setValue("role", v as "USER" | "MANAGER" | "ADMIN")}
+          onValueChange={(value) => {
+            if (value === "USER" || value === "MANAGER" || value === "ADMIN") {
+              setValue("role", value, {
+                shouldDirty: true,
+                shouldValidate: true,
+              });
+            }
+          }}
           disabled={isSubmitting}
         >
-          <SelectTrigger>
-            <SelectValue />
+          <SelectTrigger id={roleId} aria-invalid={!!errors.role}>
+            <SelectValue placeholder="Selecione uma função" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="USER">Usuário</SelectItem>
@@ -148,6 +154,9 @@ export function CreateUserForm() {
             <SelectItem value="ADMIN">Administrador</SelectItem>
           </SelectContent>
         </Select>
+        {errors.role && (
+          <p className="text-sm text-destructive">{errors.role.message}</p>
+        )}
       </div>
 
       <Button type="submit" disabled={isSubmitting} className="w-full">

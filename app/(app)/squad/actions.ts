@@ -2,9 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/app/data/admin/require-admin";
-import { requireManager } from "@/app/data/admin/require-manager";
-import { uploadLogo } from "@/lib/cloudinary";
-import { getSetting, upsertSetting } from "@/lib/data/settings";
 import {
   createUser,
   deleteUser,
@@ -39,7 +36,7 @@ export async function createUserAction(data: CreateUserInput) {
       role: parsed.data.role,
     });
 
-    revalidatePath("/settings");
+    revalidatePath("/squad");
 
     return {
       status: "success" as const,
@@ -85,7 +82,7 @@ export async function updateUserAction(data: UpdateUserInput) {
       await setUserPassword(parsed.data.userId, parsed.data.newPassword);
     }
 
-    revalidatePath("/settings");
+    revalidatePath("/squad");
 
     return {
       status: "success" as const,
@@ -110,7 +107,7 @@ export async function deleteUserAction(userId: string) {
   try {
     await deleteUser(userId);
 
-    revalidatePath("/settings");
+    revalidatePath("/squad");
 
     return {
       status: "success" as const,
@@ -122,96 +119,6 @@ export async function deleteUserAction(userId: string) {
     return {
       status: "error" as const,
       message: "Erro interno ao remover usuário.",
-    };
-  }
-}
-
-export async function getLogoUrlAction() {
-  return getSetting("logo_url");
-}
-
-export async function uploadLogoAction(formData: FormData) {
-  await requireManager();
-
-  const file = formData.get("logo") as File | null;
-  if (!file) {
-    return { status: "error" as const, message: "Nenhum arquivo enviado." };
-  }
-
-  if (!file.type.startsWith("image/")) {
-    return {
-      status: "error" as const,
-      message: "Apenas imagens são permitidas.",
-    };
-  }
-
-  if (file.size > 2 * 1024 * 1024) {
-    return {
-      status: "error" as const,
-      message: "A imagem deve ter no máximo 2MB.",
-    };
-  }
-
-  try {
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    const url = await uploadLogo(buffer, file.name);
-
-    await upsertSetting("logo_url", url);
-
-    revalidatePath("/settings/cosmetics");
-
-    return {
-      status: "success" as const,
-      message: "Logo atualizada com sucesso.",
-    };
-  } catch (error) {
-    console.error("Erro ao fazer upload da logo:", error);
-
-    return {
-      status: "error" as const,
-      message: "Erro interno ao fazer upload da logo.",
-    };
-  }
-}
-
-export async function removeLogoAction() {
-  await requireManager();
-
-  try {
-    await upsertSetting("logo_url", "");
-
-    revalidatePath("/settings/cosmetics");
-
-    return {
-      status: "success" as const,
-      message: "Logo removida. A logo padrão será usada.",
-    };
-  } catch (error) {
-    console.error("Erro ao remover logo:", error);
-
-    return {
-      status: "error" as const,
-      message: "Erro interno ao remover logo.",
-    };
-  }
-}
-
-export async function saveSettingAction(key: string, value: string) {
-  await requireAdmin();
-
-  try {
-    await upsertSetting(key, value);
-
-    revalidatePath("/settings/system");
-
-    return { status: "success" as const, message: "Configuração salva." };
-  } catch (error) {
-    console.error("Erro ao salvar configuração:", error);
-
-    return {
-      status: "error" as const,
-      message: "Erro interno ao salvar configuração.",
     };
   }
 }
