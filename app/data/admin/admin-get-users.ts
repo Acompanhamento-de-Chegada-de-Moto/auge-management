@@ -1,23 +1,11 @@
 import "server-only";
 
-import { prisma } from "@/lib/db";
+import { getAdminUsers } from "@/lib/data/user";
 import { requireAdmin } from "./require-admin";
 
 export async function adminGetUsers() {
   await requireAdmin();
-
-  return prisma.user.findMany({
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      image: true,
-      role: true,
-      createdAt: true,
-      banned: true,
-    },
-    orderBy: { createdAt: "desc" },
-  });
+  return getAdminUsers();
 }
 
 export type AdminGetUsersType = Awaited<

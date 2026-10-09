@@ -2,12 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/app/data/admin/require-admin";
-import {
-  createUser,
-  deleteUser,
-  setUserPassword,
-  updateUser,
-} from "@/lib/data/user";
+import { createUser, deleteUser, updateUserAccount } from "@/lib/data/user";
 import {
   type CreateUserInput,
   createUserSchema,
@@ -73,14 +68,11 @@ export async function updateUserAction(data: UpdateUserInput) {
   }
 
   try {
-    await updateUser(parsed.data.userId, {
+    await updateUserAccount(parsed.data.userId, {
       name: parsed.data.name,
       image: parsed.data.image,
+      newPassword: parsed.data.newPassword,
     });
-
-    if (parsed.data.newPassword) {
-      await setUserPassword(parsed.data.userId, parsed.data.newPassword);
-    }
 
     revalidatePath("/squad");
 

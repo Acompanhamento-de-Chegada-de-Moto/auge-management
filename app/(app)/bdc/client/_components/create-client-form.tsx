@@ -102,10 +102,7 @@ export function CreateClientForm({
   return (
     <div className="mx-auto w-full max-w-360 space-y-6">
       <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(handleSubmit)}
-          className="space-y-6"
-        >
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
           <FormStepper
             steps={steps}
             currentStep={step}

@@ -1,7 +1,4 @@
-import { PencilIcon, Trash2Icon } from "lucide-react";
-import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
@@ -15,6 +12,7 @@ import {
 import { formatCPF } from "@/lib/cpf";
 import { formatDateBR } from "@/lib/utils";
 import type { ClientRow } from "../_lib/types";
+import { BDCRowActions } from "./bdc-row-actions";
 
 interface BDCMobileCardProps {
   row: ClientRow;
@@ -32,10 +30,6 @@ export function BDCMobileCard({ row }: BDCMobileCardProps) {
     ? mapRegistrationStatusLabel(motorcycle.registrationStatus)
     : null;
 
-  const editHref = motorcycle
-    ? `/bdc/client/${row.id}/edit?motorcycleId=${motorcycle.id}`
-    : `/bdc/client/${row.id}/edit`;
-
   return (
     <article className="rounded-lg border p-4">
       <div className="flex items-start justify-between gap-2">
@@ -44,31 +38,11 @@ export function BDCMobileCard({ row }: BDCMobileCardProps) {
           <p className="text-sm text-muted-foreground">{formatCPF(row.cpf)}</p>
         </div>
 
-        <div className="flex shrink-0 gap-1">
-          <Link
-            href={editHref}
-            aria-label={`Editar cliente ${row.name}`}
-            className={buttonVariants({
-              variant: "ghost",
-              size: "icon",
-              className: "min-h-[44px] min-w-[44px] rounded-full",
-            })}
-          >
-            <PencilIcon className="size-4" />
-          </Link>
-
-          <Link
-            href={`/bdc/client/${row.id}/delete`}
-            aria-label={`Excluir cliente ${row.name}`}
-            className={buttonVariants({
-              variant: "ghost",
-              size: "icon",
-              className: "min-h-[44px] min-w-[44px] rounded-full",
-            })}
-          >
-            <Trash2Icon className="size-4 text-red-500" />
-          </Link>
-        </div>
+        <BDCRowActions
+          clientId={row.id}
+          clientName={row.name}
+          motorcycleId={motorcycle?.id}
+        />
       </div>
 
       <dl className="mt-3 grid grid-cols-2 gap-3 text-sm">

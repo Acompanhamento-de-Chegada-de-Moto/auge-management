@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   Bike,
@@ -63,9 +63,9 @@ interface MotorcycleTableProps {
 
 const statusViews = [
   { label: "Todas", value: "all", countKey: "total" },
-  { label: "Em trânsito", value: "Em Trânsito", countKey: "inTransit" },
-  { label: "Chegou", value: "Chegou", countKey: "arrived" },
-  { label: "Atrasadas", value: "Atrasada", countKey: "delayed" },
+  { label: "Em trÃ¢nsito", value: "in-transit", countKey: "inTransit" },
+  { label: "Chegou", value: "arrived", countKey: "arrived" },
+  { label: "Atrasadas", value: "delayed", countKey: "delayed" },
 ] as const;
 
 export default function MotorcycleTable({
@@ -123,7 +123,7 @@ export default function MotorcycleTable({
         {copied ? (
           <>
             <CheckIcon className="size-3.5 text-green-600" />
-            <span role="status">Copiado</span>
+            <span aria-live="polite">Copiado</span>
           </>
         ) : (
           <>
@@ -261,7 +261,7 @@ export default function MotorcycleTable({
         <span>
           {total} {total === 1 ? "motocicleta" : "motocicletas"}
         </span>
-        {isPending && <span role="status">Atualizando lista…</span>}
+        {isPending && <span aria-live="polite">Atualizando listaâ€¦</span>}
       </div>
 
       {motorcycles.length === 0 ? (
@@ -270,17 +270,23 @@ export default function MotorcycleTable({
             <Bike className="size-5" />
           </div>
           <h2 className="font-medium">
-            Nenhuma motocicleta nesta visualização
+            Nenhuma motocicleta nesta visualizaÃ§Ã£o
           </h2>
           <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-            Ajuste os filtros ou cadastre uma motocicleta para começar a
+            Ajuste os filtros ou cadastre uma motocicleta para comeÃ§ar a
             acompanhar o estoque.
           </p>
-          {(activeFilters.model ||
-            activeFilters.status ||
-            activeFilters.chassis) && (
+          {activeFilters.model ||
+          activeFilters.status ||
+          activeFilters.chassis ? (
             <Button variant="outline" className="mt-4" onClick={clearFilters}>
               Limpar filtros
+            </Button>
+          ) : (
+            <Button asChild className="mt-4">
+              <Link href="/inventory/motorcycle/new">
+                Adicionar motocicleta
+              </Link>
             </Button>
           )}
         </div>
@@ -312,7 +318,7 @@ export default function MotorcycleTable({
                   </div>
                   <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t pt-3">
                     <span className="text-sm text-muted-foreground">
-                      Previsão:{" "}
+                      PrevisÃ£o:{" "}
                       {formatDateBR(motorcycle.forecastArrival) ?? "Sem data"}
                     </span>
                     <span
@@ -332,9 +338,9 @@ export default function MotorcycleTable({
                 <TableRow>
                   <TableHead>Motocicleta</TableHead>
                   <TableHead>Chassi</TableHead>
-                  <TableHead>Previsão de chegada</TableHead>
+                  <TableHead>PrevisÃ£o de chegada</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
+                  <TableHead className="text-right">AÃ§Ãµes</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -369,7 +375,7 @@ export default function MotorcycleTable({
 
           {totalPages > 1 && (
             <nav
-              aria-label="Paginação do estoque"
+              aria-label="PaginaÃ§Ã£o do estoque"
               className="flex items-center justify-center gap-4 border-t py-4"
             >
               <Button
@@ -381,7 +387,7 @@ export default function MotorcycleTable({
                 <ChevronLeft className="mr-1 size-4" /> Anterior
               </Button>
               <span className="text-sm text-muted-foreground">
-                Página {page} de {totalPages}
+                PÃ¡gina {page} de {totalPages}
               </span>
               <Button
                 variant="outline"
@@ -389,7 +395,7 @@ export default function MotorcycleTable({
                 disabled={page >= totalPages || isPending}
                 onClick={() => navigate({ page: String(page + 1) }, false)}
               >
-                Próxima <ChevronRight className="ml-1 size-4" />
+                PrÃ³xima <ChevronRight className="ml-1 size-4" />
               </Button>
             </nav>
           )}

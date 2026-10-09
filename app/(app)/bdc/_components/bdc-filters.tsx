@@ -2,7 +2,6 @@
 
 import { SearchIcon, XIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -27,10 +26,7 @@ interface BDCFiltersProps {
     arrived: string;
   };
   isPending: boolean;
-  onFilterChange: (
-    key: "sellerName" | "city" | "model" | "arrived",
-    value: string,
-  ) => void;
+  onFilterChange: (key: "sellerName" | "city" | "model", value: string) => void;
   onSearch: (value: string) => void;
   onClear: () => void;
 }
@@ -49,134 +45,122 @@ export function BDCFilters({
     setSearchInput(activeFilters.search);
   }, [activeFilters.search]);
 
-  function handleSearch() {
-    onSearch(searchInput.trim());
-  }
-
-  function handleClear() {
-    setSearchInput("");
-    onClear();
-  }
+  const hasFilters = Boolean(
+    activeFilters.sellerName ||
+      activeFilters.city ||
+      activeFilters.model ||
+      activeFilters.search ||
+      activeFilters.arrived,
+  );
 
   return (
-    <div className="mb-4 flex flex-wrap items-center gap-2">
-      <Select
-        value={activeFilters.sellerName || "all"}
-        onValueChange={(value) => onFilterChange("sellerName", value)}
-        disabled={isPending}
-      >
-        <SelectTrigger className="w-full sm:w-[180px]">
-          <SelectValue placeholder="Vendedor" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">Todos os vendedores</SelectItem>
-          {filterOptions.sellers.map((seller) => (
-            <SelectItem key={seller} value={seller}>
-              {seller}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      <Select
-        value={activeFilters.city || "all"}
-        onValueChange={(value) => onFilterChange("city", value)}
-        disabled={isPending}
-      >
-        <SelectTrigger className="w-full sm:w-[180px]">
-          <SelectValue placeholder="Cidade" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">Todas as cidades</SelectItem>
-          {filterOptions.cities.map((city) => (
-            <SelectItem key={city} value={city}>
-              {city}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      <Select
-        value={activeFilters.model || "all"}
-        onValueChange={(value) => onFilterChange("model", value)}
-        disabled={isPending}
-      >
-        <SelectTrigger className="w-full sm:w-[180px]">
-          <SelectValue placeholder="Modelo" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">Todos os modelos</SelectItem>
-          {filterOptions.models.map((model) => (
-            <SelectItem key={model} value={model}>
-              {model}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      <Select
-        value={activeFilters.arrived || "all"}
-        onValueChange={(value) => onFilterChange("arrived", value)}
-        disabled={isPending}
-      >
-        <SelectTrigger className="w-full sm:w-[180px]">
-          <SelectValue placeholder="Chegada" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">Todas</SelectItem>
-          <SelectItem value="true">Chegou</SelectItem>
-          <SelectItem value="false">Não chegou</SelectItem>
-        </SelectContent>
-      </Select>
-
-      <div className="relative w-full sm:w-[220px]">
-        <button
-          type="button"
-          onClick={handleSearch}
-          disabled={isPending}
-          aria-label="Buscar clientes"
-          className="absolute left-2 top-1/2 -translate-y-1/2 disabled:opacity-50"
-        >
-          <SearchIcon className="size-4 text-muted-foreground hover:text-foreground" />
-        </button>
-
-        <Input
-          placeholder="Buscar nome, CPF ou chassi"
-          value={searchInput}
-          onChange={(event) => setSearchInput(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") {
-              handleSearch();
-            }
-          }}
-          className="pl-8 pr-8"
-          disabled={isPending}
-        />
-
-        {searchInput && (
-          <button
-            type="button"
-            onClick={() => {
-              setSearchInput("");
-              onSearch("");
+    <div className="space-y-3">
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <div className="relative min-w-0 flex-1">
+          <SearchIcon className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por cliente, CPF ou chassi"
+            value={searchInput}
+            onChange={(event) => setSearchInput(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") onSearch(searchInput.trim());
             }}
+            className="pl-9 pr-9"
             disabled={isPending}
-            aria-label="Limpar busca"
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground disabled:opacity-50"
-          >
-            <XIcon className="size-4" />
-          </button>
-        )}
+          />
+          {searchInput && (
+            <button
+              type="button"
+              aria-label="Limpar busca"
+              disabled={isPending}
+              onClick={() => {
+                setSearchInput("");
+                onSearch("");
+              }}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground disabled:opacity-50"
+            >
+              <XIcon className="size-4" />
+            </button>
+          )}
+        </div>
+        <Button
+          onClick={() => onSearch(searchInput.trim())}
+          disabled={isPending}
+          className="sm:min-w-28"
+        >
+          <SearchIcon className="mr-2 size-4" /> Buscar
+        </Button>
       </div>
 
-      <Button
-        type="button"
-        variant="outline"
-        onClick={handleClear}
-        disabled={isPending}
-      >
-        Limpar filtros
-      </Button>
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+        <Select
+          value={activeFilters.sellerName || "all"}
+          onValueChange={(value) => onFilterChange("sellerName", value)}
+          disabled={isPending}
+        >
+          <SelectTrigger className="w-full sm:w-52">
+            <SelectValue placeholder="Todos os vendedores" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os vendedores</SelectItem>
+            {filterOptions.sellers.map((seller) => (
+              <SelectItem key={seller} value={seller}>
+                {seller}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={activeFilters.city || "all"}
+          onValueChange={(value) => onFilterChange("city", value)}
+          disabled={isPending}
+        >
+          <SelectTrigger className="w-full sm:w-52">
+            <SelectValue placeholder="Todas as cidades" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas as cidades</SelectItem>
+            {filterOptions.cities.map((city) => (
+              <SelectItem key={city} value={city}>
+                {city}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={activeFilters.model || "all"}
+          onValueChange={(value) => onFilterChange("model", value)}
+          disabled={isPending}
+        >
+          <SelectTrigger className="w-full sm:w-52">
+            <SelectValue placeholder="Todos os modelos" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os modelos</SelectItem>
+            {filterOptions.models.map((model) => (
+              <SelectItem key={model} value={model}>
+                {model}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {hasFilters && (
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => {
+              setSearchInput("");
+              onClear();
+            }}
+            disabled={isPending}
+          >
+            Limpar filtros
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

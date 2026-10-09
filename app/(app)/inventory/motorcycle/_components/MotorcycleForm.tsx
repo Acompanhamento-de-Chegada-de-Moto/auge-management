@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
@@ -34,8 +34,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
 import type { ApiResponse } from "@/lib/types";
+import { cn } from "@/lib/utils";
 import {
   type CreateMotorcycleType,
   createMotorcycleSchema,
@@ -92,7 +92,9 @@ export function MotorcycleForm({
         router.push("/inventory");
         router.refresh();
       } catch {
-        toast.error("Não foi possível salvar a motocicleta. Tente novamente.");
+        toast.error(
+          "NÃ£o foi possÃ­vel salvar a motocicleta. Tente novamente.",
+        );
       }
     });
   }
@@ -104,7 +106,7 @@ export function MotorcycleForm({
           <div className="space-y-7 p-5 sm:p-7">
             <section className="space-y-4">
               <div>
-                <h2 className="text-base font-semibold">Identificação</h2>
+                <h2 className="text-base font-semibold">IdentificaÃ§Ã£o</h2>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Informe os dados que identificam esta motocicleta no estoque.
                 </p>
@@ -127,7 +129,7 @@ export function MotorcycleForm({
                           }
                         />
                       </FormControl>
-                      <FormDescription>Até 17 caracteres.</FormDescription>
+                      <FormDescription>AtÃ© 17 caracteres.</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -152,8 +154,8 @@ export function MotorcycleForm({
               <div>
                 <h2 className="text-base font-semibold">Chegada</h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  A previsão é opcional. Sem data, a unidade permanece sem
-                  previsão.
+                  A previsÃ£o Ã© opcional. Sem data, a unidade permanece sem
+                  previsÃ£o.
                 </p>
               </div>
               <div className="grid gap-5 sm:grid-cols-2">
@@ -162,7 +164,7 @@ export function MotorcycleForm({
                   name="forecastArrival"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
-                      <FormLabel>Previsão de chegada</FormLabel>
+                      <FormLabel>PrevisÃ£o de chegada</FormLabel>
                       <Popover>
                         <PopoverTrigger asChild>
                           <FormControl>
@@ -225,7 +227,7 @@ export function MotorcycleForm({
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="NO_INFORMATION">
-                            Sem confirmação
+                            Sem confirmaÃ§Ã£o
                           </SelectItem>
                           <SelectItem value="ARRIVED">Chegou</SelectItem>
                           <SelectItem value="DELAYED">Atrasada</SelectItem>
@@ -243,10 +245,10 @@ export function MotorcycleForm({
                   .isBefore(dayjs().startOf("day")) &&
                 forecastArrivalStatus === "NO_INFORMATION" && (
                   <p
-                    role="status"
+                    aria-live="polite"
                     className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200"
                   >
-                    A previsão já passou. Atualize o status para confirmar a
+                    A previsÃ£o jÃ¡ passou. Atualize o status para confirmar a
                     chegada ou registrar o atraso.
                   </p>
                 )}
@@ -279,11 +281,11 @@ export function MotorcycleForm({
               )}
               {isPending
                 ? mode === "create"
-                  ? "Salvando…"
-                  : "Salvando…"
+                  ? "Salvandoâ€¦"
+                  : "Salvandoâ€¦"
                 : mode === "create"
                   ? "Adicionar ao estoque"
-                  : "Salvar alterações"}
+                  : "Salvar alteraÃ§Ãµes"}
             </Button>
           </footer>
         </form>

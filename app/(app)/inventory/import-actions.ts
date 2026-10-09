@@ -3,109 +3,63 @@
 import { revalidatePath } from "next/cache";
 import { requireAuth } from "@/app/data/user/require-auth";
 import {
-  createMotorcycle,
-  getAllMotorcyclesForImport,
-  updateMotorcycleByChassis,
+  importMotorcycleSpreadsheet,
+  type MotorcycleImportRow,
 } from "@/lib/data/motorcycle";
 
-interface ImportRow {
-  chassis: string;
-  model: string;
-  date: Date | null;
+function formatImportMessage(counts: {
+  created: number;
+  updated: number;
+  skipped: number;
+}): string {
+  const parts: string[] = [];
+  if (counts.created) {
+    parts.push(
+      `${counts.created} moto${counts.created === 1 ? "" : "s"} criada${counts.created === 1 ? "" : "s"}`,
+    );
+  }
+  if (counts.updated) {
+    parts.push(
+      `${counts.updated} moto${counts.updated === 1 ? "" : "s"} atualizada${counts.updated === 1 ? "" : "s"}`,
+    );
+  }
+  if (counts.skipped) {
+    parts.push(
+      `${counts.skipped} linha${counts.skipped === 1 ? "" : "s"} ignorada${counts.skipped === 1 ? "" : "s"}`,
+    );
+  }
+  return `Importação concluída. ${parts.length ? parts.join(", ") : "Nenhuma alteração."}`;
 }
 
 export async function importMotorcyclesAction(
-  rows: ImportRow[],
+  rows: MotorcycleImportRow[],
 ): Promise<{ status: "success" | "error"; message: string }> {
   await requireAuth();
 
+  if (!Array.isArray(rows) || rows.length === 0) {
+    return {
+      status: "error",
+      message: "A planilha não contém linhas para importar.",
+    };
+  }
+  if (rows.length > 10_000) {
+    return {
+      status: "error",
+      message: "A importação está limitada a 10.000 linhas por vez.",
+    };
+  }
+
   try {
-    const existingMotorcycles = await getAllMotorcyclesForImport();
-    const motoByChassi = new Map(
-      existingMotorcycles.map((m) => [m.chassi.trim().toUpperCase(), m]),
-    );
-    const processedChassis = new Set<string>();
-
-    let created = 0;
-    let updated = 0;
-    let skipped = 0;
-
-    for (const row of rows) {
-      const chassi = row.chassis.trim().toUpperCase();
-      const model = row.model.trim();
-
-      if (!chassi) {
-        skipped++;
-        continue;
-      }
-
-      if (processedChassis.has(chassi)) {
-        skipped++;
-        continue;
-      }
-
-      const existing = motoByChassi.get(chassi);
-
-      if (existing) {
-        const shouldUpdate =
-          (row.date && !existing.forecastArrival) ||
-          (row.date &&
-            existing.forecastArrival &&
-            existing.forecastArrival.getTime() !== row.date.getTime()) ||
-          (model && existing.model !== model);
-
-        if (shouldUpdate) {
-          await updateMotorcycleByChassis(existing.chassi, {
-            model: model || existing.model,
-            forecastArrival: row.date ?? existing.forecastArrival ?? null,
-          });
-          updated++;
-        }
-      } else {
-        await createMotorcycle({
-          chassi,
-          model,
-          forecastArrival: row.date,
-        });
-        created++;
-      }
-
-      processedChassis.add(chassi);
-    }
-
+    const counts = await importMotorcycleSpreadsheet(rows);
     revalidatePath("/inventory");
     revalidatePath("/bdc");
     revalidatePath("/tracking", "layout");
-
-    const parts: string[] = [];
-    if (created > 0) {
-      parts.push(
-        `${created} moto${created > 1 ? "s" : ""} criada${created > 1 ? "s" : ""}`,
-      );
-    }
-    if (updated > 0) {
-      parts.push(
-        `${updated} moto${updated > 1 ? "s" : ""} atualizada${updated > 1 ? "s" : ""}`,
-      );
-    }
-    if (skipped > 0) {
-      parts.push(
-        `${skipped} linha${skipped > 1 ? "s" : ""} ignorada${skipped > 1 ? "s" : ""}`,
-      );
-    }
-
-    return {
-      status: "success",
-      message: `Importação concluída. ${parts.length > 0 ? parts.join(", ") : "Nenhuma alteração."}.`,
-    };
-  } catch (err) {
-    console.error("[import] Erro fatal:", err);
+    return { status: "success", message: formatImportMessage(counts) };
+  } catch (error) {
+    console.error("[inventory-import] Erro ao importar planilha:", error);
     return {
       status: "error",
-      message:
-        err instanceof Error
-          ? err.message
-          : "Erro interno ao importar planilha.",
+      message: "Não foi possível concluir a importação.",
     };
   }
 }

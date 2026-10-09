@@ -6,8 +6,8 @@ import { Suspense } from "react";
 import { BDCTable } from "@/app/(app)/bdc/_components/bdc-table";
 import { SpreadsheetUploadDialog } from "@/app/(app)/bdc/_components/SpreadsheetUploadDialog";
 import { Button } from "@/components/ui/button";
-import { BDCPageSkeleton } from "./_components/bdc-page-skeleton";
 import { getClientsPaginatedAction } from "./_actions/get-clients-paginated-action";
+import { BDCPageSkeleton } from "./_components/bdc-page-skeleton";
 
 export const metadata: Metadata = {
   title: "BDC",
@@ -76,8 +76,10 @@ async function RenderClients({
   return (
     <BDCTable
       rows={result.rows}
+      totalClients={result.totalClients}
       totalPages={result.totalPages}
       page={result.page}
+      statusCounts={result.statusCounts}
       filterOptions={result.filterOptions}
       activeFilters={{
         sellerName: params.sellerName ?? "",

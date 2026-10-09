@@ -2,11 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAuth } from "@/app/data/user/require-auth";
-import {
-  getMotorcycleByIdWithClient,
-  updateMotorcycle,
-  getMotorcycleByChassis,
-} from "@/lib/data/motorcycle";
+import { updateMotorcycleSafely } from "@/lib/data/motorcycle";
 import type { ApiResponse } from "@/lib/types";
 import {
   type CreateMotorcycleType,
@@ -23,47 +19,21 @@ export async function EditMotorcycleAction(
   if (!parsed.success) {
     return {
       status: "error",
-      message: "Dados do formulário inválidos.",
+      message:
+        parsed.error.issues[0]?.message ?? "Dados do formulário inválidos.",
     };
   }
 
   try {
     const { chassi, model, forecastArrival, forecastArrivalStatus } =
       parsed.data;
-
-    if (!chassi || !model) {
-      return {
-        status: "error",
-        message: "Chassi e modelo são obrigatórios.",
-      };
-    }
-
-    const currentMotorcycle = await getMotorcycleByIdWithClient(id);
-
-    if (!currentMotorcycle) {
-      return {
-        status: "error",
-        message: "Motocicleta não encontrada.",
-      };
-    }
-
-    if (chassi !== currentMotorcycle.chassi) {
-      const chassiExists = await getMotorcycleByChassis(chassi);
-
-      if (chassiExists) {
-        return {
-          status: "error",
-          message: "Este chassi já está cadastrado em outra motocicleta.",
-        };
-      }
-    }
-
-    await updateMotorcycle(id, {
-      chassi,
-      model,
-      forecastArrival: forecastArrival ?? null,
-      forecastArrivalStatus: forecastArrivalStatus ?? "NO_INFORMATION",
+    const error = await updateMotorcycleSafely(id, {
+      chassi: chassi.trim().toUpperCase(),
+      model: model.trim(),
+      forecastArrival,
+      forecastArrivalStatus,
     });
+    if (error) return { status: "error", message: error };
 
     revalidatePath("/inventory");
     revalidatePath("/tracking", "layout");
@@ -73,7 +43,6 @@ export async function EditMotorcycleAction(
     };
   } catch (error) {
     console.error("Erro ao editar motocicleta:", error);
-
     return {
       status: "error",
       message: "Erro interno ao atualizar os dados da motocicleta.",

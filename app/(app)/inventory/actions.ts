@@ -7,6 +7,8 @@ import {
   getMotorcyclesPaginated,
 } from "@/lib/data/motorcycle";
 
+const arrivalFilters = ["in-transit", "arrived", "delayed"] as const;
+
 export async function getMotorcyclesPaginatedAction(params: {
   page: number;
   pageSize?: number;
@@ -17,21 +19,24 @@ export async function getMotorcyclesPaginatedAction(params: {
 }) {
   await requireAuth();
 
-  const pageSize = params.pageSize ?? 10;
+  const page = Number.isFinite(params.page)
+    ? Math.max(1, Math.floor(params.page))
+    : 1;
+  const pageSize = Math.min(
+    100,
+    Math.max(1, Math.floor(params.pageSize ?? 10)),
+  );
+  const status = arrivalFilters.find((value) => value === params.status);
 
   const [filterOptions, statusCounts, paginated] = await Promise.all([
     getEstoqueFilterOptions(),
     getMotorcycleStatusCounts(),
     getMotorcyclesPaginated({
-      page: params.page,
+      page,
       pageSize,
-      model: params.model,
-      status: params.status as
-        | "Em Trânsito"
-        | "Chegou"
-        | "Atrasada"
-        | undefined,
-      chassisSearch: params.chassisSearch,
+      model: params.model?.trim() || undefined,
+      status,
+      chassisSearch: params.chassisSearch?.trim() || undefined,
       arrived: params.arrived,
     }),
   ]);
@@ -40,7 +45,7 @@ export async function getMotorcyclesPaginatedAction(params: {
     rows: paginated.motorcycles,
     total: paginated.total,
     totalPages: paginated.totalPages,
-    page: params.page,
+    page,
     statusCounts,
     filterOptions,
   };

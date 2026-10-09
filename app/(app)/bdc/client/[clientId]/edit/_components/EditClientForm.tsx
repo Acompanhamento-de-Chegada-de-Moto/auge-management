@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
@@ -11,13 +11,14 @@ import {
   Plus,
   SearchIcon,
   ShieldCheck,
-  User,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { EditClientAction } from "@/app/(app)/bdc/_actions/edit-client-action";
 import { SidebarSummary } from "@/app/(app)/bdc/_components/SidebarSummary";
-import { SectionHeader } from "../../../../_components/section-header";
+import type { userGetMotorcycle } from "@/app/data/user/user-get-motorcycle";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -41,21 +42,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { formatCPF, maskCPFIncremental } from "@/lib/cpf";
+import { formatCPF } from "@/lib/cpf";
 import type { getClientById } from "@/lib/data/client";
 import { cn } from "@/lib/utils";
 import {
   type CustomerFormData,
   customerSchema,
 } from "@/validators/customer-schema";
-import { EditClientAction } from "@/app/(app)/bdc/_actions/edit-client-action";
+import { SectionHeader } from "../../../../_components/section-header";
+import { CustomerSection } from "../../../_components/customer-section";
 
 type Client = NonNullable<Awaited<ReturnType<typeof getClientById>>>;
 
 interface EditClientFormProps {
   client: Client;
   selectedMotorcycle: Client["motorcycles"][number] | null;
-  searchChassisAction: (chassis: string) => Promise<any>;
+  searchChassisAction: typeof userGetMotorcycle;
 }
 
 export function EditClientForm({
@@ -63,6 +65,7 @@ export function EditClientForm({
   selectedMotorcycle,
   searchChassisAction,
 }: EditClientFormProps) {
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [showNewMotorcycle, setShowNewMotorcycle] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
@@ -116,7 +119,7 @@ export function EditClientForm({
 
       if (motorcycle) {
         form.setValue("model", motorcycle.model);
-        form.setValue("city", motorcycle.city || "");
+        form.setValue("city", motorcycle.client?.city || "");
         form.setValue(
           "forecastDate",
           motorcycle.forecastArrival
@@ -155,7 +158,11 @@ export function EditClientForm({
 
       if (result.status === "error") {
         toast.error(result.message);
+        return;
       }
+
+      toast.success(result.message);
+      router.push("/bdc");
     });
   };
 
@@ -187,7 +194,7 @@ export function EditClientForm({
                     {hasExistingMotorcycle ? (
                       <FormControl>
                         <Input
-                          placeholder="Número do chassi"
+                          placeholder="NÃºmero do chassi"
                           className="font-mono uppercase bg-muted text-muted-foreground"
                           {...field}
                           readOnly
@@ -198,7 +205,7 @@ export function EditClientForm({
                         <FormControl>
                           <div className="relative flex-1">
                             <Input
-                              placeholder="Número do chassi"
+                              placeholder="NÃºmero do chassi"
                               className={cn(
                                 "font-mono uppercase pr-9",
                                 hasSearched &&
@@ -245,12 +252,12 @@ export function EditClientForm({
 
               {hasSearched && motorcycleFound && (
                 <div
-                  role="status"
+                  aria-live="polite"
                   className="mt-3 flex items-start gap-2 rounded-lg border border-green-200/60 bg-green-50 p-3 text-sm text-green-800 dark:border-green-900/40 dark:bg-green-950/30 dark:text-green-400"
                 >
                   <CheckCircle2 className="mt-0.5 size-4 shrink-0" />
                   <span>
-                    Moto localizada no estoque. Modelo, cidade e previsão
+                    Moto localizada no estoque. Modelo, cidade e previsÃ£o
                     preenchidos automaticamente.
                   </span>
                 </div>
@@ -261,15 +268,15 @@ export function EditClientForm({
                 !motorcycleFound &&
                 !hasExistingMotorcycle && (
                   <div
-                    role="status"
+                    aria-live="polite"
                     className="mt-3 flex items-start gap-2 rounded-lg border border-blue-200/60 bg-blue-50 p-3 text-sm text-blue-800 dark:border-blue-900/40 dark:bg-blue-950/40 dark:text-blue-400"
                   >
                     <span aria-hidden className="mt-0.5">
-                      ℹ️
+                      â„¹ï¸
                     </span>
                     <span>
-                      Esta moto não está no estoque. O modelo e a previsão
-                      informados abaixo criarão um registro de previsão
+                      Esta moto nÃ£o estÃ¡ no estoque. O modelo e a previsÃ£o
+                      informados abaixo criarÃ£o um registro de previsÃ£o
                       automaticamente.
                     </span>
                   </div>
@@ -299,74 +306,7 @@ export function EditClientForm({
               </div>
             </section>
 
-            <section className="rounded-xl border bg-card p-6 shadow-sm">
-              <SectionHeader icon={User} title="Dados do Cliente" />
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="customerName"
-                  render={({ field }) => (
-                    <FormItem className="sm:col-span-2">
-                      <FormLabel>Cliente</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Nome do cliente" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="cpf"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>CPF</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="000.000.000-00"
-                          inputMode="numeric"
-                          {...field}
-                          onChange={(e) => {
-                            field.onChange(maskCPFIncremental(e.target.value));
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="sellerName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Vendedor (a)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Nome do vendedor" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="city"
-                  render={({ field }) => (
-                    <FormItem className="sm:col-span-2">
-                      <FormLabel>Cidade</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Cidade" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </section>
+            <CustomerSection form={form} />
 
             <section className="rounded-xl border bg-card p-6 shadow-sm">
               <SectionHeader
@@ -419,7 +359,7 @@ export function EditClientForm({
                   name="forecastDate"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
-                      <FormLabel>Previsão de Chegada</FormLabel>
+                      <FormLabel>PrevisÃ£o de Chegada</FormLabel>
                       <Popover>
                         <PopoverTrigger asChild>
                           <FormControl>
@@ -492,11 +432,11 @@ export function EditClientForm({
                       className="sm:col-span-2 flex items-start gap-2 rounded-lg border border-amber-200/60 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-400"
                     >
                       <span aria-hidden className="mt-0.5">
-                        ⚠️
+                        âš ï¸
                       </span>
                       <span>
-                        A data prevista para chegada já passou. Confirme se a
-                        moto chegou ou está atrasada.
+                        A data prevista para chegada jÃ¡ passou. Confirme se a
+                        moto chegou ou estÃ¡ atrasada.
                       </span>
                     </div>
                   )}
@@ -598,7 +538,7 @@ export function EditClientForm({
                         <FormLabel>Chassi (nova moto)</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="Número do chassi"
+                            placeholder="NÃºmero do chassi"
                             className="font-mono uppercase"
                             {...field}
                           />
@@ -630,7 +570,7 @@ export function EditClientForm({
                     name="newForecastDate"
                     render={({ field }) => (
                       <FormItem className="flex flex-col">
-                        <FormLabel>Previsão de Chegada</FormLabel>
+                        <FormLabel>PrevisÃ£o de Chegada</FormLabel>
                         <Popover>
                           <PopoverTrigger asChild>
                             <FormControl>
@@ -675,7 +615,7 @@ export function EditClientForm({
                 className="w-full sm:w-auto sm:min-w-[200px]"
               >
                 {pending && <Loader2 className="size-4 mr-2 animate-spin" />}
-                {pending ? "Salvando..." : "Salvar Alterações"}
+                {pending ? "Salvando..." : "Salvar AlteraÃ§Ãµes"}
               </Button>
             </div>
           </form>

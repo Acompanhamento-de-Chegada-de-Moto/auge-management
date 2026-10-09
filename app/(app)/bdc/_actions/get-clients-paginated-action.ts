@@ -1,7 +1,11 @@
 "use server";
 
 import { requireAuth } from "@/app/data/user/require-auth";
-import { getBDCFilterOptions, getClientsPaginated } from "@/lib/data/client";
+import {
+  getBDCFilterOptions,
+  getBDCStatusCounts,
+  getClientsPaginated,
+} from "@/lib/data/client";
 import { mapClientsToRows } from "../_lib/client-mapper";
 import type { GetClientsPaginatedParams, PaginatedResult } from "../_lib/types";
 
@@ -16,7 +20,7 @@ export async function getClientsPaginatedAction(
     Math.max(1, Math.floor(params.pageSize ?? 10)),
   );
 
-  const [paginated, filterOptions] = await Promise.all([
+  const [paginated, filterOptions, statusCounts] = await Promise.all([
     getClientsPaginated({
       page,
       pageSize,
@@ -27,6 +31,7 @@ export async function getClientsPaginatedAction(
       arrived: params.arrived,
     }),
     getBDCFilterOptions(),
+    getBDCStatusCounts(),
   ]);
 
   return {
@@ -34,6 +39,7 @@ export async function getClientsPaginatedAction(
     totalClients: paginated.total,
     totalPages: paginated.totalPages,
     page,
+    statusCounts,
     filterOptions: {
       sellers: filterOptions.sellers,
       cities: filterOptions.cities,

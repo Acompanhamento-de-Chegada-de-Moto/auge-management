@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAuth } from "@/app/data/user/require-auth";
-import { prisma } from "@/lib/db";
+import { deleteClient } from "@/lib/data/client";
 import type { ApiResponse } from "@/lib/types";
 
 export async function DeleteClientAction(
@@ -11,11 +11,7 @@ export async function DeleteClientAction(
   await requireAuth();
 
   try {
-    await prisma.client.delete({
-      where: {
-        id: clientId,
-      },
-    });
+    await deleteClient(clientId);
 
     revalidatePath("/bdc");
     revalidatePath("/inventory");

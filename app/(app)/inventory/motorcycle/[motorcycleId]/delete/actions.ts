@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAuth } from "@/app/data/user/require-auth";
-import { deleteMotorcycle, getMotorcycleById } from "@/lib/data/motorcycle";
+import { deleteMotorcycle } from "@/lib/data/motorcycle";
 import type { ApiResponse } from "@/lib/types";
 
 export async function DeleteMotorcycleAction(
@@ -11,16 +11,14 @@ export async function DeleteMotorcycleAction(
   await requireAuth();
 
   try {
-    const motorcycle = await getMotorcycleById(motorcycleId);
+    const result = await deleteMotorcycle(motorcycleId);
 
-    if (!motorcycle) {
+    if (result.count === 0) {
       return {
         status: "error",
         message: "Motocicleta não encontrada no sistema.",
       };
     }
-
-    await deleteMotorcycle(motorcycleId);
 
     revalidatePath("/inventory");
     revalidatePath("/tracking", "layout");

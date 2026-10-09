@@ -1,7 +1,4 @@
-import { PencilIcon, Trash2Icon } from "lucide-react";
-import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -23,6 +20,7 @@ import {
 import { formatCPF } from "@/lib/cpf";
 import { formatDateBR } from "@/lib/utils";
 import type { ClientRow } from "../_lib/types";
+import { BDCRowActions } from "./bdc-row-actions";
 
 interface BDCDesktopTableProps {
   rows: ClientRow[];
@@ -70,7 +68,7 @@ export function BDCDesktopTable({ rows }: BDCDesktopTableProps) {
               Situação
             </TableHead>
 
-            <TableHead className="w-[88px] whitespace-normal px-1">
+            <TableHead className="w-[140px] whitespace-normal px-2">
               Ações
             </TableHead>
           </TableRow>
@@ -88,10 +86,6 @@ export function BDCDesktopTable({ rows }: BDCDesktopTableProps) {
             const registrationStatus = motorcycle?.registrationStatus
               ? mapRegistrationStatusLabel(motorcycle.registrationStatus)
               : null;
-
-            const editHref = motorcycle
-              ? `/bdc/client/${row.id}/edit?motorcycleId=${motorcycle.id}`
-              : `/bdc/client/${row.id}/edit`;
 
             return (
               <TableRow
@@ -164,32 +158,12 @@ export function BDCDesktopTable({ rows }: BDCDesktopTableProps) {
                   )}
                 </TableCell>
 
-                <TableCell className="px-1">
-                  <div className="flex items-center justify-center gap-0">
-                    <Link
-                      href={editHref}
-                      aria-label={`Editar cliente ${row.name}`}
-                      className={buttonVariants({
-                        variant: "ghost",
-                        size: "icon",
-                        className: "size-9 shrink-0 rounded-full",
-                      })}
-                    >
-                      <PencilIcon className="size-4" />
-                    </Link>
-
-                    <Link
-                      href={`/bdc/client/${row.id}/delete`}
-                      aria-label={`Excluir cliente ${row.name}`}
-                      className={buttonVariants({
-                        variant: "ghost",
-                        size: "icon",
-                        className: "size-9 shrink-0 rounded-full",
-                      })}
-                    >
-                      <Trash2Icon className="size-4 text-red-500" />
-                    </Link>
-                  </div>
+                <TableCell className="px-2">
+                  <BDCRowActions
+                    clientId={row.id}
+                    clientName={row.name}
+                    motorcycleId={motorcycle?.id}
+                  />
                 </TableCell>
               </TableRow>
             );

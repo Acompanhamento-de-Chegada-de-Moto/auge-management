@@ -2,8 +2,8 @@ import { PlusIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
-import { getMotorcyclesPaginatedAction } from "@/app/(app)/inventory/actions";
 import { MotorcycleSpreadsheetUploadDialog } from "@/app/(app)/inventory/_components/MotorcycleSpreadsheetUploadDialog";
+import { getMotorcyclesPaginatedAction } from "@/app/(app)/inventory/actions";
 import { Button } from "@/components/ui/button";
 import {
   Table,

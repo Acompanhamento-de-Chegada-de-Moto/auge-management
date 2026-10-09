@@ -22,6 +22,11 @@ export interface PaginatedResult {
   totalClients: number;
   totalPages: number;
   page: number;
+  statusCounts: {
+    total: number;
+    arrived: number;
+    waiting: number;
+  };
   filterOptions: {
     sellers: string[];
     cities: string[];

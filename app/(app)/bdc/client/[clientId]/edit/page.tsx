@@ -2,8 +2,8 @@ import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { buttonVariants } from "@/components/ui/button";
 import { userGetMotorcycle } from "@/app/data/user/user-get-motorcycle";
+import { buttonVariants } from "@/components/ui/button";
 import { getClientById } from "@/lib/data/client";
 import { EditClientForm } from "./_components/EditClientForm";
 
@@ -34,27 +34,40 @@ export default async function EditarClientePage({
   const selectedMotorcycle =
     (motorcycleId
       ? client.motorcycles.find((m) => m.id === motorcycleId)
-      : undefined) ?? client.motorcycles[0] ?? null;
+      : undefined) ??
+    client.motorcycles[0] ??
+    null;
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-        <h1 className="text-2xl font-bold">Editar Cliente</h1>
-        <Link
-          title="voltar"
-          href="/bdc"
-          className={buttonVariants({
-            variant: "secondary",
-          })}
-        >
-          <ArrowLeft className="size-4 mr-2" /> Voltar
-        </Link>
+    <main className="min-w-0 px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-7xl space-y-6">
+        <header className="flex flex-col gap-4">
+          <Link
+            href="/bdc"
+            className={buttonVariants({
+              variant: "ghost",
+              size: "sm",
+              className: "-ml-3 w-fit text-muted-foreground",
+            })}
+          >
+            <ArrowLeft className="mr-2 size-4" /> Voltar para clientes
+          </Link>
+          <div className="space-y-1">
+            <h1 className="text-2xl font-semibold tracking-tight">
+              Editar cliente
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Atualize os dados de {client.name} e o acompanhamento da
+              motocicleta.
+            </p>
+          </div>
+        </header>
+        <EditClientForm
+          client={client}
+          selectedMotorcycle={selectedMotorcycle}
+          searchChassisAction={userGetMotorcycle}
+        />
       </div>
-      <EditClientForm
-        client={client}
-        selectedMotorcycle={selectedMotorcycle}
-        searchChassisAction={userGetMotorcycle}
-      />
-    </div>
+    </main>
   );
 }

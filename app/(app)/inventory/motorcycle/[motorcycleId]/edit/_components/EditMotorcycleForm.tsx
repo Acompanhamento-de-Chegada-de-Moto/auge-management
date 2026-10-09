@@ -1,8 +1,8 @@
 "use client";
 
-import { EditMotorcycleAction } from "../actions";
-import { MotorcycleForm } from "../../../_components/MotorcycleForm";
 import type { getMotorcycleByIdWithClient } from "@/lib/data/motorcycle";
+import { MotorcycleForm } from "../../../_components/MotorcycleForm";
+import { EditMotorcycleAction } from "../actions";
 
 type Motorcycle = NonNullable<
   Awaited<ReturnType<typeof getMotorcycleByIdWithClient>>

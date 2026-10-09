@@ -1,39 +1,9 @@
 import "server-only";
 
-import { prisma } from "@/lib/db";
+import { getPublicClientByCpf } from "@/lib/data/client";
 
 export async function PublicGetClientByCPF(cpf: string) {
-  const data = await prisma.client.findUnique({
-    where: {
-      cpf,
-    },
-    select: {
-      id: true,
-      name: true,
-      cpf: true,
-      city: true,
-      sellersName: true,
-      billingDate: true,
-      createdAt: true,
-      // Traz as motocicletas vinculadas a este cliente se houver
-      motorcycles: {
-        select: {
-          id: true,
-          chassi: true,
-          model: true,
-          forecastArrival: true,
-          forecastArrivalStatus: true,
-          registrationStatus: true,
-          registrationDate: true,
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-      },
-    },
-  });
-
-  return data;
+  return getPublicClientByCpf(cpf);
 }
 
 export type PublicGetClientByCPFType = Awaited<

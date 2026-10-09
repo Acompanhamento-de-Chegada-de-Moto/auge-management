@@ -1,7 +1,8 @@
-"use client";
+﻿"use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
+import { Button } from "@/components/ui/button";
 
 import type { BDCTableProps } from "../bdc-table.types";
 import { BDCDesktopTable } from "./bdc-desktop-table";
@@ -10,8 +11,10 @@ import { BDCMobileCard } from "./bdc-mobile-card";
 
 export function BDCTable({
   rows,
+  totalClients,
   totalPages,
   page,
+  statusCounts,
   filterOptions,
   activeFilters,
 }: BDCTableProps) {
@@ -57,6 +60,48 @@ export function BDCTable({
 
   return (
     <div className="min-w-0 space-y-4">
+      <fieldset className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+        <legend className="sr-only">Visualizações por chegada</legend>
+        {[
+          {
+            label: "Todos os clientes",
+            value: "all",
+            count: statusCounts.total,
+          },
+          { label: "Moto chegou", value: "true", count: statusCounts.arrived },
+          {
+            label: "Aguardando chegada",
+            value: "false",
+            count: statusCounts.waiting,
+          },
+        ].map((view) => {
+          const selected = (activeFilters.arrived || "all") === view.value;
+          return (
+            <button
+              key={view.value}
+              type="button"
+              aria-pressed={selected}
+              disabled={isPending}
+              onClick={() => updateParams({ arrived: view.value })}
+              className={`flex min-h-16 items-center justify-between rounded-xl border px-4 text-left transition-colors ${
+                selected
+                  ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                  : "bg-card hover:bg-muted/50"
+              }`}
+            >
+              <span
+                className={`text-sm ${selected ? "font-medium" : "text-muted-foreground"}`}
+              >
+                {view.label}
+              </span>
+              <span className="text-lg font-semibold tabular-nums">
+                {view.count}
+              </span>
+            </button>
+          );
+        })}
+      </fieldset>
+
       <BDCFilters
         filterOptions={filterOptions}
         activeFilters={activeFilters}
@@ -66,9 +111,27 @@ export function BDCTable({
         onClear={handleClearFilters}
       />
 
+      <div className="flex items-center justify-between text-sm text-muted-foreground">
+        <span>
+          {totalClients} {totalClients === 1 ? "cliente" : "clientes"}
+        </span>
+        {isPending && <span aria-live="polite">Atualizando lista...</span>}
+      </div>
+
       {rows.length === 0 ? (
-        <div className="rounded-lg border py-10 text-center text-sm text-muted-foreground">
-          Nenhum registro encontrado.
+        <div className="flex flex-col items-center rounded-xl border border-dashed px-6 py-14 text-center">
+          <h2 className="font-medium">Nenhum cliente nesta visualizaÃ§Ã£o</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Altere os filtros ou cadastre um cliente para acompanhar o
+            atendimento.
+          </p>
+          <Button
+            variant="outline"
+            className="mt-4"
+            onClick={handleClearFilters}
+          >
+            Limpar filtros
+          </Button>
         </div>
       ) : (
         <div
@@ -98,7 +161,7 @@ export function BDCTable({
               </button>
 
               <span className="text-sm text-muted-foreground">
-                Página {page} de {totalPages}
+                PÃ¡gina {page} de {totalPages}
               </span>
 
               <button
@@ -107,7 +170,7 @@ export function BDCTable({
                 disabled={page >= totalPages || isPending}
                 onClick={() => handlePageChange(page + 1)}
               >
-                Próxima
+                PrÃ³xima
               </button>
             </div>
           )}
