@@ -3,12 +3,11 @@
 import { Loader2, SendHorizonal } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
-import { apiMutation } from "@/lib/api/client";
 import type {
   AdminTicket,
   ManagerTicket,
 } from "@/app/data/admin/admin-get-tickets";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,6 +18,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { apiMutation } from "@/lib/api/client";
 import { initialsOf } from "@/lib/utils";
 import { priorityConfig, statusConfig } from "./tickets-config";
 
@@ -90,31 +90,30 @@ export function TicketDialog({ ticket, children }: TicketDialogProps) {
             </code>
             <DialogTitle className="text-base">{ticket.subject}</DialogTitle>
           </div>
-          <DialogDescription>
-            <div className="flex items-center gap-2 mt-1">
-              <Badge
-                variant="outline"
-                className={priorityConfig[ticket.priority]?.className}
-              >
-                {priorityConfig[ticket.priority]?.label ?? ticket.priority}
-              </Badge>
-              <Badge
-                variant="outline"
-                className={statusConfig[ticket.status]?.className}
-              >
-                {statusConfig[ticket.status]?.label ?? ticket.status}
-              </Badge>
-              <span className="text-xs text-muted-foreground">
-                Criado por {creatorName} em{" "}
-                {new Date(ticket.createdAt).toLocaleDateString("pt-BR", {
-                  day: "2-digit",
-                  month: "2-digit",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </span>
-            </div>
+          <DialogDescription className="mt-1 flex flex-wrap items-center gap-2">
+            <span className="sr-only">Prioridade e situação:</span>
+            <Badge
+              variant="outline"
+              className={priorityConfig[ticket.priority]?.className}
+            >
+              {priorityConfig[ticket.priority]?.label ?? ticket.priority}
+            </Badge>
+            <Badge
+              variant="outline"
+              className={statusConfig[ticket.status]?.className}
+            >
+              {statusConfig[ticket.status]?.label ?? ticket.status}
+            </Badge>
+            <span className="text-xs text-muted-foreground">
+              Criado por {creatorName} em{" "}
+              {new Date(ticket.createdAt).toLocaleDateString("pt-BR", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </span>
           </DialogDescription>
         </DialogHeader>
 
@@ -127,7 +126,7 @@ export function TicketDialog({ ticket, children }: TicketDialogProps) {
           </div>
 
           {/* Thread de mensagens */}
-          {ticket.messages.length > 0 && (
+          {ticket.messages.length > 0 ? (
             <div className="space-y-3">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Respostas ({ticket.messages.length})
@@ -135,13 +134,9 @@ export function TicketDialog({ ticket, children }: TicketDialogProps) {
               {ticket.messages.map((msg) => (
                 <div key={msg.id} className="flex gap-3">
                   <Avatar className="size-8 shrink-0 mt-0.5">
-                    {msg.user.image ? (
-                      <img
-                        src={msg.user.image}
-                        alt={msg.user.name}
-                        className="size-full rounded-full object-cover"
-                      />
-                    ) : null}
+                    {msg.user.image && (
+                      <AvatarImage src={msg.user.image} alt={msg.user.name} />
+                    )}
                     <AvatarFallback className="text-[10px]">
                       {initialsOf(msg.user.name)}
                     </AvatarFallback>
@@ -167,6 +162,10 @@ export function TicketDialog({ ticket, children }: TicketDialogProps) {
                 </div>
               ))}
             </div>
+          ) : (
+            <p className="rounded-xl border border-dashed px-4 py-5 text-center text-sm text-muted-foreground">
+              Nenhuma resposta enviada ainda.
+            </p>
           )}
         </div>
 
@@ -179,6 +178,9 @@ export function TicketDialog({ ticket, children }: TicketDialogProps) {
               </p>
             )}
             <div className="flex gap-2">
+              <label htmlFor={messageId} className="sr-only">
+                Responder ao ticket
+              </label>
               <textarea
                 id={messageId}
                 value={message}

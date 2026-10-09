@@ -10,6 +10,7 @@ import {
   type ComponentProps,
   type ReactNode,
 } from "react";
+import { createPortal } from "react-dom";
 import type * as React from "react";
 import { XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -119,6 +120,13 @@ function DialogContent({
 }: ComponentProps<"dialog"> & { showCloseButton?: boolean }) {
   const { open, setOpen, titleId, descriptionId } = useDialog();
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(
+    null,
+  );
+
+  useEffect(() => {
+    setPortalContainer(document.body);
+  }, []);
 
   useEffect(() => {
     const element = dialogRef.current;
@@ -128,7 +136,9 @@ function DialogContent({
     if (!open && element.open) element.close();
   }, [open]);
 
-  return (
+  if (!portalContainer) return null;
+
+  return createPortal(
     <dialog
       ref={dialogRef}
       data-slot="dialog-content"
@@ -173,7 +183,8 @@ function DialogContent({
           </DialogClose>
         )}
       </section>
-    </dialog>
+    </dialog>,
+    portalContainer,
   );
 }
 
