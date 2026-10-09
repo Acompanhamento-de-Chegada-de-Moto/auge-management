@@ -9,6 +9,7 @@ import {
   FileText,
   MapPin,
   Motorbike,
+  Search,
   Tag,
   User,
 } from "lucide-react";
@@ -20,6 +21,7 @@ import { getArrivalStatus } from "@/lib/bdc-data";
 interface SidebarSummaryProps {
   chassis: string;
   found: boolean;
+  searched?: boolean;
   model?: string;
   city?: string;
   customerName?: string;
@@ -29,7 +31,21 @@ interface SidebarSummaryProps {
   arrivalStatus?: string | null;
 }
 
-function getStatusBadge(found: boolean, forecastDate?: Date | null, arrivalStatus?: string | null) {
+function getStatusBadge(
+  found: boolean,
+  searched: boolean,
+  forecastDate?: Date | null,
+  arrivalStatus?: string | null,
+) {
+  if (!found && !searched) {
+    return {
+      label: "Aguardando consulta",
+      color:
+        "bg-slate-100 text-slate-700 hover:bg-slate-100 dark:bg-slate-900/30 dark:text-slate-400",
+      icon: Search,
+    };
+  }
+
   if (!found) {
     return {
       label: "Não Encontrado",
@@ -68,6 +84,7 @@ function getStatusBadge(found: boolean, forecastDate?: Date | null, arrivalStatu
 export function SidebarSummary({
   chassis,
   found,
+  searched = false,
   model,
   city,
   customerName,
@@ -79,7 +96,7 @@ export function SidebarSummary({
   const [collapsed, setCollapsed] = useState(false);
 
   const hasData = chassis || customerName || model;
-  const status = getStatusBadge(found, forecastDate, arrivalStatus);
+  const status = getStatusBadge(found, searched, forecastDate, arrivalStatus);
   const StatusIcon = status.icon;
 
   return (
