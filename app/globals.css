@@ -2,13 +2,13 @@
 @import "tw-animate-css";
 @plugin "daisyui" {
   themes:
-    light --default,
-    dark --prefersdark;
+    auge-light --default,
+    auge-dark --prefersdark;
   logs: false;
 }
 
 @plugin "daisyui/theme" {
-  name: "light";
+  name: "auge-light";
   default: true;
   color-scheme: light;
   --color-base-100: oklch(1 0 0);
@@ -36,7 +36,7 @@
 }
 
 @plugin "daisyui/theme" {
-  name: "dark";
+  name: "auge-dark";
   prefersdark: true;
   color-scheme: dark;
   --color-base-100: oklch(0.19 0.012 260);
@@ -63,7 +63,7 @@
   --noise: 0;
 }
 
-@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+@custom-variant dark (&:where([data-theme=auge-dark], [data-theme=auge-dark] *));
 
 @theme inline {
   --color-background: var(--background);
@@ -110,7 +110,7 @@
 }
 
 :root,
-[data-theme="light"] {
+[data-theme="auge-light"] {
   --background: var(--color-base-200);
   --foreground: var(--color-base-content);
   --card: var(--color-base-100);
@@ -149,7 +149,7 @@
   --sidebar-ring: var(--color-primary);
 }
 
-:root[data-theme="dark"] {
+:root[data-theme="auge-dark"] {
   --background: var(--color-base-200);
   --foreground: var(--color-base-content);
   --card: var(--color-base-100);
