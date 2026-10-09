@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { ModeToggle } from "@/components/ModeToggle";
 import {
@@ -5,6 +6,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { SIDEBAR_COOKIE_NAME } from "@/lib/constants";
 import { getSetting } from "@/lib/data/settings";
 
 export default async function AppLayout({
@@ -12,10 +14,15 @@ export default async function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const logoUrl = await getSetting("logo_url");
+  const [logoUrl, cookieStore] = await Promise.all([
+    getSetting("logo_url"),
+    cookies(),
+  ]);
+
+  const defaultOpen = cookieStore.get(SIDEBAR_COOKIE_NAME)?.value !== "false";
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={defaultOpen}>
       <AppSidebar logoUrl={logoUrl} />
 
       <SidebarInset className="min-w-0">

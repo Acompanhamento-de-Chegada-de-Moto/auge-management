@@ -6,3 +6,5 @@ export const ACCEPTED_SPREADSHEET_TYPES = {
   "application/vnd.oasis.opendocument.spreadsheet": [".ods"],
   "text/csv": [".csv"],
 } as const;
+
+export const SIDEBAR_COOKIE_NAME = "sidebar_state";

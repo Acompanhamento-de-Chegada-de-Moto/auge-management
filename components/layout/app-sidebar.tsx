@@ -1,10 +1,10 @@
 "use client";
 
 import {
-  type LucideIcon,
   LayoutDashboard,
   LifeBuoy,
   LogOut,
+  type LucideIcon,
   Package,
   Search,
   User,
@@ -34,6 +34,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarRail,
 } from "@/components/ui/sidebar";
 
 import { authClient } from "@/lib/auth-client";
@@ -247,6 +248,7 @@ export function AppSidebar({ logoUrl }: { logoUrl?: string | null }) {
           </SidebarMenu>
         )}
       </SidebarFooter>
+      <SidebarRail />
     </Sidebar>
   );
 }
