@@ -39,6 +39,13 @@ import {
 
 import { authClient } from "@/lib/auth-client";
 
+type SidebarUser = {
+  name: string;
+  email: string;
+  image?: string | null;
+  role?: string | null;
+};
+
 interface NavItem {
   title: string;
   href: string;
@@ -71,10 +78,15 @@ const navigationData: NavItem[] = [
   },
 ];
 
-export function AppSidebar({ logoUrl }: { logoUrl?: string | null }) {
+export function AppSidebar({
+  logoUrl,
+  user,
+}: {
+  logoUrl?: string | null;
+  user: SidebarUser;
+}) {
   const pathname = usePathname();
   const router = useRouter();
-  const { data: session } = authClient.useSession();
 
   const handleSignOut = async () => {
     await authClient.signOut({
@@ -83,8 +95,6 @@ export function AppSidebar({ logoUrl }: { logoUrl?: string | null }) {
       },
     });
   };
-
-  const user = session?.user;
 
   const userInitials = user?.name
     ? user.name

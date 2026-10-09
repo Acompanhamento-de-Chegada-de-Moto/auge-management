@@ -11,6 +11,16 @@ export const auth = betterAuth({
     enabled: true,
     disableSignUp: true,
   },
+  rateLimit: {
+    enabled: true,
+    storage: "database",
+    modelName: "rateLimit",
+    window: 60,
+    max: 100,
+    customRules: {
+      "/sign-in/email": { window: 60, max: 5 },
+    },
+  },
   plugins: [
     admin({
       defaultRole: "USER",

@@ -2,7 +2,7 @@
 
 import { Eye, Ticket } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { updateTicketStatusAction } from "@/app/(app)/support/actions";
+import { apiMutation } from "@/lib/api/client";
 import type {
   AdminTicket,
   ManagerTicket,
@@ -37,7 +37,9 @@ export function TicketList({ tickets, canManageStatus }: TicketListProps) {
   const router = useRouter();
 
   const handleStatusChange = async (ticketId: string, status: string) => {
-    await updateTicketStatusAction(ticketId, status);
+    await apiMutation(`/api/v1/support/tickets/${ticketId}`, "PATCH", {
+      status,
+    });
     router.refresh();
   };
 

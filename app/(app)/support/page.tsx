@@ -2,7 +2,10 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 
 import { requireManager } from "@/app/data/admin/require-manager";
-import { adminGetAllTickets, managerGetOwnTickets } from "@/app/data/admin/admin-get-tickets";
+import {
+  adminGetAllTickets,
+  managerGetOwnTickets,
+} from "@/app/data/admin/admin-get-tickets";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -68,19 +71,23 @@ export default async function SupportPage() {
   await requireManager();
 
   return (
-    <div className="w-full px-4 py-6 sm:px-6 lg:px-8">
-      <div className="mb-6 block md:hidden">
-        <h1 className="text-lg font-bold">Suporte</h1>
-        <p className="text-sm text-muted-foreground">
-          Abra um chamado para o suporte técnico
+    <main className="mx-auto w-full max-w-[1600px] space-y-6 p-4 sm:p-6 lg:p-8">
+      <header className="rounded-2xl border bg-card p-5 shadow-sm sm:p-6">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">
+          Atendimento
         </p>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
+        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+          Suporte
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Abra um chamado e acompanhe as solicitações da equipe.
+        </p>
+      </header>
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <Suspense fallback={<SupportSkeleton />}>
           <RenderSupport />
         </Suspense>
       </div>
-    </div>
+    </main>
   );
 }

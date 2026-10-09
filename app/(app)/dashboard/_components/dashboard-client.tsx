@@ -34,15 +34,19 @@ interface KpiCardProps {
 
 function KpiCard({ title, value, icon: Icon }: KpiCardProps) {
   return (
-    <Card>
+    <Card className="overflow-hidden border-border/70 shadow-sm transition-shadow hover:shadow-md">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">
           {title}
         </CardTitle>
-        <Icon className="size-4 text-muted-foreground" />
+        <span className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <Icon className="size-4" aria-hidden="true" />
+        </span>
       </CardHeader>
       <CardContent>
-        <p className="text-2xl font-bold">{value}</p>
+        <p className="text-3xl font-semibold tracking-tight tabular-nums">
+          {value.toLocaleString("pt-BR")}
+        </p>
       </CardContent>
     </Card>
   );
@@ -57,7 +61,7 @@ interface RankTableProps {
 
 function RankTable({ title, description, rows, emptyMessage }: RankTableProps) {
   return (
-    <Card>
+    <Card className="border-border/70 shadow-sm">
       <CardHeader>
         <CardTitle className="text-base">{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
@@ -109,11 +113,7 @@ export function DashboardClient({ data }: DashboardClientProps) {
   return (
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiCard
-          title="Clientes"
-          value={data.totalClients}
-          icon={Users}
-        />
+        <KpiCard title="Clientes" value={data.totalClients} icon={Users} />
         <KpiCard
           title="Motocicletas"
           value={data.totalMotorcycles}
@@ -234,37 +234,23 @@ export function DashboardClient({ data }: DashboardClientProps) {
           <CardHeader className="flex-row items-center justify-between gap-4 space-y-0">
             <div>
               <CardTitle className="text-base">Resumo Geral</CardTitle>
-              <CardDescription>
-                Panorama consolidado do sistema
-              </CardDescription>
+              <CardDescription>Panorama consolidado do sistema</CardDescription>
             </div>
             <ChartNoAxesColumnIncreasing className="size-5 text-muted-foreground" />
           </CardHeader>
           <CardContent className="space-y-3">
-            <SummaryRow
-              label="Total de Clientes"
-              value={data.totalClients}
-            />
+            <SummaryRow label="Total de Clientes" value={data.totalClients} />
             <SummaryRow
               label="Total de Motocicletas"
               value={data.totalMotorcycles}
             />
-            <SummaryRow
-              label="Chegadas"
-              value={data.arrivalStatus.chegou}
-            />
+            <SummaryRow label="Chegadas" value={data.arrivalStatus.chegou} />
             <SummaryRow
               label="Em Trânsito"
               value={data.arrivalStatus.emTransito}
             />
-            <SummaryRow
-              label="Atrasadas"
-              value={data.arrivalStatus.atrasada}
-            />
-            <SummaryRow
-              label="Clientes (30 dias)"
-              value={data.recentClients}
-            />
+            <SummaryRow label="Atrasadas" value={data.arrivalStatus.atrasada} />
+            <SummaryRow label="Clientes (30 dias)" value={data.recentClients} />
             <SummaryRow
               label="Motos cadastradas (30 dias)"
               value={data.recentMotorcycles}
@@ -301,19 +287,19 @@ function StatusBar({
         <div
           className={`h-full rounded-full transition-all ${color}`}
           style={{ width: `${percentage}%` }}
+          role="progressbar"
+          aria-label={label}
+          aria-valuemin={0}
+          aria-valuemax={total}
+          aria-valuenow={value}
+          aria-valuetext={`${value} de ${total} (${percentage}%)`}
         />
       </div>
     </div>
   );
 }
 
-function SummaryRow({
-  label,
-  value,
-}: {
-  label: string;
-  value: number;
-}) {
+function SummaryRow({ label, value }: { label: string; value: number }) {
   return (
     <div className="flex items-center justify-between">
       <span className="text-sm text-muted-foreground">{label}</span>

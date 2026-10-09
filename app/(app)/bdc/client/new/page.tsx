@@ -2,10 +2,8 @@ import { ArrowLeft, ClipboardPlus } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { userGetMotorcycle } from "@/app/data/user/user-get-motorcycle";
 import { buttonVariants } from "@/components/ui/button";
 import { CreateClientForm } from "../_components/create-client-form";
-import { CreateClientAction } from "./actions";
 
 export const metadata: Metadata = {
   title: "Novo Cliente",
@@ -16,11 +14,11 @@ export const metadata: Metadata = {
 export default async function NewClientPage() {
   return (
     <main
-      className="min-w-0 px-4 py-6 sm:px-6 lg:px-8"
+      className="mx-auto min-w-0 w-full max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8"
       aria-labelledby="page-title"
     >
       <div className="mx-auto w-full max-w-7xl space-y-6">
-        <header className="flex flex-col gap-4">
+        <header className="flex flex-col gap-4 rounded-2xl border bg-card p-5 shadow-sm sm:p-6">
           <div>
             <Link
               href="/bdc"
@@ -56,10 +54,7 @@ export default async function NewClientPage() {
           </div>
         </header>
 
-        <CreateClientForm
-          action={CreateClientAction}
-          searchChassisAction={userGetMotorcycle}
-        />
+        <CreateClientForm />
       </div>
     </main>
   );

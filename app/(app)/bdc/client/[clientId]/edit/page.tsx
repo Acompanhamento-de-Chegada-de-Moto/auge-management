@@ -2,7 +2,6 @@ import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { userGetMotorcycle } from "@/app/data/user/user-get-motorcycle";
 import { buttonVariants } from "@/components/ui/button";
 import { getClientById } from "@/lib/data/client";
 import { EditClientForm } from "./_components/EditClientForm";
@@ -39,9 +38,9 @@ export default async function EditarClientePage({
     null;
 
   return (
-    <main className="min-w-0 px-4 py-6 sm:px-6 lg:px-8">
-      <div className="mx-auto w-full max-w-7xl space-y-6">
-        <header className="flex flex-col gap-4">
+    <main className="mx-auto min-w-0 w-full max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-[1600px] space-y-6">
+        <header className="flex flex-col gap-4 rounded-2xl border bg-card p-5 shadow-sm sm:p-6">
           <Link
             href="/bdc"
             className={buttonVariants({
@@ -65,7 +64,6 @@ export default async function EditarClientePage({
         <EditClientForm
           client={client}
           selectedMotorcycle={selectedMotorcycle}
-          searchChassisAction={userGetMotorcycle}
         />
       </div>
     </main>

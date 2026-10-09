@@ -55,6 +55,8 @@ export const ModelName = {
   Session: 'Session',
   Account: 'Account',
   Verification: 'Verification',
+  RateLimit: 'RateLimit',
+  ApiRateLimit: 'ApiRateLimit',
   Client: 'Client',
   Motorcycle: 'Motorcycle',
   Setting: 'Setting',
@@ -139,6 +141,26 @@ export const VerificationScalarFieldEnum = {
 } as const
 
 export type VerificationScalarFieldEnum = (typeof VerificationScalarFieldEnum)[keyof typeof VerificationScalarFieldEnum]
+
+
+export const RateLimitScalarFieldEnum = {
+  id: 'id',
+  key: 'key',
+  count: 'count',
+  lastRequest: 'lastRequest'
+} as const
+
+export type RateLimitScalarFieldEnum = (typeof RateLimitScalarFieldEnum)[keyof typeof RateLimitScalarFieldEnum]
+
+
+export const ApiRateLimitScalarFieldEnum = {
+  key: 'key',
+  windowStart: 'windowStart',
+  count: 'count',
+  expiresAt: 'expiresAt'
+} as const
+
+export type ApiRateLimitScalarFieldEnum = (typeof ApiRateLimitScalarFieldEnum)[keyof typeof ApiRateLimitScalarFieldEnum]
 
 
 export const ClientScalarFieldEnum = {

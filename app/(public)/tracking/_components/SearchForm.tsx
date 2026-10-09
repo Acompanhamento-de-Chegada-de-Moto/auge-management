@@ -29,14 +29,27 @@ export function SearchForm({ defaultValue = "" }: SearchFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex w-full max-w-lg gap-2">
+    <form
+      onSubmit={handleSubmit}
+      className="flex w-full max-w-lg flex-col gap-2 rounded-2xl border bg-card p-3 shadow-lg shadow-black/[0.03] sm:flex-row"
+    >
       <Input
+        id="tracking-cpf"
+        name="cpf"
+        type="text"
+        inputMode="numeric"
+        autoComplete="off"
+        aria-label="CPF do cliente"
+        aria-describedby="tracking-cpf-help"
         placeholder="Digite o CPF do cliente..."
         value={query}
         onChange={handleChange}
-        className="flex-1"
+        className="min-h-12 flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0 sm:pl-3"
       />
-      <Button type="submit">
+      <span id="tracking-cpf-help" className="sr-only">
+        Informe os 11 dígitos do CPF para consultar.
+      </span>
+      <Button type="submit" className="min-h-12 w-full sm:w-auto sm:px-6">
         <Search className="mr-2 size-4" />
         Buscar
       </Button>

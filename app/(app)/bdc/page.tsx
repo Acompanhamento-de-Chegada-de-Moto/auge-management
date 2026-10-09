@@ -6,7 +6,12 @@ import { Suspense } from "react";
 import { BDCTable } from "@/app/(app)/bdc/_components/bdc-table";
 import { SpreadsheetUploadDialog } from "@/app/(app)/bdc/_components/SpreadsheetUploadDialog";
 import { Button } from "@/components/ui/button";
-import { getClientsPaginatedAction } from "./_actions/get-clients-paginated-action";
+import {
+  getBDCFilterOptions,
+  getBDCStatusCounts,
+  getClientsPaginated,
+} from "@/lib/data/client";
+import { mapClientsToRows } from "./_lib/client-mapper";
 import { BDCPageSkeleton } from "./_components/bdc-page-skeleton";
 
 export const metadata: Metadata = {
@@ -28,10 +33,15 @@ export default async function BDCPage({ searchParams }: BDCPageProps) {
   const params = await searchParams;
 
   return (
-    <main className="min-w-0 w-full space-y-6 p-4 sm:p-6 lg:p-8">
-      <header className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <main className="mx-auto min-w-0 w-full max-w-[1600px] space-y-6 p-4 sm:p-6 lg:p-8">
+      <header className="flex min-w-0 flex-col gap-5 rounded-2xl border bg-card p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-6">
         <div className="min-w-0 space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight">BDC</h1>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">
+            Relacionamento
+          </p>
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+            BDC
+          </h1>
           <p className="text-sm text-muted-foreground">
             Acompanhamento e gestão de clientes e motocicletas.
           </p>
@@ -61,26 +71,39 @@ async function RenderClients({
 }: {
   params: Awaited<BDCPageProps["searchParams"]>;
 }) {
-  const result = await getClientsPaginatedAction({
-    page: Number(params.page) || 1,
-    sellerName: params.sellerName,
-    city: params.city,
-    model: params.model,
-    search: params.search,
-    arrived:
-      params.arrived === "true" || params.arrived === "false"
-        ? params.arrived
-        : undefined,
-  });
+  const page = Math.max(1, Math.floor(Number(params.page) || 1));
+  const [paginated, filterOptions, statusCounts] = await Promise.all([
+    getClientsPaginated({
+      page,
+      pageSize: 10,
+      sellerName: params.sellerName,
+      city: params.city,
+      model: params.model,
+      search: params.search,
+      arrived:
+        params.arrived === "true" || params.arrived === "false"
+          ? params.arrived
+          : undefined,
+    }),
+    getBDCFilterOptions(),
+    getBDCStatusCounts(),
+  ]);
+
+  const rows = mapClientsToRows(paginated.clients);
+  const filters = {
+    sellers: filterOptions.sellers,
+    cities: filterOptions.cities,
+    models: filterOptions.models,
+  };
 
   return (
     <BDCTable
-      rows={result.rows}
-      totalClients={result.totalClients}
-      totalPages={result.totalPages}
-      page={result.page}
-      statusCounts={result.statusCounts}
-      filterOptions={result.filterOptions}
+      rows={rows}
+      totalClients={paginated.total}
+      totalPages={paginated.totalPages}
+      page={page}
+      statusCounts={statusCounts}
+      filterOptions={filters}
       activeFilters={{
         sellerName: params.sellerName ?? "",
         city: params.city ?? "",

@@ -41,31 +41,31 @@ Sistema de gerenciamento de concessionária de motocicletas. Módulos atuais:
 app/
   (app)/                    # Rotas autenticadas (protegidas por requireAuth)
     bdc/
-      _components/          # BdcTable, SidebarSummary, SpreadsheetUploadDialog, SectionHeader, CopyText
-      page.tsx              # Server Component shell + <BdcPageClient />
-      actions.ts            # Server Actions: getClients, getBDCFilterOptions, searchChassis, deleteClient, importSpreadsheet
+      _components/          # Tabelas, formulários e diálogos do BDC
+      page.tsx              # Server Component consulta a DAL para renderização inicial
+      _actions/              # Removido; mutações estão em app/api/v1/bdc
       client/
-        new/                # page.tsx + actions.ts (createClient)
-        [clientId]/edit/    # page.tsx + _components/EditClientForm.tsx + actions.ts (updateClient)
-        [clientId]/delete/  # page.tsx + actions.ts (deleteClient)
+        new/                # page.tsx + formulário; POST /api/v1/bdc/clients
+        [clientId]/edit/    # page.tsx + _components/EditClientForm.tsx
+        [clientId]/delete/  # page.tsx + confirmação
     dashboard/
       _components/          # dashboard-client, dashboard-skeleton
       page.tsx
     inventory/
       _components/          # MotorcycleTable, MotorcycleSpreadsheetUploadDialog
-      page.tsx              # + actions.ts, import-actions.ts
+      page.tsx              # Server Component consulta a DAL
       motorcycle/
-        new/                # page.tsx + _components/CreateMotorcycleForm.tsx + actions.ts
-        [motorcycleId]/edit/    # page.tsx + _components/EditMotorcycleForm.tsx + actions.ts
-        [motorcycleId]/delete/  # page.tsx + actions.ts
+        new/                # page.tsx + _components/CreateMotorcycleForm.tsx
+        [motorcycleId]/edit/    # page.tsx + _components/EditMotorcycleForm.tsx
+        [motorcycleId]/delete/  # page.tsx + confirmação
     settings/
       _components/          # UsersTable, CreateUserForm, SidebarNav, ContactSettingsForm
       cosmetics/_components/    # LogoUploadForm
       system/
-      layout.tsx / page.tsx / actions.ts
+      layout.tsx / page.tsx
     support/
       _components/          # ticket-list, ticket-form, ticket-dialog, ticket-skeleton, tickets-config
-      page.tsx / actions.ts
+      page.tsx
     layout.tsx              # @/(app)/layout — requireAuth, Header/Navbar do shell
   (auth)/                   # Rotas públicas (sem proteção)
     sign-in/                # + _components/LoginForm.tsx
@@ -78,11 +78,12 @@ app/
       unavailable/
   api/
     auth/[...all]/          # Better Auth API routes
-    upload/avatar/
+    upload/avatar/          # Upload administrativo
+    v1/                     # Route Handlers REST internos, com sessão e validação por endpoint
   data/                     # Guards + DAL de rotas
     admin/                  # require-admin, require-manager, admin-get-users, admin-get-tickets
     public/                 # public-get-client-by-cpf, public-get-motorcycle
-    user/                   # require-auth, user-get-motorcycle
+    user/                   # require-auth
   data/require-user.ts      # Guards (ver app/data/*)
   layout.tsx / page.tsx
 
@@ -150,25 +151,25 @@ prisma.config.ts            # Config do Prisma 7 (datasource + migrations.seed)
 
 ---
 
-## Arquitetura — Server Actions + DAL
+## Arquitetura — Route Handlers + DAL
 
-O projeto segue a arquitetura recomendada pelo Next.js: **Server Actions** na camada de UI + **DAL** (Data Access Layer) isolada. **Não usa TanStack React Query** — toda troca de dados é via Server Actions + `router.refresh()` / `router.push()`.
+Operações interativas do cliente usam Route Handlers versionados em `app/api/v1/**/route.ts`. As páginas Server Component consultam a DAL diretamente para renderização inicial; não faça uma chamada HTTP interna da página para a própria aplicação. **Não usa TanStack React Query**.
 
 ```
-Página (Server Component shell)
-  ↓ renderiza
-Client Component (app/**/_components/*-page-client.tsx)
-  → lê searchParams (useSearchParams)
-  → chama Server Action via useEffect
-Server Action (app/**/actions.ts)
-  → valida auth (requireAuth/requireUser)
-  → valida input (Zod)
+Client Component
+  → chama /api/v1/... com fetch
+Route Handler (app/api/v1/**/route.ts)
+  → valida origem em mutações
+  → resolve sessão Better Auth e papel exigido
+  → valida payload com Zod e limita tamanho
   ↓ chama
 DAL (lib/data/*.ts)
-  → executa queries Prisma
+  → executa queries Prisma; nunca faz auth
 ```
 
-**Regra**: `lib/data/*.ts` nunca faz auth. As Server Actions fazem auth + validação + chamam o DAL.
+**Segurança**: `proxy.ts` é uma barreira antecipada para navegação, não a autorização final. O layout autenticado usa `requireAuth()`. Cada Route Handler deve autenticar e autorizar a operação por conta própria; nunca confiar apenas na existência do cookie ou no proxy. Mutação autenticada por cookie exige validação de mesma origem. Rotas públicas devem selecionar somente os dados necessários.
+
+**Rate limit**: Better Auth usa a tabela `rateLimit` no PostgreSQL. Route Handlers usam `ApiRateLimit` com incremento atômico por usuário, método e rota; importações e upload de avatar têm limites próprios. As tabelas são criadas pela migration `20261009000000_add_rate_limits`.
 
 ---
 
@@ -282,7 +283,7 @@ Colunas: Cliente | CPF | Vendedor | Cidade | Modelo | Chassi | Data Faturamento 
 
 ### Importação de Planilha (`/bdc` — botão "Importar Planilha")
 - **Componente**: `components/bdc/spreadsheet-upload-dialog.tsx`
-- **Server Action**: `importSpreadsheetAction(formData: FormData)` em `app/(app)/bdc/actions.ts`
+- **API Route Handler**: `POST /api/v1/bdc/import` recebe as linhas já parseadas no client-side
 - **Formatos aceitos**: `.xlsx`, `.xls`, `.ods`, `.csv`
 - **Colunas da planilha**:
   | Coluna | Mapeamento |
@@ -520,7 +521,7 @@ O seed (`prisma/seed.ts`) reusa `createUser` de `lib/data/user.ts` (via `auth.ap
 1. **Sempre use shadcn/ui** para novos componentes de UI. Não crie do zero.
 2. **Sempre valide formulários com Zod** + react-hook-form. Não use estado local descontrolado.
 3. **Datas**: use `date-fns` para formatação e `dayjs` para cálculos/comparações.
-4. **DAL**: nunca coloque lógica de auth em `lib/data/*.ts`. Auth fica nas Server Actions.
+4. **DAL**: nunca coloque lógica de auth em `lib/data/*.ts`. Auth e autorização ficam nos Route Handlers; as páginas autenticadas também passam pelos guards server-side.
 5. **Modo edição**: nunca adicione stepper. O formulário deve ser direto.
 6. **Sidebar**: em modo edição, sempre visível. Em criação, aparece apenas no Step 2.
 7. **Não commite** sem pedir confirmação do usuário (exceto se ele pedir explicitamente).
@@ -528,8 +529,8 @@ O seed (`prisma/seed.ts`) reusa `createUser` de `lib/data/user.ts` (via `auth.ap
 9. **Formate com Biome** antes de commits.
 10. **Chassi editável**: no Estoque, o chassi pode ser alterado na edição. Sempre verificar duplicata no banco.
 11. **Importação de planilha**: usar `xlsx` (SheetJS) para parse no client-side. Colunas obrigatórias: CLIENTE, CHASSI, VENDEDOR. Campo "MOTO CHEGOU" = "SIM" → `forecastDate = hoje`.
-12. **TanStack React Query não é usado** — nunca importe `@tanstack/react-query`. Toda troca de dados é via Server Actions + `router.refresh()` / `router.push()`.
-13. **Páginas de listagem (BDC/Estoque)**: Server Component shell (para metadata) renderiza Client Component em `_components/`. O Client Component lê `useSearchParams`, faz fetch via Server Action em `useEffect`, e gerencia navegação com `useTransition` + `router.push()` com URL params. Filtros e página são controlados por URL, não por estado local.
+12. **TanStack React Query não é usado** — nunca importe `@tanstack/react-query`. Operações iniciadas no cliente usam `fetch` para `/api/v1/**`; mutações atualizam a tela com `router.refresh()` / `router.push()`.
+13. **Páginas de listagem (BDC/Estoque)**: Server Components leem os parâmetros de URL e consultam a DAL diretamente. Filtros e página são controlados por URL, não por estado local.
 14. **Tabelas (BDCTable/MotorcycleTable)**: puramente apresentação. Props: dados, opções de filtro, filtros ativos, totalRows, page, totalPages, e callbacks (`onFilterChange`, `onPageChange`, etc.). Sem fetch, sem `useMemo` para filtro, sem estado de paginação.
 15. **Client indexes**: `Client` tem `@@index([sellerName])`, `@@index([city])`, `@@index([createdAt])` para performance dos filtros server-side.
 16. **EM CIMA DO ARQUIVO ATUAL 2025**: o schema Prisma tem `deliveryForecast` em `Client` e `forecastDate` em `Motorcycle`. Ambos são usados. `forecastDate` é a "previsão de chegada" da moto. `deliveryForecast` no Client é um campo legado não utilizado pelo frontend.
@@ -539,7 +540,7 @@ O seed (`prisma/seed.ts`) reusa `createUser` de `lib/data/user.ts` (via `auth.ap
 
 ## Roadmap / Tarefas Pendentes (conhecidas)
 
-- [x] Conectar formulário BDC ao backend (Prisma model + Server Actions)
+- [x] Conectar formulário BDC ao backend (Prisma model + Route Handlers)
 - [x] Adicionar tabela/modelo de Estoque
 - [x] Implementar busca real de chassi no banco
 - [x] Importação de planilha Excel no BDC
@@ -547,6 +548,8 @@ O seed (`prisma/seed.ts`) reusa `createUser` de `lib/data/user.ts` (via `auth.ap
 - [x] Substituir TanStack React Query por Server Components + router.refresh()
 - [x] Server-side pagination com URL params (BDC 20/página, Estoque 50/página)
 - [x] Filtros server-side com índices no banco
+- [x] Migrar operações interativas para Route Handlers `/api/v1` com autenticação por endpoint
+- [x] Rate limiting compartilhado em PostgreSQL para Better Auth e Route Handlers
 - [ ] Upload de documentos no formulário
 - [ ] Toast/notificação após salvar (em vez de redirect silencioso)
 - [ ] Responsividade mobile da sidebar (drawer)
@@ -554,4 +557,4 @@ O seed (`prisma/seed.ts`) reusa `createUser` de `lib/data/user.ts` (via `auth.ap
 
 ---
 
-*Última atualização: 2026-06-12 — implementado server-side pagination com URL params (useSearchParams + useTransition), BDCTable/MotorcycleTable viram presentation-only, removido TanStack Query e hooks de paginação client-side, adicionados índices no Client.*
+*Última atualização: 2026-10-09 — operações interativas migradas para Route Handlers `/api/v1`; proxy atua como redirecionamento antecipado, layouts e endpoints verificam sessão; configurados cabeçalhos básicos de segurança e rate limits em PostgreSQL.*

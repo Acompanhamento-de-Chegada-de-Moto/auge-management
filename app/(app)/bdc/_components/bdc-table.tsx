@@ -59,7 +59,7 @@ export function BDCTable({
   }
 
   return (
-    <div className="min-w-0 space-y-4">
+    <section aria-label="Clientes e filtros" className="min-w-0 space-y-4">
       <fieldset className="grid grid-cols-1 gap-2 sm:grid-cols-3">
         <legend className="sr-only">Visualizações por chegada</legend>
         {[
@@ -83,7 +83,7 @@ export function BDCTable({
               aria-pressed={selected}
               disabled={isPending}
               onClick={() => updateParams({ arrived: view.value })}
-              className={`flex min-h-16 items-center justify-between rounded-xl border px-4 text-left transition-colors ${
+              className={`flex min-h-20 items-center justify-between rounded-xl border bg-card px-4 text-left shadow-sm transition-colors hover:-translate-y-0.5 hover:shadow-md ${
                 selected
                   ? "border-primary bg-primary/5 ring-1 ring-primary/20"
                   : "bg-card hover:bg-muted/50"
@@ -111,7 +111,10 @@ export function BDCTable({
         onClear={handleClearFilters}
       />
 
-      <div className="flex items-center justify-between text-sm text-muted-foreground">
+      <div
+        className="flex items-center justify-between rounded-lg bg-muted/40 px-3 py-2 text-sm text-muted-foreground"
+        aria-live="polite"
+      >
         <span>
           {totalClients} {totalClients === 1 ? "cliente" : "clientes"}
         </span>
@@ -119,7 +122,10 @@ export function BDCTable({
       </div>
 
       {rows.length === 0 ? (
-        <div className="flex flex-col items-center rounded-xl border border-dashed px-6 py-14 text-center">
+        <div
+          role="status"
+          className="flex flex-col items-center rounded-2xl border border-dashed bg-card px-6 py-14 text-center shadow-sm"
+        >
           <h2 className="font-medium">Nenhum cliente nesta visualizaÃ§Ã£o</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Altere os filtros ou cadastre um cliente para acompanhar o
@@ -153,7 +159,7 @@ export function BDCTable({
             <div className="flex items-center justify-center gap-4 pt-4">
               <button
                 type="button"
-                className="rounded-md border px-3 py-2 text-sm disabled:pointer-events-none disabled:opacity-50"
+                className="min-h-11 rounded-lg border bg-card px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-50"
                 disabled={page <= 1 || isPending}
                 onClick={() => handlePageChange(page - 1)}
               >
@@ -166,7 +172,7 @@ export function BDCTable({
 
               <button
                 type="button"
-                className="rounded-md border px-3 py-2 text-sm disabled:pointer-events-none disabled:opacity-50"
+                className="min-h-11 rounded-lg border bg-card px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-50"
                 disabled={page >= totalPages || isPending}
                 onClick={() => handlePageChange(page + 1)}
               >
@@ -176,6 +182,6 @@ export function BDCTable({
           )}
         </div>
       )}
-    </div>
+    </section>
   );
 }

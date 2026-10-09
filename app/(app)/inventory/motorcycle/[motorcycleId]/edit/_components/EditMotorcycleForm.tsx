@@ -2,7 +2,7 @@
 
 import type { getMotorcycleByIdWithClient } from "@/lib/data/motorcycle";
 import { MotorcycleForm } from "../../../_components/MotorcycleForm";
-import { EditMotorcycleAction } from "../actions";
+import { apiMutation } from "@/lib/api/client";
 
 type Motorcycle = NonNullable<
   Awaited<ReturnType<typeof getMotorcycleByIdWithClient>>
@@ -13,7 +13,13 @@ export function EditMotorcycleForm({ motorcycle }: { motorcycle: Motorcycle }) {
     <MotorcycleForm
       mode="edit"
       initialValues={motorcycle}
-      action={(values) => EditMotorcycleAction(motorcycle.id, values)}
+      action={(values) =>
+        apiMutation(
+          `/api/v1/inventory/motorcycles/${motorcycle.id}`,
+          "PUT",
+          values,
+        )
+      }
     />
   );
 }

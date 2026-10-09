@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-import { updateUserAction } from "@/app/(app)/squad/actions";
+import { apiMutation } from "@/lib/api/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -165,12 +165,16 @@ export function EditUserDialog({ user, trigger }: EditUserDialogProps) {
         imageUrl = uploadResult.url;
       }
 
-      const result = await updateUserAction({
-        userId: user.id,
-        name: name.trim(),
-        newPassword: enablePassword ? newPassword : "",
-        image: imageUrl,
-      });
+      const result = await apiMutation(
+        `/api/v1/admin/users/${user.id}`,
+        "PUT",
+        {
+          userId: user.id,
+          name: name.trim(),
+          newPassword: enablePassword ? newPassword : "",
+          image: imageUrl,
+        },
+      );
 
       if (result.status !== "success") {
         setError(result.message);

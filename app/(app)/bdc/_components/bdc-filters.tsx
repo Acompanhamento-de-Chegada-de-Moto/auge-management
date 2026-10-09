@@ -54,11 +54,12 @@ export function BDCFilters({
   );
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
       <div className="flex flex-col gap-2 sm:flex-row">
         <div className="relative min-w-0 flex-1">
           <SearchIcon className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
+            aria-label="Buscar por cliente, CPF ou chassi"
             placeholder="Buscar por cliente, CPF ou chassi"
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
@@ -98,7 +99,10 @@ export function BDCFilters({
           onValueChange={(value) => onFilterChange("sellerName", value)}
           disabled={isPending}
         >
-          <SelectTrigger className="w-full sm:w-52">
+          <SelectTrigger
+            aria-label="Filtrar por vendedor"
+            className="min-h-11 w-full sm:w-52"
+          >
             <SelectValue placeholder="Todos os vendedores" />
           </SelectTrigger>
           <SelectContent>
@@ -116,7 +120,10 @@ export function BDCFilters({
           onValueChange={(value) => onFilterChange("city", value)}
           disabled={isPending}
         >
-          <SelectTrigger className="w-full sm:w-52">
+          <SelectTrigger
+            aria-label="Filtrar por cidade"
+            className="min-h-11 w-full sm:w-52"
+          >
             <SelectValue placeholder="Todas as cidades" />
           </SelectTrigger>
           <SelectContent>
@@ -134,7 +141,10 @@ export function BDCFilters({
           onValueChange={(value) => onFilterChange("model", value)}
           disabled={isPending}
         >
-          <SelectTrigger className="w-full sm:w-52">
+          <SelectTrigger
+            aria-label="Filtrar por modelo"
+            className="min-h-11 w-full sm:w-52"
+          >
             <SelectValue placeholder="Todos os modelos" />
           </SelectTrigger>
           <SelectContent>

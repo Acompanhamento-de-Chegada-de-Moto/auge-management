@@ -3,8 +3,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { MotorcycleSpreadsheetUploadDialog } from "@/app/(app)/inventory/_components/MotorcycleSpreadsheetUploadDialog";
-import { getMotorcyclesPaginatedAction } from "@/app/(app)/inventory/actions";
 import { Button } from "@/components/ui/button";
+import {
+  getEstoqueFilterOptions,
+  getMotorcycleStatusCounts,
+  getMotorcyclesPaginated,
+} from "@/lib/data/motorcycle";
 import {
   Table,
   TableBody,
@@ -25,10 +29,15 @@ export default async function EstoquePage({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   return (
-    <main className="min-w-0 space-y-6 p-4 sm:p-6 lg:p-8">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <main className="mx-auto min-w-0 w-full max-w-[1600px] space-y-6 p-4 sm:p-6 lg:p-8">
+      <header className="flex flex-col gap-5 rounded-2xl border bg-card p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-6">
         <div className="space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight">Estoque</h1>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">
+            Operação
+          </p>
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+            Estoque
+          </h1>
           <p className="text-sm text-muted-foreground">
             Acompanhe chegadas, prazos e motocicletas disponíveis.
           </p>
@@ -59,22 +68,33 @@ async function RenderMotorcycles({
 }) {
   const params = await searchParams;
 
-  const result = await getMotorcyclesPaginatedAction({
-    page: Number(params.page) || 1,
-    model: typeof params.model === "string" ? params.model : undefined,
-    status: typeof params.status === "string" ? params.status : undefined,
-    chassisSearch:
-      typeof params.chassis === "string" ? params.chassis : undefined,
-  });
+  const page = Math.max(1, Math.floor(Number(params.page) || 1));
+  const arrivalFilters = ["in-transit", "arrived", "delayed"] as const;
+  const status =
+    typeof params.status === "string"
+      ? arrivalFilters.find((value) => value === params.status)
+      : undefined;
+  const [filterOptions, statusCounts, paginated] = await Promise.all([
+    getEstoqueFilterOptions(),
+    getMotorcycleStatusCounts(),
+    getMotorcyclesPaginated({
+      page,
+      pageSize: 10,
+      model: typeof params.model === "string" ? params.model.trim() : undefined,
+      status,
+      chassisSearch:
+        typeof params.chassis === "string" ? params.chassis.trim() : undefined,
+    }),
+  ]);
 
   return (
     <MotorcycleTable
-      motorcycles={result.rows}
-      total={result.total}
-      totalPages={result.totalPages}
-      page={result.page}
-      statusCounts={result.statusCounts}
-      filterOptions={result.filterOptions}
+      motorcycles={paginated.motorcycles}
+      total={paginated.total}
+      totalPages={paginated.totalPages}
+      page={page}
+      statusCounts={statusCounts}
+      filterOptions={filterOptions}
       activeFilters={{
         model: typeof params.model === "string" ? params.model : "",
         status: typeof params.status === "string" ? params.status : "",

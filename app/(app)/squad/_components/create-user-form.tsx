@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-import { createUserAction } from "@/app/(app)/squad/actions";
+import { apiMutation } from "@/lib/api/client";
 import {
   type CreateUserInput,
   createUserSchema,
@@ -52,7 +52,7 @@ export function CreateUserForm() {
 
   async function onSubmit(data: CreateUserInput) {
     try {
-      const result = await createUserAction(data);
+      const result = await apiMutation("/api/v1/admin/users", "POST", data);
 
       if (result.status !== "success") {
         setError("root", { message: result.message });

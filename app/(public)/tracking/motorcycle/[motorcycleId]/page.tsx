@@ -50,8 +50,8 @@ export default async function MotocicletaDetalhePage({
   const statusColor = getStatusColor(statusLabel);
 
   return (
-    <div className="flex min-h-full flex-col items-center bg-background px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
-      <main className="flex w-full max-w-2xl flex-col gap-5">
+    <main className="flex min-h-full flex-col items-center bg-gradient-to-b from-primary/[0.04] to-background px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
+      <div className="flex w-full max-w-3xl flex-col gap-5">
         {/* Cabeçalho */}
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
@@ -63,15 +63,18 @@ export default async function MotocicletaDetalhePage({
               className="object-contain"
               aria-hidden="true"
             />
-            <h1 className="truncate text-lg font-bold sm:text-xl">
-              Acompanhamento de Motocicleta
+            <h1 className="truncate text-lg font-semibold tracking-tight sm:text-xl">
+              Acompanhamento de motocicletas
             </h1>
           </div>
           <ReloadButton />
         </div>
 
         {/* Hero de status — primeira coisa que o cliente precisa ver */}
-        <div className="rounded-2xl border bg-card p-6 shadow-sm">
+        <section
+          aria-label="Status da motocicleta"
+          className="rounded-2xl border bg-card p-6 shadow-sm sm:p-8"
+        >
           <div className="flex flex-col items-center gap-2 text-center">
             <span
               className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-semibold animate-blink-status ${arrivalStatus.color}`}
@@ -104,12 +107,12 @@ export default async function MotocicletaDetalhePage({
               />
             </div>
           )}
-        </div>
+        </section>
 
         {/* Dados do cliente */}
         <section
           aria-labelledby="dados-cliente"
-          className="rounded-2xl border bg-card p-6 shadow-sm"
+          className="rounded-2xl border bg-card p-5 shadow-sm sm:p-6"
         >
           <h2 id="dados-cliente" className="text-base font-semibold">
             {client.name}
@@ -139,7 +142,7 @@ export default async function MotocicletaDetalhePage({
         {/* Detalhes da moto */}
         <section
           aria-labelledby="detalhes-moto"
-          className="rounded-2xl border bg-muted/20 p-5"
+          className="rounded-2xl border bg-card p-5 shadow-sm sm:p-6"
         >
           <h2 id="detalhes-moto" className="sr-only">
             Detalhes da motocicleta
@@ -179,7 +182,7 @@ export default async function MotocicletaDetalhePage({
             </div>
           </dl>
         </section>
-      </main>
-    </div>
+      </div>
+    </main>
   );
 }

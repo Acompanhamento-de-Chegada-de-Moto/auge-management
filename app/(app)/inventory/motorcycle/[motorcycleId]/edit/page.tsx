@@ -28,8 +28,8 @@ export default async function EditarMotocicletaPage({
   }
 
   return (
-    <main className="min-w-0 space-y-6 p-4 sm:p-6 lg:p-8">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <main className="mx-auto min-w-0 w-full max-w-[1600px] space-y-6 p-4 sm:p-6 lg:p-8">
+      <header className="flex flex-col gap-4 rounded-2xl border bg-card p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-6">
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold tracking-tight">
             Editar motocicleta
@@ -49,7 +49,9 @@ export default async function EditarMotocicletaPage({
         </Link>
       </header>
 
-      <EditMotorcycleForm motorcycle={motorcycle} />
+      <div className="mx-auto w-full max-w-4xl">
+        <EditMotorcycleForm motorcycle={motorcycle} />
+      </div>
     </main>
   );
 }

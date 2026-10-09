@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { apiMutation } from "@/lib/api/client";
 import { SidebarSummary } from "@/app/(app)/bdc/_components/SidebarSummary";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
@@ -27,24 +28,12 @@ import { MotorcycleSection } from "./motorcycle-section";
 import { RegistrationSection } from "./registration-section";
 import type { MotorcycleLookupResult, MotorcycleLookupState } from "./types";
 
-interface CreateClientFormProps {
-  action: (
-    data: CustomerFormData,
-  ) => Promise<{ status: string; message: string }>;
-  searchChassisAction: (
-    chassis: string,
-  ) => Promise<MotorcycleLookupResult | null>;
-}
-
 const steps: WizardStep[] = [
   { id: 1, title: "Motocicleta", icon: Bike },
   { id: 2, title: "Cliente e Emplacamento", icon: ShieldCheck },
 ];
 
-export function CreateClientForm({
-  action,
-  searchChassisAction,
-}: CreateClientFormProps) {
+export function CreateClientForm() {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [step, setStep] = useState(1);
@@ -84,7 +73,7 @@ export function CreateClientForm({
   function handleSubmit(data: CustomerFormData) {
     startTransition(async () => {
       try {
-        const result = await action(data);
+        const result = await apiMutation("/api/v1/bdc/clients", "POST", data);
 
         if (result.status === "success") {
           toast.success(result.message || "Cliente cadastrado com sucesso!");
@@ -116,11 +105,7 @@ export function CreateClientForm({
           <div className="grid min-w-0 grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
             <div className="order-2 min-w-0 space-y-5 xl:order-1">
               {step === 1 ? (
-                <MotorcycleSection
-                  form={form}
-                  searchChassisAction={searchChassisAction}
-                  onLookupResult={setLookup}
-                />
+                <MotorcycleSection form={form} onLookupResult={setLookup} />
               ) : (
                 <>
                   <CustomerSection form={form} />

@@ -22,11 +22,23 @@ export default async function AcompanhamentoPage({
   const logoUrl = await getSetting("logo_url");
 
   return (
-    <div className="flex min-h-full flex-col items-center bg-background px-4 py-12 sm:px-6 lg:px-8">
-      <div className="flex w-full max-w-2xl flex-col items-center gap-8">
-        <div className="flex flex-col items-center gap-2 text-center">
-          <Image src={logoUrl || "/logo-auge.png"} alt="Auge" width={80} height={80} className="size-20 object-contain" />
-          <h1 className="text-2xl font-bold tracking-tight">
+    <main className="relative flex min-h-full flex-col items-center overflow-hidden bg-gradient-to-b from-primary/[0.04] via-background to-background px-4 py-10 sm:px-6 sm:py-16 lg:px-8">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-40 left-1/2 size-[28rem] -translate-x-1/2 rounded-full bg-primary/[0.06] blur-3xl"
+      />
+      <div className="relative flex w-full max-w-2xl flex-col items-center gap-8">
+        <div className="flex flex-col items-center gap-3 text-center">
+          <div className="flex size-20 items-center justify-center rounded-3xl border bg-card shadow-sm">
+            <Image
+              src={logoUrl || "/logo-auge.png"}
+              alt="Auge"
+              width={60}
+              height={60}
+              className="size-14 object-contain"
+            />
+          </div>
+          <h1 className="text-balance text-2xl font-bold tracking-tight sm:text-3xl">
             Acompanhamento de Motocicletas
           </h1>
           <p className="text-muted-foreground">
@@ -37,7 +49,10 @@ export default async function AcompanhamentoPage({
         <SearchForm defaultValue={query} />
 
         {query && clients.length === 0 && (
-          <p className="text-sm text-muted-foreground">
+          <p
+            role="status"
+            className="w-full rounded-xl border bg-card px-5 py-4 text-center text-sm text-muted-foreground"
+          >
             Nenhum cliente encontrado para &quot;{query}&quot;.
           </p>
         )}
@@ -51,7 +66,7 @@ export default async function AcompanhamentoPage({
         )}
       </div>
 
-      <div className="mt-auto pt-12">
+      <div className="relative mt-auto pt-12">
         <Link
           href="/bdc"
           className="text-xs text-muted-foreground/60 transition-colors hover:text-muted-foreground"
@@ -59,6 +74,6 @@ export default async function AcompanhamentoPage({
           Área administrativa →
         </Link>
       </div>
-    </div>
+    </main>
   );
 }

@@ -189,3 +189,15 @@ export async function getMotorcycleByChassisWithClient(chassis: string) {
     orderBy: { createdAt: "desc" },
   });
 }
+
+export async function getMotorcycleLookupByChassis(chassis: string) {
+  return prisma.motorcycle.findFirst({
+    where: { chassi: chassis },
+    select: {
+      model: true,
+      forecastArrival: true,
+      forecastArrivalStatus: true,
+    },
+    orderBy: { createdAt: "desc" },
+  });
+}

@@ -13,7 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { DeleteMotorcycleAction } from "../actions";
+import { apiMutation } from "@/lib/api/client";
 
 interface DeleteMotorcycleConfirmationProps {
   motorcycle: {
@@ -32,7 +32,10 @@ export function DeleteMotorcycleConfirmation({
   function handleDelete() {
     startTransition(async () => {
       try {
-        const result = await DeleteMotorcycleAction(motorcycle.id);
+        const result = await apiMutation(
+          `/api/v1/inventory/motorcycles/${motorcycle.id}`,
+          "DELETE",
+        );
         if (result.status === "error") {
           toast.error(result.message);
           return;

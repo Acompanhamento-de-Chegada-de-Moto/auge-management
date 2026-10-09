@@ -3,7 +3,7 @@
 import { Loader2, MessageSquarePlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
-import { createTicketAction } from "@/app/(app)/support/actions";
+import { apiMutation } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -44,7 +44,7 @@ export function TicketForm() {
     setError(null);
 
     try {
-      const result = await createTicketAction({
+      const result = await apiMutation("/api/v1/support/tickets", "POST", {
         subject: subject.trim(),
         description: description.trim(),
         priority: priority as "NORMAL" | "HIGH" | "URGENT",

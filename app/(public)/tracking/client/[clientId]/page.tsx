@@ -40,10 +40,10 @@ export default async function ClienteDetalhePage({
   const whatsappMessage = await getWhatsAppMessage();
 
   return (
-    <div className="flex min-h-full flex-col items-center bg-background px-4 py-12 sm:px-6 lg:px-8">
-      <div className="flex w-full max-w-2xl flex-col gap-6">
+    <main className="flex min-h-full flex-col items-center bg-gradient-to-b from-primary/[0.04] to-background px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
+      <div className="flex w-full max-w-3xl flex-col gap-6">
         <div className="flex items-start justify-between gap-4">
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 items-center gap-3">
             <Image
               src={logoUrl || "/logo-auge.png"}
               alt=""
@@ -51,15 +51,22 @@ export default async function ClienteDetalhePage({
               height={40}
               className="object-contain"
             />
-            <h1 className="text-xl font-bold">Acompanhamento de Motocicleta</h1>
+            <h1 className="text-balance text-lg font-semibold tracking-tight sm:text-xl">
+              Acompanhamento de motocicletas
+            </h1>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <ReloadButton />
           </div>
         </div>
 
-        <div className="rounded-lg border bg-card p-6 shadow-sm">
-          <h2 className="text-lg font-semibold">{client.name}</h2>
+        <section
+          aria-labelledby="client-name"
+          className="rounded-2xl border bg-card p-5 shadow-sm sm:p-7"
+        >
+          <h2 id="client-name" className="text-xl font-semibold tracking-tight">
+            {client.name}
+          </h2>
           {client.cpf && (
             <p className="mt-1 text-sm text-muted-foreground">
               CPF: {formatCPF(client.cpf)}
@@ -103,8 +110,8 @@ export default async function ClienteDetalhePage({
                     />
                   )}
 
-                  <div className="rounded-lg border bg-muted/20 p-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                  <article className="rounded-xl border bg-muted/20 p-4 sm:p-5">
+                    <div className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
                       <div>
                         <span className="text-muted-foreground">Modelo</span>
                         <p className="font-medium">{moto.model}</p>
@@ -156,13 +163,13 @@ export default async function ClienteDetalhePage({
                         </p>
                       </div>
                     </div>
-                  </div>
+                  </article>
                 </div>
               );
             })}
           </div>
-        </div>
+        </section>
       </div>
-    </div>
+    </main>
   );
 }

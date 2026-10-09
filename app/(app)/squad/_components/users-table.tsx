@@ -53,7 +53,7 @@ export function UsersTable({ users }: UsersTableProps) {
 
   return (
     <section className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 rounded-2xl border bg-card p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-5">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <Users className="size-4 text-muted-foreground" />
@@ -83,7 +83,10 @@ export function UsersTable({ users }: UsersTableProps) {
       </div>
 
       {!hasUsers ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed px-4 py-12 text-center">
+        <div
+          role="status"
+          className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed bg-card px-4 py-12 text-center shadow-sm"
+        >
           <div className="flex size-11 items-center justify-center rounded-full bg-muted">
             <Users className="size-5 text-muted-foreground" />
           </div>
@@ -117,7 +120,7 @@ export function UsersTable({ users }: UsersTableProps) {
             ))}
           </div>
 
-          <div className="hidden overflow-hidden rounded-lg border md:block">
+          <div className="hidden overflow-hidden rounded-2xl border bg-card shadow-sm md:block">
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/40 hover:bg-muted/40">

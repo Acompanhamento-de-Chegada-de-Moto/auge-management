@@ -14,7 +14,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { formatCPF } from "@/lib/cpf";
-import { DeleteClientAction } from "../actions";
+import { apiMutation } from "@/lib/api/client";
 
 interface DeleteClientConfirmationProps {
   client: {
@@ -35,7 +35,10 @@ export function DeleteClientConfirmation({
   function handleDelete() {
     startTransition(async () => {
       try {
-        const result = await DeleteClientAction(client.id);
+        const result = await apiMutation(
+          `/api/v1/bdc/clients/${client.id}`,
+          "DELETE",
+        );
         if (result.status === "error") {
           toast.error(result.message);
           return;

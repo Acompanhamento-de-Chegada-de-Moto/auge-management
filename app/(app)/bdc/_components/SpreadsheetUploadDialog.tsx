@@ -2,7 +2,7 @@
 
 import * as XLSX from "xlsx";
 import { SpreadsheetImportDialog } from "@/components/SpreadsheetImportDialog";
-import { importSpreadsheetAction } from "../_actions/import-spreadsheet-action";
+import { apiMutation } from "@/lib/api/client";
 
 const COLUMN_MAP: Record<string, string> = {
   CLIENTE: "cliente",
@@ -127,7 +127,7 @@ export function SpreadsheetUploadDialog() {
       description="Envie uma planilha com os dados dos clientes. Formatos aceitos: Excel, LibreOffice ou CSV."
       emptyRowsMessage="Verifique se as colunas CLIENTE, CHASSI e CONSULTOR estão preenchidas."
       parseFile={async (file) => (await parseSpreadsheet(file)).rows}
-      importRows={importSpreadsheetAction}
+      importRows={(rows) => apiMutation("/api/v1/bdc/import", "POST", rows)}
     />
   );
 }

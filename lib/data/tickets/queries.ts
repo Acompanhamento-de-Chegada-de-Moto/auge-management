@@ -24,3 +24,10 @@ export async function getTicketsByCreator(userId: string) {
     orderBy: { createdAt: "desc" },
   });
 }
+
+export async function getTicketOwnerId(ticketId: string) {
+  return prisma.ticket.findUnique({
+    where: { id: ticketId },
+    select: { createdById: true },
+  });
+}

@@ -5,7 +5,7 @@ import { Loader2, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-import { deleteUserAction } from "@/app/(app)/squad/actions";
+import { apiMutation } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -38,7 +38,10 @@ export function DeleteUserDialog({
     setIsDeleting(true);
 
     try {
-      const result = await deleteUserAction(userId);
+      const result = await apiMutation(
+        `/api/v1/admin/users/${userId}`,
+        "DELETE",
+      );
 
       if (result.status !== "success") {
         toast.error(result.message);

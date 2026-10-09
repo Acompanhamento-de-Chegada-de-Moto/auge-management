@@ -166,7 +166,7 @@ export default function MotorcycleTable({
   }
 
   return (
-    <div className="w-full">
+    <section aria-label="Motocicletas e filtros" className="w-full space-y-4">
       <div className="mb-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
         {statusViews.map((view) => {
           const selected = (activeFilters.status || "all") === view.value;
@@ -177,7 +177,7 @@ export default function MotorcycleTable({
               aria-pressed={selected}
               onClick={() => navigate({ status: view.value, arrived: null })}
               disabled={isPending}
-              className={`flex min-h-16 items-center justify-between rounded-xl border px-4 text-left transition-colors ${
+              className={`flex min-h-20 items-center justify-between rounded-xl border bg-card px-4 text-left shadow-sm transition-colors hover:-translate-y-0.5 hover:shadow-md ${
                 selected
                   ? "border-primary bg-primary/5 ring-1 ring-primary/20"
                   : "bg-card hover:bg-muted/50"
@@ -196,10 +196,11 @@ export default function MotorcycleTable({
         })}
       </div>
 
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+      <div className="flex flex-col gap-3 rounded-2xl border bg-card p-4 shadow-sm sm:flex-row sm:items-center">
         <div className="relative w-full sm:max-w-sm">
           <SearchIcon className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
+            aria-label="Buscar motocicleta pelo chassi"
             placeholder="Buscar pelo chassi"
             value={chassisInput}
             onChange={(event) => setChassisInput(event.target.value)}
@@ -229,7 +230,10 @@ export default function MotorcycleTable({
           onValueChange={(value) => navigate({ model: value })}
           disabled={isPending}
         >
-          <SelectTrigger className="w-full sm:w-56">
+          <SelectTrigger
+            aria-label="Filtrar por modelo"
+            className="min-h-11 w-full sm:w-56"
+          >
             <SelectValue placeholder="Todos os modelos" />
           </SelectTrigger>
           <SelectContent>
@@ -257,7 +261,10 @@ export default function MotorcycleTable({
         )}
       </div>
 
-      <div className="mb-3 flex items-center justify-between text-sm text-muted-foreground">
+      <div
+        className="flex items-center justify-between rounded-lg bg-muted/40 px-3 py-2 text-sm text-muted-foreground"
+        aria-live="polite"
+      >
         <span>
           {total} {total === 1 ? "motocicleta" : "motocicletas"}
         </span>
@@ -265,7 +272,10 @@ export default function MotorcycleTable({
       </div>
 
       {motorcycles.length === 0 ? (
-        <div className="flex flex-col items-center rounded-xl border border-dashed px-6 py-14 text-center">
+        <div
+          role="status"
+          className="flex flex-col items-center rounded-2xl border border-dashed bg-card px-6 py-14 text-center shadow-sm"
+        >
           <div className="mb-4 flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
             <Bike className="size-5" />
           </div>
@@ -401,6 +411,6 @@ export default function MotorcycleTable({
           )}
         </div>
       )}
-    </div>
+    </section>
   );
 }

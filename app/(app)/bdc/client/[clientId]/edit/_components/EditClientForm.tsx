@@ -16,9 +16,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { EditClientAction } from "@/app/(app)/bdc/_actions/edit-client-action";
 import { SidebarSummary } from "@/app/(app)/bdc/_components/SidebarSummary";
-import type { userGetMotorcycle } from "@/app/data/user/user-get-motorcycle";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -43,6 +41,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatCPF } from "@/lib/cpf";
+import { apiMutation, searchMotorcycleByChassis } from "@/lib/api/client";
 import type { getClientById } from "@/lib/data/client";
 import { cn } from "@/lib/utils";
 import {
@@ -57,13 +56,11 @@ type Client = NonNullable<Awaited<ReturnType<typeof getClientById>>>;
 interface EditClientFormProps {
   client: Client;
   selectedMotorcycle: Client["motorcycles"][number] | null;
-  searchChassisAction: typeof userGetMotorcycle;
 }
 
 export function EditClientForm({
   client,
   selectedMotorcycle,
-  searchChassisAction,
 }: EditClientFormProps) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -114,12 +111,15 @@ export function EditClientForm({
     setSearchError(null);
 
     try {
-      const motorcycle = await searchChassisAction(chassisValue);
+      const motorcycle = await searchMotorcycleByChassis<{
+        model: string;
+        forecastArrival: string | null;
+        forecastArrivalStatus: string | null;
+      }>(chassisValue);
       setHasSearched(true);
 
       if (motorcycle) {
         form.setValue("model", motorcycle.model);
-        form.setValue("city", motorcycle.client?.city || "");
         form.setValue(
           "forecastDate",
           motorcycle.forecastArrival
@@ -150,10 +150,13 @@ export function EditClientForm({
 
   const handleSubmit = async (formData: CustomerFormData) => {
     startTransition(async () => {
-      const result = await EditClientAction(
-        client.id,
-        selectedMotorcycle?.id ?? null,
-        formData,
+      const result = await apiMutation(
+        `/api/v1/bdc/clients/${client.id}`,
+        "PUT",
+        {
+          motorcycleId: selectedMotorcycle?.id ?? null,
+          values: formData,
+        },
       );
 
       if (result.status === "error") {

@@ -18,7 +18,7 @@ export default async function DeleteClientPage({
   if (!client) notFound();
 
   return (
-    <main className="min-w-0 p-4 sm:p-6 lg:p-8">
+    <main className="mx-auto flex min-h-[calc(100vh-3.5rem)] min-w-0 w-full max-w-[1600px] items-start justify-center bg-muted/20 p-4 sm:items-center sm:p-6 lg:p-8">
       <DeleteClientConfirmation client={client} />
     </main>
   );

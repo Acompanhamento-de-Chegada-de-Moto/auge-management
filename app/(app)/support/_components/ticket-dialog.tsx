@@ -3,7 +3,7 @@
 import { Loader2, SendHorizonal } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
-import { addTicketMessageAction } from "@/app/(app)/support/actions";
+import { apiMutation } from "@/lib/api/client";
 import type {
   AdminTicket,
   ManagerTicket,
@@ -49,7 +49,11 @@ export function TicketDialog({ ticket, children }: TicketDialogProps) {
     setError(null);
 
     try {
-      const result = await addTicketMessageAction(ticket.id, message);
+      const result = await apiMutation(
+        `/api/v1/support/tickets/${ticket.id}`,
+        "POST",
+        { message },
+      );
 
       if (result.status === "success") {
         setMessage("");

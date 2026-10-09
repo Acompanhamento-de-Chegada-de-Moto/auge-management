@@ -1,7 +1,7 @@
 "use client";
 
 import * as XLSX from "xlsx";
-import { importMotorcyclesAction } from "@/app/(app)/inventory/import-actions";
+import { apiMutation } from "@/lib/api/client";
 import { SpreadsheetImportDialog } from "@/components/SpreadsheetImportDialog";
 
 function normalizeText(value: string) {
@@ -128,7 +128,9 @@ export function MotorcycleSpreadsheetUploadDialog() {
       description="Envie a planilha usando a aba Página2 com as colunas: DATA DE CHEGADA, MODELO, CHASSI."
       emptyRowsMessage="Verifique se a aba Página2 tem a coluna CHASSI preenchida."
       parseFile={async (file) => (await parseSpreadsheet(file)).rows}
-      importRows={importMotorcyclesAction}
+      importRows={(rows) =>
+        apiMutation("/api/v1/inventory/import", "POST", rows)
+      }
     />
   );
 }

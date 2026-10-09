@@ -14,15 +14,13 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { searchMotorcycleByChassis } from "@/lib/api/client";
 import type { CustomerFormData } from "@/validators/customer-schema";
 import { SectionHeader } from "../../_components/section-header";
 import type { MotorcycleLookupResult, MotorcycleLookupState } from "./types";
 
 interface MotorcycleSectionProps {
   form: UseFormReturn<CustomerFormData>;
-  searchChassisAction: (
-    chassis: string,
-  ) => Promise<MotorcycleLookupResult | null>;
   onLookupResult: (state: MotorcycleLookupState) => void;
 }
 
@@ -34,7 +32,6 @@ const arrivalStatusMap: Record<string, CustomerFormData["arrivalStatus"]> = {
 
 export function MotorcycleSection({
   form,
-  searchChassisAction,
   onLookupResult,
 }: MotorcycleSectionProps) {
   const [searchLoading, setSearchLoading] = useState(false);
@@ -98,7 +95,10 @@ export function MotorcycleSection({
     onLookupResult({ searched: false, motorcycle: null });
 
     try {
-      const motorcycle = await searchChassisAction(normalizedChassis);
+      const motorcycle =
+        await searchMotorcycleByChassis<MotorcycleLookupResult>(
+          normalizedChassis,
+        );
 
       setHasSearched(true);
       setMotorcycleFound(Boolean(motorcycle));

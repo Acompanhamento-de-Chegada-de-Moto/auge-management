@@ -75,6 +75,25 @@ model Verification {
   @@map("verification")
 }
 
+model RateLimit {
+  id          String @id
+  key         String @unique
+  count       Int
+  lastRequest BigInt
+
+  @@map("rateLimit")
+}
+
+model ApiRateLimit {
+  key         String   @id
+  windowStart DateTime
+  count       Int
+  expiresAt   DateTime
+
+  @@index([expiresAt])
+  @@map("api_rate_limits")
+}
+
 model Client {
   id          String       @id @default(uuid()) @db.Uuid
   name        String
