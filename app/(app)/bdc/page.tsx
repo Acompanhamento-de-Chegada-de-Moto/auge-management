@@ -5,9 +5,9 @@ import { Suspense } from "react";
 
 import { BDCTable } from "@/app/(app)/bdc/_components/bdc-table";
 import { SpreadsheetUploadDialog } from "@/app/(app)/bdc/_components/SpreadsheetUploadDialog";
-import { getClientsPaginatedAction } from "@/app/(app)/bdc/actions";
 import { Button } from "@/components/ui/button";
 import { BDCPageSkeleton } from "./_components/bdc-page-skeleton";
+import { getClientsPaginatedAction } from "./_actions/get-clients-paginated-action";
 
 export const metadata: Metadata = {
   title: "BDC",

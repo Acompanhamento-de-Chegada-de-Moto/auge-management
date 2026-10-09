@@ -17,7 +17,6 @@ import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { SidebarSummary } from "@/app/(app)/bdc/_components/SidebarSummary";
-import { EditClientAction } from "@/app/(app)/bdc/actions";
 import { SectionHeader } from "../../../../_components/section-header";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -49,6 +48,7 @@ import {
   type CustomerFormData,
   customerSchema,
 } from "@/validators/customer-schema";
+import { EditClientAction } from "@/app/(app)/bdc/_actions/edit-client-action";
 
 type Client = NonNullable<Awaited<ReturnType<typeof getClientById>>>;
 

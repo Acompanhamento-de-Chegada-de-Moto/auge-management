@@ -6,7 +6,6 @@ import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
-import { importSpreadsheetAction } from "@/app/(app)/bdc/actions";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -18,6 +17,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { ACCEPTED_SPREADSHEET_TYPES } from "@/lib/constants";
+import { importSpreadsheetAction } from "../_actions/import-spreadsheet-action";
 
 const COLUMN_MAP: Record<string, string> = {
   CLIENTE: "cliente",

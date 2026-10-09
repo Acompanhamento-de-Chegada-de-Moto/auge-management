@@ -1,4 +1,4 @@
-import type { ClientRow } from "@/app/(app)/bdc/actions";
+import type { ClientRow } from "./_lib/types";
 
 export interface BDCFilterOptions {
   sellers: string[];

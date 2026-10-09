@@ -1,7 +1,5 @@
 import { PencilIcon, Trash2Icon } from "lucide-react";
 import Link from "next/link";
-
-import type { ClientRow } from "@/app/(app)/bdc/actions";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -24,6 +22,7 @@ import {
 } from "@/lib/bdc-data";
 import { formatCPF } from "@/lib/cpf";
 import { formatDateBR } from "@/lib/utils";
+import type { ClientRow } from "../_lib/types";
 
 interface BDCDesktopTableProps {
   rows: ClientRow[];
