@@ -5,6 +5,7 @@ import {
   authorizeApiRequest,
   readJsonBody,
 } from "@/lib/api/auth";
+import { revalidateListingCache } from "@/lib/api/revalidate-listing-cache";
 import { createMotorcycle } from "@/lib/data/motorcycle";
 import { createMotorcycleSchema } from "@/lib/zod-schemas/motorcycle-schema";
 
@@ -36,6 +37,7 @@ export async function POST(request: Request) {
       clientId: data.clientId ?? undefined,
     });
 
+    revalidateListingCache();
     revalidatePath("/inventory");
     revalidatePath("/tracking", "layout");
     return Response.json(

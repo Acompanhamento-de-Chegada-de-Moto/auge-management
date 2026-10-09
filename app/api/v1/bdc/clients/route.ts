@@ -6,6 +6,7 @@ import {
   normalizeDateFields,
   readJsonBody,
 } from "@/lib/api/auth";
+import { revalidateListingCache } from "@/lib/api/revalidate-listing-cache";
 import { createBDCClient } from "@/lib/data/client";
 import {
   mapArrivalStatus,
@@ -53,6 +54,7 @@ export async function POST(request: Request) {
       },
     });
 
+    revalidateListingCache();
     revalidatePath("/bdc");
     revalidatePath("/inventory");
     return Response.json(

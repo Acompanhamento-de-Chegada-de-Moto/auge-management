@@ -5,6 +5,7 @@ import { Toaster } from "sonner";
 import { CookieConsentBanner } from "@/components/CookieConsentBanner";
 import { ThemeColorSync } from "@/components/ThemeColorSync";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { GlobalLoadingBar } from "@/components/ui/global-loading-bar";
 import { cn } from "@/lib/utils";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
@@ -60,6 +61,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <ThemeColorSync />
+          <GlobalLoadingBar />
           <TooltipProvider>{children}</TooltipProvider>
           <Toaster />
         </ThemeProvider>

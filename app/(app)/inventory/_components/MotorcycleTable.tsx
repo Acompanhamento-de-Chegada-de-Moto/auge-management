@@ -6,6 +6,7 @@ import {
   ChevronLeft,
   ChevronRight,
   CopyIcon,
+  LoaderCircle,
   PencilIcon,
   SearchIcon,
   XIcon,
@@ -264,7 +265,12 @@ export default function MotorcycleTable({
         <span>
           {total} {total === 1 ? "motocicleta" : "motocicletas"}
         </span>
-        {isPending && <span aria-live="polite">Atualizando lista…</span>}
+        {isPending && (
+          <span className="inline-flex items-center gap-2" role="status">
+            <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
+            Atualizando lista…
+          </span>
+        )}
       </div>
 
       {motorcycles.length === 0 ? (
@@ -298,8 +304,9 @@ export default function MotorcycleTable({
         </div>
       ) : (
         <div
+          aria-busy={isPending}
           className={
-            isPending ? "pointer-events-none opacity-60 transition-opacity" : ""
+            isPending ? "pointer-events-none opacity-80 transition-opacity" : ""
           }
         >
           <div className="space-y-3 md:hidden">

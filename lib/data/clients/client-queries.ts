@@ -1,5 +1,7 @@
-﻿import { stripCPF } from "@/lib/cpf";
+import { unstable_cache } from "next/cache";
+import { stripCPF } from "@/lib/cpf";
 import { arrivalArrivedWhere } from "@/lib/data/arrival-status";
+import { listingCacheTags } from "@/lib/data/listing-cache-tags";
 import { prisma } from "@/lib/db";
 
 export async function getClients() {
@@ -69,46 +71,61 @@ export async function searchClientsByName(name: string) {
   });
 }
 
-export async function getBDCFilterOptions() {
-  const [sellers, cities, models] = await Promise.all([
-    prisma.client.findMany({
-      select: { sellersName: true },
-      distinct: ["sellersName"],
-      where: { sellersName: { not: "" } },
-      orderBy: { sellersName: "asc" },
-    }),
-    prisma.client.findMany({
-      select: { city: true },
-      distinct: ["city"],
-      where: { city: { not: "" } },
-      orderBy: { city: "asc" },
-    }),
-    prisma.motorcycle.findMany({
-      select: { model: true },
-      distinct: ["model"],
-      where: { model: { not: "" } },
-      orderBy: { model: "asc" },
-    }),
-  ]);
+const getCachedBDCFilterOptions = unstable_cache(
+  async () => {
+    const [sellers, cities, models] = await Promise.all([
+      prisma.client.findMany({
+        select: { sellersName: true },
+        distinct: ["sellersName"],
+        where: { sellersName: { not: "" } },
+        orderBy: { sellersName: "asc" },
+      }),
+      prisma.client.findMany({
+        select: { city: true },
+        distinct: ["city"],
+        where: { city: { not: "" } },
+        orderBy: { city: "asc" },
+      }),
+      prisma.motorcycle.findMany({
+        select: { model: true },
+        distinct: ["model"],
+        where: { model: { not: "" } },
+        orderBy: { model: "asc" },
+      }),
+    ]);
 
-  return {
-    sellers: sellers.map((s) => s.sellersName),
-    cities: cities.map((c) => c.city),
-    models: models.map((m) => m.model),
-  };
+    return {
+      sellers: sellers.map((seller) => seller.sellersName),
+      cities: cities.map((city) => city.city),
+      models: models.map((model) => model.model),
+    };
+  },
+  ["bdc-filter-options"],
+  { revalidate: 300, tags: [listingCacheTags.bdcFilters] },
+);
+
+const getCachedBDCStatusCounts = unstable_cache(
+  async () => {
+    const arrivedFilter = { motorcycles: { some: arrivalArrivedWhere() } };
+    const [total, arrived, waiting] = await Promise.all([
+      prisma.client.count(),
+      prisma.client.count({ where: arrivedFilter }),
+      prisma.client.count({ where: { NOT: arrivedFilter } }),
+    ]);
+
+    return { total, arrived, waiting };
+  },
+  ["bdc-status-counts"],
+  { revalidate: 60, tags: [listingCacheTags.bdcCounts] },
+);
+
+export function getBDCFilterOptions() {
+  return getCachedBDCFilterOptions();
 }
 
-export async function getBDCStatusCounts() {
-  const arrivedFilter = { motorcycles: { some: arrivalArrivedWhere() } };
-  const [total, arrived, waiting] = await Promise.all([
-    prisma.client.count(),
-    prisma.client.count({ where: arrivedFilter }),
-    prisma.client.count({ where: { NOT: arrivedFilter } }),
-  ]);
-
-  return { total, arrived, waiting };
+export function getBDCStatusCounts() {
+  return getCachedBDCStatusCounts();
 }
-
 export async function getClientsPaginated(params: {
   page: number;
   pageSize: number;

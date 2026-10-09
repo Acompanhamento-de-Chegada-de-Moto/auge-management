@@ -1,9 +1,11 @@
-﻿import type { Prisma } from "@/generated/prisma/client";
+import { unstable_cache } from "next/cache";
+import type { Prisma } from "@/generated/prisma/client";
 import {
   arrivalArrivedWhere,
   arrivalDelayedWhere,
   arrivalInTransitWhere,
 } from "@/lib/data/arrival-status";
+import { listingCacheTags } from "@/lib/data/listing-cache-tags";
 import { prisma } from "@/lib/db";
 
 export async function getAllMotorcycles() {
@@ -22,32 +24,45 @@ export async function getAllMotorcycles() {
   });
 }
 
-export async function getEstoqueFilterOptions() {
-  const models = await prisma.motorcycle.findMany({
-    select: { model: true },
-    distinct: ["model"],
-    where: { model: { not: "" } },
-    orderBy: { model: "asc" },
-  });
+const getCachedEstoqueFilterOptions = unstable_cache(
+  async () => {
+    const models = await prisma.motorcycle.findMany({
+      select: { model: true },
+      distinct: ["model"],
+      where: { model: { not: "" } },
+      orderBy: { model: "asc" },
+    });
 
-  return {
-    models: models.map((m) => m.model),
-  };
+    return { models: models.map((motorcycle) => motorcycle.model) };
+  },
+  ["inventory-filter-options"],
+  { revalidate: 300, tags: [listingCacheTags.inventoryFilters] },
+);
+
+const getCachedMotorcycleStatusCounts = unstable_cache(
+  async () => {
+    const [total, inTransit, arrived, delayed] = await Promise.all([
+      prisma.motorcycle.count(),
+      prisma.motorcycle.count({
+        where: { forecastArrivalStatus: "NO_INFORMATION" },
+      }),
+      prisma.motorcycle.count({ where: { forecastArrivalStatus: "ARRIVED" } }),
+      prisma.motorcycle.count({ where: { forecastArrivalStatus: "DELAYED" } }),
+    ]);
+
+    return { total, inTransit, arrived, delayed };
+  },
+  ["inventory-status-counts"],
+  { revalidate: 60, tags: [listingCacheTags.inventoryCounts] },
+);
+
+export function getEstoqueFilterOptions() {
+  return getCachedEstoqueFilterOptions();
 }
 
-export async function getMotorcycleStatusCounts() {
-  const [total, inTransit, arrived, delayed] = await Promise.all([
-    prisma.motorcycle.count(),
-    prisma.motorcycle.count({
-      where: { forecastArrivalStatus: "NO_INFORMATION" },
-    }),
-    prisma.motorcycle.count({ where: { forecastArrivalStatus: "ARRIVED" } }),
-    prisma.motorcycle.count({ where: { forecastArrivalStatus: "DELAYED" } }),
-  ]);
-
-  return { total, inTransit, arrived, delayed };
+export function getMotorcycleStatusCounts() {
+  return getCachedMotorcycleStatusCounts();
 }
-
 export async function getMotorcyclesPaginated(params: {
   page: number;
   pageSize: number;

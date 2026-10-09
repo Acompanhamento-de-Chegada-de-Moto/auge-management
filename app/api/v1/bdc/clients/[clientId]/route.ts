@@ -7,6 +7,7 @@ import {
   normalizeDateFields,
   readJsonBody,
 } from "@/lib/api/auth";
+import { revalidateListingCache } from "@/lib/api/revalidate-listing-cache";
 import { deleteClient, updateBDCClient } from "@/lib/data/client";
 import {
   mapArrivalStatus,
@@ -89,6 +90,7 @@ export async function PUT(request: Request, { params }: RouteContext) {
     });
 
     if (error) return apiError(error, 409);
+    revalidateListingCache();
     revalidatePath("/bdc");
     revalidatePath("/inventory");
     revalidatePath("/tracking", "layout");
@@ -118,6 +120,7 @@ export async function DELETE(request: Request, { params }: RouteContext) {
 
   try {
     await deleteClient(clientId);
+    revalidateListingCache();
     revalidatePath("/bdc");
     revalidatePath("/inventory");
     revalidatePath("/tracking", "layout");

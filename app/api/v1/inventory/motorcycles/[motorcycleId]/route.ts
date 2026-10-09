@@ -6,6 +6,7 @@ import {
   authorizeApiRequest,
   readJsonBody,
 } from "@/lib/api/auth";
+import { revalidateListingCache } from "@/lib/api/revalidate-listing-cache";
 import {
   deleteMotorcycle,
   updateMotorcycleSafely,
@@ -45,6 +46,7 @@ export async function PUT(request: Request, { params }: RouteContext) {
     });
     if (error) return apiError(error, 409);
 
+    revalidateListingCache();
     revalidatePath("/inventory");
     revalidatePath("/tracking", "layout");
     return Response.json({ message: "Motocicleta atualizada com sucesso." });
@@ -75,6 +77,7 @@ export async function DELETE(request: Request, { params }: RouteContext) {
     const result = await deleteMotorcycle(motorcycleId);
     if (result.count === 0) return apiError("Motocicleta não encontrada.", 404);
 
+    revalidateListingCache();
     revalidatePath("/inventory");
     revalidatePath("/tracking", "layout");
     return Response.json({

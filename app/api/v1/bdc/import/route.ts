@@ -6,6 +6,7 @@ import {
   authorizeApiRequest,
   readJsonBody,
 } from "@/lib/api/auth";
+import { revalidateListingCache } from "@/lib/api/revalidate-listing-cache";
 import { importBDCSpreadsheet } from "@/lib/data/client";
 
 const rowSchema = z.object({
@@ -35,6 +36,7 @@ export async function POST(request: Request) {
       return apiError("Linhas inválidas ou limite de 10.000 excedido.", 400);
 
     const counts = await importBDCSpreadsheet(parsed.data);
+    revalidateListingCache();
     const parts = [
       counts.created ? `${counts.created} moto(s) criada(s)` : "",
       counts.updated ? `${counts.updated} moto(s) atualizada(s)` : "",

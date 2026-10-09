@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
+import { LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import type { BDCTableProps } from "../bdc-table.types";
@@ -118,7 +119,12 @@ export function BDCTable({
         <span>
           {totalClients} {totalClients === 1 ? "cliente" : "clientes"}
         </span>
-        {isPending && <span aria-live="polite">Atualizando lista...</span>}
+        {isPending && (
+          <span className="inline-flex items-center gap-2" role="status">
+            <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
+            Atualizando lista…
+          </span>
+        )}
       </div>
 
       {rows.length === 0 ? (
@@ -141,9 +147,10 @@ export function BDCTable({
         </div>
       ) : (
         <div
+          aria-busy={isPending}
           className={
             isPending
-              ? "pointer-events-none opacity-60 transition-opacity"
+              ? "pointer-events-none opacity-80 transition-opacity"
               : undefined
           }
         >
