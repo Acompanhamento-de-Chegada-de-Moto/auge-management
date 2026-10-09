@@ -1,17 +1,15 @@
 ﻿"use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import dayjs from "dayjs";
-import { CalendarDays, LoaderCircle, Save } from "lucide-react";
+import { LoaderCircle, Save } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import type { z } from "zod/v3";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
+import { DateInput } from "@/components/DateInput";
 import {
   Form,
   FormControl,
@@ -22,11 +20,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -165,37 +158,16 @@ export function MotorcycleForm({
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
                       <FormLabel>PrevisÃ£o de chegada</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              className={cn(
-                                "w-full justify-start text-left font-normal",
-                                !field.value && "text-muted-foreground",
-                              )}
-                            >
-                              <CalendarDays className="mr-2 size-4" />
-                              {field.value
-                                ? format(new Date(field.value), "dd/MM/yyyy", {
-                                    locale: ptBR,
-                                  })
-                                : "Selecionar data (opcional)"}
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={
-                              field.value ? new Date(field.value) : undefined
-                            }
-                            onSelect={field.onChange}
-                            locale={ptBR}
-                          />
-                        </PopoverContent>
-                      </Popover>
+                      <FormControl>
+                        <DateInput
+                          name={field.name}
+                          ref={field.ref}
+                          value={field.value as Date | undefined}
+                          onValueChange={field.onChange}
+                          onBlur={field.onBlur}
+                          className="input h-11 w-full rounded-xl border-base-300 bg-base-100 px-3.5 text-sm shadow-none focus:border-primary focus:outline-2 focus:outline-primary/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-invalid:border-error"
+                        />
+                      </FormControl>
                       {field.value && (
                         <Button
                           type="button"

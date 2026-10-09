@@ -1,7 +1,7 @@
 "use client";
 
 import { isBefore, startOfDay } from "date-fns";
-import { ShieldCheck } from "lucide-react";
+import { ClipboardList } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
 import {
   FormControl,
@@ -39,8 +39,12 @@ export function RegistrationSection({
     isBefore(startOfDay(forecastDate), startOfDay(new Date()));
 
   return (
-    <section className="rounded-xl border bg-card p-4 sm:p-5 lg:p-6">
-      <SectionHeader icon={ShieldCheck} title="Faturamento e Emplacamento" />
+    <section className="min-w-0 pb-2">
+      <SectionHeader
+        icon={ClipboardList}
+        title="Datas e emplacamento"
+        description="Informações complementares do pedido."
+      />
 
       <div className="grid gap-4 sm:grid-cols-2">
         <DatePickerField
@@ -62,7 +66,7 @@ export function RegistrationSection({
           control={form.control}
           name="arrivalStatus"
           render={({ field }) => (
-            <FormItem className="sm:col-span-2">
+            <FormItem>
               <FormLabel>
                 Status de Chegada
                 <span className="ml-0.5 text-destructive" aria-hidden="true">

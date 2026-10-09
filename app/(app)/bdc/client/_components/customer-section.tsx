@@ -1,6 +1,6 @@
 "use client";
 
-import { User } from "lucide-react";
+import { UserRound } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
 import {
   FormControl,
@@ -20,8 +20,8 @@ interface CustomerSectionProps {
 
 export function CustomerSection({ form }: CustomerSectionProps) {
   return (
-    <section className="rounded-xl border bg-card p-4 sm:p-5 lg:p-6">
-      <SectionHeader icon={User} title="Dados do Cliente" />
+    <section className="min-w-0 border-b border-base-300/80 pb-6">
+      <SectionHeader icon={UserRound} title="Dados do Cliente" />
 
       <div className="grid gap-4 sm:grid-cols-2">
         <FormField
@@ -36,7 +36,11 @@ export function CustomerSection({ form }: CustomerSectionProps) {
                 </span>
               </FormLabel>
               <FormControl>
-                <Input placeholder="Nome do cliente" {...field} />
+                <Input
+                  placeholder="Nome completo do cliente"
+                  autoComplete="name"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -59,6 +63,7 @@ export function CustomerSection({ form }: CustomerSectionProps) {
                   {...field}
                   placeholder="000.000.000-00"
                   inputMode="numeric"
+                  autoComplete="off"
                   onChange={(event) => {
                     field.onChange(maskCPFIncremental(event.target.value));
                   }}
@@ -81,7 +86,11 @@ export function CustomerSection({ form }: CustomerSectionProps) {
                 </span>
               </FormLabel>
               <FormControl>
-                <Input placeholder="Nome do vendedor" {...field} />
+                <Input
+                  placeholder="Nome do vendedor responsável"
+                  autoComplete="off"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -100,7 +109,11 @@ export function CustomerSection({ form }: CustomerSectionProps) {
                 </span>
               </FormLabel>
               <FormControl>
-                <Input placeholder="Cidade" {...field} />
+                <Input
+                  placeholder="Cidade"
+                  autoComplete="address-level2"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

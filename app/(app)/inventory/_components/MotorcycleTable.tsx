@@ -8,13 +8,13 @@ import {
   CopyIcon,
   PencilIcon,
   SearchIcon,
-  Trash2Icon,
   XIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -63,7 +63,7 @@ interface MotorcycleTableProps {
 
 const statusViews = [
   { label: "Todas", value: "all", countKey: "total" },
-  { label: "Em trÃ¢nsito", value: "in-transit", countKey: "inTransit" },
+  { label: "Em trânsito", value: "in-transit", countKey: "inTransit" },
   { label: "Chegou", value: "arrived", countKey: "arrived" },
   { label: "Atrasadas", value: "delayed", countKey: "delayed" },
 ] as const;
@@ -150,17 +150,13 @@ export default function MotorcycleTable({
           <PencilIcon className="mr-2 size-4" />
           <span className="hidden lg:inline">Editar</span>
         </Link>
-        <Link
-          href={`/inventory/motorcycle/${motorcycle.id}/delete`}
-          aria-label={`Excluir ${motorcycle.model}`}
-          className={buttonVariants({
-            variant: "ghost",
-            size: "icon",
-            className: "min-h-10 min-w-10 text-destructive",
-          })}
-        >
-          <Trash2Icon className="size-4" />
-        </Link>
+        <ConfirmDeleteDialog
+          endpoint={`/api/v1/inventory/motorcycles/${motorcycle.id}`}
+          itemType="Motocicleta"
+          itemName={`${motorcycle.model} · ${motorcycle.chassi}`}
+          description="A exclusão é permanente e remove esta unidade do estoque."
+          triggerLabel={`Excluir ${motorcycle.model}, chassi ${motorcycle.chassi}`}
+        />
       </div>
     );
   }
@@ -177,10 +173,10 @@ export default function MotorcycleTable({
               aria-pressed={selected}
               onClick={() => navigate({ status: view.value, arrived: null })}
               disabled={isPending}
-              className={`flex min-h-20 items-center justify-between rounded-xl border bg-card px-4 text-left shadow-sm transition-colors hover:-translate-y-0.5 hover:shadow-md ${
+              className={`flex min-h-16 items-center justify-between rounded-lg border border-base-300/80 bg-base-100 px-4 text-left transition-colors hover:bg-base-200 ${
                 selected
                   ? "border-primary bg-primary/5 ring-1 ring-primary/20"
-                  : "bg-card hover:bg-muted/50"
+                  : "hover:bg-base-200"
               }`}
             >
               <span
@@ -196,7 +192,7 @@ export default function MotorcycleTable({
         })}
       </div>
 
-      <div className="flex flex-col gap-3 rounded-2xl border bg-card p-4 shadow-sm sm:flex-row sm:items-center">
+      <div className="flex flex-col gap-3 rounded-xl border border-base-300/80 bg-base-100 p-3 sm:flex-row sm:items-center sm:p-4">
         <div className="relative w-full sm:max-w-sm">
           <SearchIcon className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -262,28 +258,28 @@ export default function MotorcycleTable({
       </div>
 
       <div
-        className="flex items-center justify-between rounded-lg bg-muted/40 px-3 py-2 text-sm text-muted-foreground"
+        className="flex items-center justify-between border-y border-base-300/70 px-1 py-2 text-sm text-base-content/65"
         aria-live="polite"
       >
         <span>
           {total} {total === 1 ? "motocicleta" : "motocicletas"}
         </span>
-        {isPending && <span aria-live="polite">Atualizando listaâ€¦</span>}
+        {isPending && <span aria-live="polite">Atualizando lista…</span>}
       </div>
 
       {motorcycles.length === 0 ? (
         <div
           role="status"
-          className="flex flex-col items-center rounded-2xl border border-dashed bg-card px-6 py-14 text-center shadow-sm"
+          className="flex flex-col items-center rounded-xl border border-dashed border-base-300 bg-base-100 px-6 py-12 text-center"
         >
           <div className="mb-4 flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
             <Bike className="size-5" />
           </div>
           <h2 className="font-medium">
-            Nenhuma motocicleta nesta visualizaÃ§Ã£o
+            Nenhuma motocicleta nesta visualização
           </h2>
           <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-            Ajuste os filtros ou cadastre uma motocicleta para comeÃ§ar a
+            Ajuste os filtros ou cadastre uma motocicleta para começar a
             acompanhar o estoque.
           </p>
           {activeFilters.model ||
@@ -315,7 +311,7 @@ export default function MotorcycleTable({
               return (
                 <article
                   key={motorcycle.id}
-                  className="rounded-xl border bg-card p-4"
+                  className="rounded-lg border border-base-300/80 bg-base-100 p-4"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
@@ -328,7 +324,7 @@ export default function MotorcycleTable({
                   </div>
                   <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t pt-3">
                     <span className="text-sm text-muted-foreground">
-                      PrevisÃ£o:{" "}
+                      Previsão:{" "}
                       {formatDateBR(motorcycle.forecastArrival) ?? "Sem data"}
                     </span>
                     <span
@@ -342,15 +338,15 @@ export default function MotorcycleTable({
             })}
           </div>
 
-          <div className="hidden overflow-hidden rounded-xl border bg-card md:block">
+          <div className="hidden overflow-hidden rounded-lg border border-base-300/80 bg-base-100 md:block">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Motocicleta</TableHead>
                   <TableHead>Chassi</TableHead>
-                  <TableHead>PrevisÃ£o de chegada</TableHead>
+                  <TableHead>Previsão de chegada</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="text-right">AÃ§Ãµes</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -385,7 +381,7 @@ export default function MotorcycleTable({
 
           {totalPages > 1 && (
             <nav
-              aria-label="PaginaÃ§Ã£o do estoque"
+              aria-label="Paginação do estoque"
               className="flex items-center justify-center gap-4 border-t py-4"
             >
               <Button
@@ -397,7 +393,7 @@ export default function MotorcycleTable({
                 <ChevronLeft className="mr-1 size-4" /> Anterior
               </Button>
               <span className="text-sm text-muted-foreground">
-                PÃ¡gina {page} de {totalPages}
+                Página {page} de {totalPages}
               </span>
               <Button
                 variant="outline"
@@ -405,7 +401,7 @@ export default function MotorcycleTable({
                 disabled={page >= totalPages || isPending}
                 onClick={() => navigate({ page: String(page + 1) }, false)}
               >
-                PrÃ³xima <ChevronRight className="ml-1 size-4" />
+                Próxima <ChevronRight className="ml-1 size-4" />
               </Button>
             </nav>
           )}

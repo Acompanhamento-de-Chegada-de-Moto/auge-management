@@ -26,7 +26,7 @@ function PaginationContent({
   return (
     <ul
       data-slot="pagination-content"
-      className={cn("flex items-center gap-0.5", className)}
+      className={cn("join items-center gap-1", className)}
       {...props}
     />
   );
@@ -50,9 +50,9 @@ function PaginationLink({
   return (
     <Button
       asChild
-      variant={isActive ? "outline" : "ghost"}
+      variant={isActive ? "default" : "outline"}
       size={size}
-      className={cn(className)}
+      className={cn(isActive && "btn-active", className)}
     >
       <a
         aria-current={isActive ? "page" : undefined}

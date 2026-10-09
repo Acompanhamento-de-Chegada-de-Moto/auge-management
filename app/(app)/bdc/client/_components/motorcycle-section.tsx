@@ -17,11 +17,11 @@ import { cn } from "@/lib/utils";
 import { searchMotorcycleByChassis } from "@/lib/api/client";
 import type { CustomerFormData } from "@/validators/customer-schema";
 import { SectionHeader } from "../../_components/section-header";
-import type { MotorcycleLookupResult, MotorcycleLookupState } from "./types";
+import type { MotorcycleLookupResult } from "./types";
 
 interface MotorcycleSectionProps {
   form: UseFormReturn<CustomerFormData>;
-  onLookupResult: (state: MotorcycleLookupState) => void;
+  onLookupResult: (found: boolean) => void;
 }
 
 const arrivalStatusMap: Record<string, CustomerFormData["arrivalStatus"]> = {
@@ -45,7 +45,7 @@ export function MotorcycleSection({
     setHasSearched(false);
     setMotorcycleFound(false);
     setSearchError(null);
-    onLookupResult({ searched: false, motorcycle: null });
+    onLookupResult(false);
   }
 
   function fillMotorcycleFields(motorcycle: MotorcycleLookupResult) {
@@ -92,7 +92,7 @@ export function MotorcycleSection({
     setSearchError(null);
     setHasSearched(false);
     setMotorcycleFound(false);
-    onLookupResult({ searched: false, motorcycle: null });
+    onLookupResult(false);
 
     try {
       const motorcycle =
@@ -102,7 +102,7 @@ export function MotorcycleSection({
 
       setHasSearched(true);
       setMotorcycleFound(Boolean(motorcycle));
-      onLookupResult({ searched: true, motorcycle });
+      onLookupResult(Boolean(motorcycle));
 
       if (motorcycle) {
         fillMotorcycleFields(motorcycle);
@@ -115,7 +115,7 @@ export function MotorcycleSection({
   }
 
   return (
-    <section className="min-w-0 rounded-xl border bg-card p-4 sm:p-5 lg:p-6">
+    <section className="min-w-0 border-b border-base-300/80 pb-6">
       <SectionHeader
         icon={Bike}
         title="Motocicleta"
@@ -150,6 +150,11 @@ export function MotorcycleSection({
                           "border-green-600 focus-visible:ring-green-600/30",
                       )}
                       onChange={(event) => {
+                        if (motorcycleFound) {
+                          form.setValue("model", "", { shouldValidate: true });
+                          form.setValue("forecastDate", undefined);
+                          form.setValue("arrivalStatus", "Sem Informação");
+                        }
                         field.onChange(event.target.value.toUpperCase());
                         clearSearchState();
                       }}

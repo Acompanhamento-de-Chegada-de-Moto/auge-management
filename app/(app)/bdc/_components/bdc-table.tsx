@@ -83,10 +83,10 @@ export function BDCTable({
               aria-pressed={selected}
               disabled={isPending}
               onClick={() => updateParams({ arrived: view.value })}
-              className={`flex min-h-20 items-center justify-between rounded-xl border bg-card px-4 text-left shadow-sm transition-colors hover:-translate-y-0.5 hover:shadow-md ${
+              className={`flex min-h-16 items-center justify-between rounded-lg border border-base-300/80 bg-base-100 px-4 text-left transition-colors hover:bg-base-200 ${
                 selected
                   ? "border-primary bg-primary/5 ring-1 ring-primary/20"
-                  : "bg-card hover:bg-muted/50"
+                  : "hover:bg-base-200"
               }`}
             >
               <span
@@ -112,7 +112,7 @@ export function BDCTable({
       />
 
       <div
-        className="flex items-center justify-between rounded-lg bg-muted/40 px-3 py-2 text-sm text-muted-foreground"
+        className="flex items-center justify-between border-y border-base-300/70 px-1 py-2 text-sm text-base-content/65"
         aria-live="polite"
       >
         <span>
@@ -124,9 +124,9 @@ export function BDCTable({
       {rows.length === 0 ? (
         <div
           role="status"
-          className="flex flex-col items-center rounded-2xl border border-dashed bg-card px-6 py-14 text-center shadow-sm"
+          className="flex flex-col items-center rounded-xl border border-dashed border-base-300 bg-base-100 px-6 py-12 text-center"
         >
-          <h2 className="font-medium">Nenhum cliente nesta visualizaÃ§Ã£o</h2>
+          <h2 className="font-medium">Nenhum cliente nesta visualização</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Altere os filtros ou cadastre um cliente para acompanhar o
             atendimento.
@@ -167,7 +167,7 @@ export function BDCTable({
               </button>
 
               <span className="text-sm text-muted-foreground">
-                PÃ¡gina {page} de {totalPages}
+                Página {page} de {totalPages}
               </span>
 
               <button
@@ -176,7 +176,7 @@ export function BDCTable({
                 disabled={page >= totalPages || isPending}
                 onClick={() => handlePageChange(page + 1)}
               >
-                PrÃ³xima
+                Próxima
               </button>
             </div>
           )}

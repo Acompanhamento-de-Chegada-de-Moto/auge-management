@@ -22,7 +22,7 @@ Sistema de gerenciamento de concessionária de motocicletas. Módulos atuais:
 | React | 19.2.4 com React Compiler |
 | Lang | TypeScript 5 (strict) |
 | Styling | Tailwind CSS v4 (`@import "tailwindcss"`) |
-| UI | shadcn/ui — estilo **radix-nova** |
+| UI | daisyUI 5 + Tailwind CSS v4; HTML nativo e APIs do navegador para interações |
 | Forms | react-hook-form + zod + @hookform/resolvers |
 | Auth | better-auth + Prisma adapter |
 | DB | PostgreSQL (local via Docker) |
@@ -91,7 +91,7 @@ app/
 # importados por caminho relativo. Só fica em components/ o que é realmente compartilhado.
 
 components/                 # APENAS compartilhados/globais
-  ui/                       # shadcn/ui components (NEVER edit directly)
+  ui/                       # wrappers compartilhados: classes daisyUI + HTML nativo
   layout/                   # header.tsx, navbar.tsx (shell do app — usados por app/(app)/layout)
   providers/                # query-provider.tsx
   ThemeProvider.tsx         # ThemeColorSync, ModeToggle, CookieConsentBanner (layout raiz / globais)
@@ -126,11 +126,11 @@ prisma.config.ts            # Config do Prisma 7 (datasource + migrations.seed)
 
 ## Convenções de Código
 
-### shadcn/ui
-- **Estilo**: `radix-nova` (definido em `components.json`)
-- **Nunca edite** componentes em `components/ui/` diretamente. Se precisar customizar, use `cn()` com overrides ou crie um wrapper.
-- Para adicionar novos componentes: `npx shadcn add <componente>`
-- Componentes existentes: Badge, Breadcrumb, Button, Calendar, Card, Dialog, DropdownMenu, Form, Input, Label, Popover, Select, Switch, Table
+### daisyUI e HTML acessível
+- **Estilo visual**: daisyUI 5 com Tailwind CSS v4 e temas claro/escuro próprios.
+- Componentes compartilhados em `components/ui/` usam classes daisyUI, elementos HTML nativos e APIs do navegador como `<dialog>`.
+- Não instale shadcn nem Radix. Para novos componentes, use classes daisyUI e controles nativos acessíveis.
+- Prefira superfícies discretas, foco visível, contraste suficiente e alvos de toque confortáveis.
 
 ### Tailwind CSS v4
 - Usa sintaxe nova: `@import "tailwindcss"` (não `@tailwind` directives)
@@ -258,7 +258,7 @@ model Setting { ... }      // chave-valor para configs do sistema
    - **Não encontrada**: avança Step 2 com chassi preenchido, resto manual.
 2. **Step 2 — Dados do Cliente**: Campos disponíveis:
    - Cliente, Vendedor, Cidade, Modelo, Chassi (readonly)
-   - **Data de Faturamento** (DatePicker shadcn)
+- **Data de Faturamento** (DatePicker compartilhado com estilo daisyUI)
    - **Previsão de Chegada**: DatePicker (opcional)
    - **Status de Emplacamento**: Select (Pendente / Em Emplacamento / Emplacado)
      - Se diferente de "Pendente": aparece DatePicker para data do emplacamento
@@ -408,7 +408,7 @@ arrivalDate: Date (optional)
 
 ### `MotorcycleForm` / `MotorcycleEditForm`
 - Formulários de cadastro/edição de motocicleta
-- Campos: Chassi, Modelo, Previsão de Chegada (DatePicker shadcn)
+- Campos: Chassi, Modelo, Previsão de Chegada (DatePicker compartilhado com estilo daisyUI)
 - Edit form permite alterar o chassi (com validação de duplicata)
 
 ---
@@ -518,7 +518,7 @@ O seed (`prisma/seed.ts`) reusa `createUser` de `lib/data/user.ts` (via `auth.ap
 
 ## Notas para Agentes
 
-1. **Sempre use shadcn/ui** para novos componentes de UI. Não crie do zero.
+1. **Use daisyUI** para os estilos de novos componentes de UI e prefira elementos HTML nativos para interações acessíveis.
 2. **Sempre valide formulários com Zod** + react-hook-form. Não use estado local descontrolado.
 3. **Datas**: use `date-fns` para formatação e `dayjs` para cálculos/comparações.
 4. **DAL**: nunca coloque lógica de auth em `lib/data/*.ts`. Auth e autorização ficam nos Route Handlers; as páginas autenticadas também passam pelos guards server-side.

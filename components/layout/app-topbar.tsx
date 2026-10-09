@@ -29,7 +29,7 @@ export function AppTopbar() {
   ) ?? [/^\//, "Auge Management", "Área de trabalho"];
 
   return (
-    <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center gap-3 border-b border-border/60 bg-background/85 px-4 backdrop-blur-xl sm:px-6">
+    <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center gap-3 border-b border-base-300/80 bg-base-100 px-4 sm:px-6">
       <SidebarTrigger className="size-10 rounded-xl" />
       <div className="h-7 w-px bg-border/70" aria-hidden="true" />
 

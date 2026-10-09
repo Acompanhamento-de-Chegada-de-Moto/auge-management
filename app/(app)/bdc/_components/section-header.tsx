@@ -12,13 +12,16 @@ export function SectionHeader({
   description,
 }: SectionHeaderProps) {
   return (
-    <div className="mb-6 flex items-start gap-3">
-      <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border bg-muted/40">
-        <Icon className="size-4 text-muted-foreground" />
-      </div>
+    <div className="mb-5 flex items-start gap-2.5">
+      <Icon
+        className="mt-0.5 size-4 shrink-0 text-primary"
+        aria-hidden="true"
+      />
 
       <div className="min-w-0 space-y-1">
-        <h2 className="text-base font-semibold tracking-tight">{title}</h2>
+        <h2 className="text-sm font-semibold tracking-tight sm:text-base">
+          {title}
+        </h2>
 
         {description && (
           <p className="text-sm text-muted-foreground">{description}</p>

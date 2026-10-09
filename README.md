@@ -17,7 +17,7 @@ Sistema de gerenciamento para concessionária de motocicletas. Controle de clien
 | Camada | Tecnologia |
 |--------|-----------|
 | Framework | Next.js 16 (App Router) |
-| UI | React 19, TypeScript (strict), Tailwind CSS v4, shadcn/ui (radix-nova) |
+| UI | React 19, TypeScript (strict), Tailwind CSS v4, daisyUI 5 e HTML nativo |
 | Formulários | react-hook-form + Zod |
 | Autenticação | better-auth + Prisma adapter |
 | Banco de dados | PostgreSQL (local via Docker) |

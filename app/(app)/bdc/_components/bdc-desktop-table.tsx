@@ -28,47 +28,47 @@ interface BDCDesktopTableProps {
 
 export function BDCDesktopTable({ rows }: BDCDesktopTableProps) {
   return (
-    <div className="hidden min-w-0 w-full overflow-hidden rounded-md border md:block">
-      <Table className="w-full table-fixed text-xs">
+    <div className="hidden min-w-0 w-full overflow-hidden rounded-lg border border-base-300/80 md:block">
+      <Table className="w-full table-fixed text-[13px]">
         <TableHeader>
-          <TableRow>
-            <TableHead className="w-[20%] whitespace-normal px-2">
+          <TableRow className="bg-base-200/70 hover:bg-base-200/70">
+            <TableHead className="h-10 w-[20%] whitespace-normal px-2 text-[11px] font-semibold uppercase tracking-wide text-base-content/65">
               Cliente
             </TableHead>
 
-            <TableHead className="hidden w-[12%] whitespace-normal px-2 xl:table-cell">
+            <TableHead className="h-10 hidden w-[12%] whitespace-normal px-2 text-[11px] font-semibold uppercase tracking-wide text-base-content/65 xl:table-cell">
               CPF
             </TableHead>
 
-            <TableHead className="hidden w-[12%] whitespace-normal px-2 xl:table-cell">
+            <TableHead className="h-10 hidden w-[12%] whitespace-normal px-2 text-[11px] font-semibold uppercase tracking-wide text-base-content/65 xl:table-cell">
               Vendedor
             </TableHead>
 
-            <TableHead className="hidden w-[12%] whitespace-normal px-2 2xl:table-cell">
+            <TableHead className="h-10 hidden w-[12%] whitespace-normal px-2 text-[11px] font-semibold uppercase tracking-wide text-base-content/65 2xl:table-cell">
               Cidade
             </TableHead>
 
-            <TableHead className="w-[14%] whitespace-normal px-2">
+            <TableHead className="h-10 w-[14%] whitespace-normal px-2 text-[11px] font-semibold uppercase tracking-wide text-base-content/65">
               Modelo
             </TableHead>
 
-            <TableHead className="w-[14%] whitespace-normal px-2">
+            <TableHead className="h-10 w-[14%] whitespace-normal px-2 text-[11px] font-semibold uppercase tracking-wide text-base-content/65">
               Chassi
             </TableHead>
 
-            <TableHead className="hidden w-[12%] whitespace-normal px-2 2xl:table-cell">
+            <TableHead className="h-10 hidden w-[12%] whitespace-normal px-2 text-[11px] font-semibold uppercase tracking-wide text-base-content/65 2xl:table-cell">
               Faturamento
             </TableHead>
 
-            <TableHead className="w-[14%] whitespace-normal px-2">
+            <TableHead className="h-10 w-[14%] whitespace-normal px-2 text-[11px] font-semibold uppercase tracking-wide text-base-content/65">
               Previsão
             </TableHead>
 
-            <TableHead className="w-[12%] whitespace-normal px-2">
+            <TableHead className="h-10 w-[12%] whitespace-normal px-2 text-[11px] font-semibold uppercase tracking-wide text-base-content/65">
               Situação
             </TableHead>
 
-            <TableHead className="w-[140px] whitespace-normal px-2">
+            <TableHead className="h-10 w-[140px] whitespace-normal px-2 text-[11px] font-semibold uppercase tracking-wide text-base-content/65">
               Ações
             </TableHead>
           </TableRow>

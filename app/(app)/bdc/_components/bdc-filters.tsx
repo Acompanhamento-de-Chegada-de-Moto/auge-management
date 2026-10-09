@@ -54,7 +54,7 @@ export function BDCFilters({
   );
 
   return (
-    <div className="space-y-3 rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
+    <div className="space-y-3 rounded-xl border border-base-300/80 bg-base-100 p-3 sm:p-4">
       <div className="flex flex-col gap-2 sm:flex-row">
         <div className="relative min-w-0 flex-1">
           <SearchIcon className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />

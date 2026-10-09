@@ -36,7 +36,7 @@ function LoadingBar() {
 
   return (
     <div
-      className={`fixed top-0 left-0 right-0 z-[9999] h-[3px] bg-red-600 transition-opacity duration-200 ${
+      className={`fixed top-0 left-0 right-0 z-[9999] h-[3px] bg-primary transition-opacity duration-200 ${
         loading ? "opacity-100" : "opacity-0"
       }`}
     />

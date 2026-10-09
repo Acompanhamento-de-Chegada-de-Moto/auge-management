@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 export default async function NewClientPage() {
   return (
-    <main
+    <section
       className="mx-auto min-w-0 w-full max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8"
       aria-labelledby="page-title"
     >
@@ -56,6 +56,6 @@ export default async function NewClientPage() {
 
         <CreateClientForm />
       </div>
-    </main>
+    </section>
   );
 }

@@ -1,5 +1,6 @@
-import { PencilIcon, Trash2Icon } from "lucide-react";
+import { PencilIcon } from "lucide-react";
 import Link from "next/link";
+import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 import { buttonVariants } from "@/components/ui/button";
 
 interface BDCRowActionsProps {
@@ -30,17 +31,13 @@ export function BDCRowActions({
       >
         <PencilIcon className="mr-2 size-4" /> Editar
       </Link>
-      <Link
-        href={`/bdc/client/${clientId}/delete`}
-        aria-label={`Excluir cliente ${clientName}`}
-        className={buttonVariants({
-          variant: "ghost",
-          size: "icon",
-          className: "min-h-10 min-w-10 text-destructive",
-        })}
-      >
-        <Trash2Icon className="size-4" />
-      </Link>
+      <ConfirmDeleteDialog
+        endpoint={`/api/v1/bdc/clients/${clientId}`}
+        itemType="Cliente"
+        itemName={clientName}
+        description="A exclusão remove o cadastro e desfaz o vínculo com as motocicletas associadas. Essa ação não pode ser desfeita."
+        triggerLabel={`Excluir cliente ${clientName}`}
+      />
     </div>
   );
 }

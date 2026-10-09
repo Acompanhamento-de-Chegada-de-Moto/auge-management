@@ -3,14 +3,13 @@
 import {
   LayoutDashboard,
   LifeBuoy,
-  LogOut,
   LoaderCircle,
-  type LucideIcon,
+  LogOut,
   Package,
   Search,
-  User,
-  Users,
-  UsersIcon,
+  UserRound,
+  UsersRound,
+  type LucideIcon,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -20,14 +19,6 @@ import { toast } from "sonner";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
@@ -35,11 +26,8 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuButton,
   SidebarMenuItem,
-  SidebarRail,
 } from "@/components/ui/sidebar";
-
 import { authClient } from "@/lib/auth-client";
 
 type SidebarUser = {
@@ -49,37 +37,73 @@ type SidebarUser = {
   role?: string | null;
 };
 
-interface NavItem {
+type NavItem = {
   title: string;
   href: string;
   icon: LucideIcon;
   adminOnly?: boolean;
   managerOnly?: boolean;
-}
+};
 
-const navigationData: NavItem[] = [
-  { title: "Acompanhamento", href: "/tracking", icon: Search },
-  { title: "BDC", href: "/bdc", icon: Users },
-  { title: "Estoque", href: "/inventory", icon: Package },
+type NavSection = {
+  title: string;
+  items: NavItem[];
+};
+
+const navigation: NavSection[] = [
   {
-    title: "Dashboard",
-    href: "/dashboard",
-    icon: LayoutDashboard,
-    adminOnly: true,
+    title: "Workspace",
+    items: [
+      { title: "Acompanhamento", href: "/tracking", icon: Search },
+      { title: "Relacionamento", href: "/bdc", icon: UsersRound },
+      { title: "Estoque", href: "/inventory", icon: Package },
+    ],
   },
   {
-    title: "Usuários",
-    href: "/squad",
-    icon: UsersIcon,
-    adminOnly: true,
+    title: "Visão geral",
+    items: [
+      {
+        title: "Dashboard",
+        href: "/dashboard",
+        icon: LayoutDashboard,
+        adminOnly: true,
+      },
+    ],
   },
   {
-    title: "Suporte",
-    href: "/support",
-    icon: LifeBuoy,
-    managerOnly: true,
+    title: "Administração",
+    items: [
+      {
+        title: "Equipe",
+        href: "/squad",
+        icon: UsersRound,
+        adminOnly: true,
+      },
+      {
+        title: "Suporte",
+        href: "/support",
+        icon: LifeBuoy,
+        managerOnly: true,
+      },
+    ],
   },
 ];
+
+function initials(name: string) {
+  return name
+    .trim()
+    .split(/\s+/)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+}
+
+function canSeeItem(item: NavItem, role?: string | null) {
+  if (item.adminOnly) return role === "ADMIN";
+  if (item.managerOnly) return role === "ADMIN" || role === "MANAGER";
+  return true;
+}
 
 export function AppSidebar({
   logoUrl,
@@ -90,15 +114,14 @@ export function AppSidebar({
 }) {
   const pathname = usePathname();
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const userInitials = initials(user.name);
 
   const handleSignOut = async () => {
     if (isSigningOut) return;
-
     setIsSigningOut(true);
 
     try {
       const result = await authClient.signOut();
-
       if (result.error) {
         toast.error("Não foi possível sair da conta.", {
           description: result.error.status
@@ -108,7 +131,6 @@ export function AppSidebar({
         setIsSigningOut(false);
         return;
       }
-
       window.location.replace("/sign-in");
     } catch {
       toast.error("Não foi possível sair da conta. Verifique sua conexão.");
@@ -116,176 +138,143 @@ export function AppSidebar({
     }
   };
 
-  const userInitials = user?.name
-    ? user.name
-        .trim()
-        .split(/\s+/)
-        .map((part) => part[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2)
-    : null;
-
-  const visibleNav = navigationData.filter((item) => {
-    if (item.adminOnly) return user?.role === "ADMIN";
-
-    if (item.managerOnly) {
-      return user?.role === "ADMIN" || user?.role === "MANAGER";
-    }
-
-    return true;
-  });
-
-  const isActive = (href: string) =>
-    pathname === href || pathname.startsWith(`${href}/`);
-
   return (
     <Sidebar collapsible="icon" variant="sidebar">
-      <SidebarHeader className="border-b border-sidebar-border/60 px-3 py-5">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              size="lg"
-              tooltip="Auge"
-              className="h-14 rounded-2xl px-2 hover:bg-sidebar-accent/70"
-            >
-              <Link href="/tracking">
-                <Image
-                  src={logoUrl || "/logo-auge.png"}
-                  alt="Auge"
-                  width={36}
-                  height={36}
-                  className="size-10 shrink-0 rounded-xl object-contain"
-                  unoptimized={Boolean(logoUrl)}
-                />
-
-                <div className="grid flex-1 text-left leading-tight">
-                  <span className="truncate text-sm font-semibold tracking-tight">
-                    Auge Management
-                  </span>
-                  <span className="truncate text-xs text-muted-foreground">
-                    Operação de concessionária
-                  </span>
-                </div>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+      <SidebarHeader className="border-b border-sidebar-border/60 px-3 py-4">
+        <Link
+          href="/tracking"
+          aria-label="Auge Management — acompanhamento"
+          title="Auge Management"
+          className="group flex h-12 items-center gap-3 rounded-2xl px-2 transition-colors hover:bg-sidebar-accent/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        >
+          <Image
+            src={logoUrl || "/logo-auge.png"}
+            alt=""
+            width={36}
+            height={36}
+            className="size-9 shrink-0 rounded-xl object-contain"
+            unoptimized={Boolean(logoUrl)}
+          />
+          <span className="grid min-w-0 text-left leading-tight group-data-[collapsible=icon]:hidden">
+            <span className="truncate text-sm font-semibold tracking-tight">
+              Auge Management
+            </span>
+            <span className="truncate pt-1 text-xs text-muted-foreground">
+              Operação de concessionária
+            </span>
+          </span>
+        </Link>
       </SidebarHeader>
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel className="px-3 text-[10px] font-semibold uppercase tracking-[0.15em] text-sidebar-foreground/50">
-            Workspace
-          </SidebarGroupLabel>
 
-          <SidebarMenu>
-            {visibleNav.map((item) => {
-              const active = isActive(item.href);
+      <SidebarContent className="gap-1 px-2 py-3">
+        <nav aria-label="Navegação principal" className="space-y-3">
+          {navigation.map((section) => {
+            const items = section.items.filter((item) =>
+              canSeeItem(item, user.role),
+            );
+            if (items.length === 0) return null;
 
-              return (
-                <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={active}
-                    tooltip={item.title}
-                    className="h-11 rounded-xl px-3 text-sm transition-colors"
-                  >
-                    <Link
-                      href={item.href}
-                      aria-current={active ? "page" : undefined}
-                    >
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              );
-            })}
-          </SidebarMenu>
-        </SidebarGroup>
+            return (
+              <SidebarGroup key={section.title} className="p-0">
+                <SidebarGroupLabel className="h-7 px-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-sidebar-foreground/50 group-data-[collapsible=icon]:opacity-0">
+                  {section.title}
+                </SidebarGroupLabel>
+                <SidebarMenu className="gap-1">
+                  {items.map((item) => {
+                    const active =
+                      pathname === item.href ||
+                      pathname.startsWith(`${item.href}/`);
+                    const Icon = item.icon;
+
+                    return (
+                      <SidebarMenuItem key={item.href}>
+                        <Link
+                          href={item.href}
+                          aria-current={active ? "page" : undefined}
+                          aria-label={item.title}
+                          title={item.title}
+                          data-active={active}
+                          className="group/nav-link relative flex h-10 items-center gap-3 overflow-hidden rounded-xl px-3 text-sm font-medium text-sidebar-foreground/75 outline-none transition-colors hover:bg-sidebar-accent/70 hover:text-sidebar-foreground focus-visible:ring-2 focus-visible:ring-primary data-[active=true]:bg-primary/10 data-[active=true]:text-primary group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0 [&_svg]:size-[18px] [&_svg]:shrink-0"
+                        >
+                          <Icon aria-hidden="true" />
+                          <span className="truncate group-data-[collapsible=icon]:hidden">
+                            {item.title}
+                          </span>
+                          {active && (
+                            <span
+                              aria-hidden="true"
+                              className="absolute inset-y-2 left-0 w-[3px] rounded-r-full bg-primary group-data-[collapsible=icon]:hidden"
+                            />
+                          )}
+                        </Link>
+                      </SidebarMenuItem>
+                    );
+                  })}
+                </SidebarMenu>
+              </SidebarGroup>
+            );
+          })}
+        </nav>
       </SidebarContent>
-      <SidebarFooter className="border-t border-sidebar-border/60 p-3">
-        {user && (
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <SidebarMenuButton
-                    size="lg"
-                    tooltip={user.name || "Minha conta"}
-                    className="h-14 rounded-2xl px-2 hover:bg-sidebar-accent/70"
-                  >
-                    <Avatar className="size-8 shrink-0">
-                      {user.image && (
-                        <AvatarImage
-                          src={user.image}
-                          alt={user.name || "Usuário"}
-                        />
-                      )}
-                      <AvatarFallback className="text-xs font-semibold">
-                        {userInitials || <User className="size-4" />}
-                      </AvatarFallback>
-                    </Avatar>
 
-                    <div className="grid flex-1 text-left leading-tight">
-                      <span className="truncate text-sm font-medium">
-                        {user.name}
-                      </span>
-                      <span className="truncate text-xs text-muted-foreground">
-                        {user.email}
-                      </span>
-                    </div>
-                  </SidebarMenuButton>
-                </DropdownMenuTrigger>
+      <SidebarFooter className="border-t border-sidebar-border/60 p-2">
+        <details className="group/account relative">
+          <summary
+            aria-label={`Conta de ${user.name}`}
+            title={user.name}
+            className="flex h-12 cursor-pointer list-none items-center gap-3 rounded-xl px-2 outline-none transition-colors hover:bg-sidebar-accent/70 focus-visible:ring-2 focus-visible:ring-primary group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0 [&::-webkit-details-marker]:hidden"
+          >
+            <Avatar className="size-8 shrink-0">
+              {user.image && <AvatarImage src={user.image} alt="" />}
+              <AvatarFallback className="text-xs font-semibold">
+                {userInitials || <UserRound className="size-4" />}
+              </AvatarFallback>
+            </Avatar>
+            <span className="grid min-w-0 flex-1 text-left leading-tight group-data-[collapsible=icon]:hidden">
+              <span className="truncate text-sm font-medium">{user.name}</span>
+              <span className="truncate pt-1 text-xs text-muted-foreground">
+                {user.email}
+              </span>
+            </span>
+            <span
+              aria-hidden="true"
+              className="size-1.5 shrink-0 rounded-full bg-success group-data-[collapsible=icon]:hidden"
+            />
+          </summary>
 
-                <DropdownMenuContent side="top" align="start" className="w-64">
-                  <DropdownMenuLabel className="font-normal">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="size-9">
-                        {user.image && (
-                          <AvatarImage
-                            src={user.image}
-                            alt={user.name || "Usuário"}
-                          />
-                        )}
-                        <AvatarFallback>
-                          {userInitials || <User className="size-4" />}
-                        </AvatarFallback>
-                      </Avatar>
-
-                      <div className="grid min-w-0 flex-1">
-                        <span className="truncate text-sm font-medium">
-                          {user.name}
-                        </span>
-                        <span className="truncate text-xs text-muted-foreground">
-                          {user.email}
-                        </span>
-                      </div>
-                    </div>
-                  </DropdownMenuLabel>
-
-                  <DropdownMenuSeparator />
-
-                  <DropdownMenuItem
-                    onSelect={() => void handleSignOut()}
-                    disabled={isSigningOut}
-                    className="cursor-pointer text-destructive focus:text-destructive"
-                  >
-                    {isSigningOut ? (
-                      <LoaderCircle className="mr-2 size-4 animate-spin" />
-                    ) : (
-                      <LogOut className="mr-2 size-4" />
-                    )}
-                    {isSigningOut ? "Saindo…" : "Sair da conta"}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        )}
+          <div className="absolute bottom-full left-0 z-50 mb-2 w-full rounded-2xl border border-base-300 bg-base-100 p-2 shadow-xl group-data-[collapsible=icon]:left-12 group-data-[collapsible=icon]:w-56">
+            <div className="border-b border-base-300 px-3 py-2">
+              <p className="truncate text-sm font-medium">{user.name}</p>
+              <p className="truncate text-xs text-base-content/60">
+                {user.email}
+              </p>
+              <p className="mt-1 text-[11px] text-base-content/50">
+                {user.role === "ADMIN"
+                  ? "Administrador"
+                  : user.role === "MANAGER"
+                    ? "Gerente"
+                    : "Colaborador"}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => void handleSignOut()}
+              disabled={isSigningOut}
+              className="mt-1 flex h-10 w-full items-center gap-2 rounded-xl px-3 text-left text-sm text-error outline-none transition-colors hover:bg-error/10 focus-visible:ring-2 focus-visible:ring-error disabled:opacity-60"
+            >
+              {isSigningOut ? (
+                <LoaderCircle
+                  className="size-4 animate-spin"
+                  aria-hidden="true"
+                />
+              ) : (
+                <LogOut className="size-4" aria-hidden="true" />
+              )}
+              {isSigningOut ? "Saindo…" : "Sair da conta"}
+            </button>
+          </div>
+        </details>
       </SidebarFooter>
-      <SidebarRail />
     </Sidebar>
   );
 }

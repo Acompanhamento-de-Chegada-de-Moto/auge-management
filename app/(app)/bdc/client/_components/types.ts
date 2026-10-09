@@ -3,8 +3,3 @@ export interface MotorcycleLookupResult {
   forecastArrival: string | Date | null;
   forecastArrivalStatus: string | null;
 }
-
-export interface MotorcycleLookupState {
-  searched: boolean;
-  motorcycle: MotorcycleLookupResult | null;
-}
