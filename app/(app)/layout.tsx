@@ -31,7 +31,7 @@ export default async function AppLayout({
           <ModeToggle />
         </header>
 
-        <main className="flex-1 p-4 md:p-6">{children}</main>
+        <main className="min-w-0 flex-1">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   );
