@@ -19,6 +19,8 @@ export const auth = betterAuth({
     max: 100,
     customRules: {
       "/sign-in/email": { window: 60, max: 5 },
+      // Logout must remain available even if the rate-limit store is unavailable.
+      "/sign-out": false,
     },
   },
   plugins: [

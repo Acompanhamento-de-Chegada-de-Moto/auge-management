@@ -5,7 +5,6 @@ import { Toaster } from "sonner";
 import { CookieConsentBanner } from "@/components/CookieConsentBanner";
 import { ThemeColorSync } from "@/components/ThemeColorSync";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import { QueryProvider } from "@/components/providers/query-provider";
 import { cn } from "@/lib/utils";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
@@ -63,11 +62,9 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <QueryProvider>
-            <ThemeColorSync />
-            <TooltipProvider>{children}</TooltipProvider>
-            <Toaster />
-          </QueryProvider>
+          <ThemeColorSync />
+          <TooltipProvider>{children}</TooltipProvider>
+          <Toaster />
         </ThemeProvider>
         <CookieConsentBanner />
       </body>

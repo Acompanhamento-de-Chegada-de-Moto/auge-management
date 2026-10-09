@@ -34,7 +34,7 @@ export default function LoginForm() {
       const result = await authClient.signIn.email({
         email: data.email,
         password: data.password,
-        callbackURL: `${process.env.NEXT_PUBLIC_BETTER_AUTH_URL}/bdc`,
+        callbackURL: "/bdc",
       });
 
       if (result.error) {

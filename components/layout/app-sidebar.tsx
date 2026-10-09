@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   LifeBuoy,
   LogOut,
+  LoaderCircle,
   type LucideIcon,
   Package,
   Search,
@@ -13,7 +14,9 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
+import { useState } from "react";
+import { toast } from "sonner";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -86,14 +89,31 @@ export function AppSidebar({
   user: SidebarUser;
 }) {
   const pathname = usePathname();
-  const router = useRouter();
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   const handleSignOut = async () => {
-    await authClient.signOut({
-      fetchOptions: {
-        onSuccess: () => router.push("/sign-in"),
-      },
-    });
+    if (isSigningOut) return;
+
+    setIsSigningOut(true);
+
+    try {
+      const result = await authClient.signOut();
+
+      if (result.error) {
+        toast.error("Não foi possível sair da conta.", {
+          description: result.error.status
+            ? `O servidor retornou o erro ${result.error.status}.`
+            : "Tente novamente em instantes.",
+        });
+        setIsSigningOut(false);
+        return;
+      }
+
+      window.location.replace("/sign-in");
+    } catch {
+      toast.error("Não foi possível sair da conta. Verifique sua conexão.");
+      setIsSigningOut(false);
+    }
   };
 
   const userInitials = user?.name
@@ -121,14 +141,14 @@ export function AppSidebar({
 
   return (
     <Sidebar collapsible="icon" variant="sidebar">
-      <SidebarHeader className="border-b px-3 py-4">
+      <SidebarHeader className="border-b border-sidebar-border/60 px-3 py-5">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
               size="lg"
               tooltip="Auge"
-              className="h-12"
+              className="h-14 rounded-2xl px-2 hover:bg-sidebar-accent/70"
             >
               <Link href="/tracking">
                 <Image
@@ -136,16 +156,16 @@ export function AppSidebar({
                   alt="Auge"
                   width={36}
                   height={36}
-                  className="size-9 shrink-0 rounded-lg object-contain"
+                  className="size-10 shrink-0 rounded-xl object-contain"
                   unoptimized={Boolean(logoUrl)}
                 />
 
                 <div className="grid flex-1 text-left leading-tight">
-                  <span className="truncate text-sm font-semibold">
-                    Acompanhamento
+                  <span className="truncate text-sm font-semibold tracking-tight">
+                    Auge Management
                   </span>
                   <span className="truncate text-xs text-muted-foreground">
-                    Chegada de Moto
+                    Operação de concessionária
                   </span>
                 </div>
               </Link>
@@ -155,7 +175,9 @@ export function AppSidebar({
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Menu principal</SidebarGroupLabel>
+          <SidebarGroupLabel className="px-3 text-[10px] font-semibold uppercase tracking-[0.15em] text-sidebar-foreground/50">
+            Workspace
+          </SidebarGroupLabel>
 
           <SidebarMenu>
             {visibleNav.map((item) => {
@@ -167,7 +189,7 @@ export function AppSidebar({
                     asChild
                     isActive={active}
                     tooltip={item.title}
-                    className="h-10"
+                    className="h-11 rounded-xl px-3 text-sm transition-colors"
                   >
                     <Link
                       href={item.href}
@@ -183,7 +205,7 @@ export function AppSidebar({
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="border-t p-2">
+      <SidebarFooter className="border-t border-sidebar-border/60 p-3">
         {user && (
           <SidebarMenu>
             <SidebarMenuItem>
@@ -192,7 +214,7 @@ export function AppSidebar({
                   <SidebarMenuButton
                     size="lg"
                     tooltip={user.name || "Minha conta"}
-                    className="h-12"
+                    className="h-14 rounded-2xl px-2 hover:bg-sidebar-accent/70"
                   >
                     <Avatar className="size-8 shrink-0">
                       {user.image && (
@@ -246,11 +268,16 @@ export function AppSidebar({
                   <DropdownMenuSeparator />
 
                   <DropdownMenuItem
-                    onClick={handleSignOut}
+                    onSelect={() => void handleSignOut()}
+                    disabled={isSigningOut}
                     className="cursor-pointer text-destructive focus:text-destructive"
                   >
-                    <LogOut className="mr-2 size-4" />
-                    Sair da conta
+                    {isSigningOut ? (
+                      <LoaderCircle className="mr-2 size-4 animate-spin" />
+                    ) : (
+                      <LogOut className="mr-2 size-4" />
+                    )}
+                    {isSigningOut ? "Saindo…" : "Sair da conta"}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

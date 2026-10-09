@@ -72,7 +72,7 @@ export default async function SupportPage() {
 
   return (
     <main className="mx-auto w-full max-w-[1600px] space-y-6 p-4 sm:p-6 lg:p-8">
-      <header className="rounded-2xl border bg-card p-5 shadow-sm sm:p-6">
+      <header className="border-b border-border/70 pb-6">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">
           Atendimento
         </p>

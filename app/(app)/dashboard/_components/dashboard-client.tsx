@@ -34,7 +34,7 @@ interface KpiCardProps {
 
 function KpiCard({ title, value, icon: Icon }: KpiCardProps) {
   return (
-    <Card className="overflow-hidden border-border/70 shadow-sm transition-shadow hover:shadow-md">
+    <Card className="overflow-hidden border-border/60 shadow-none transition-colors hover:bg-muted/20">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">
           {title}
@@ -61,7 +61,7 @@ interface RankTableProps {
 
 function RankTable({ title, description, rows, emptyMessage }: RankTableProps) {
   return (
-    <Card className="border-border/70 shadow-sm">
+    <Card className="border-border/60 shadow-none">
       <CardHeader>
         <CardTitle className="text-base">{title}</CardTitle>
         <CardDescription>{description}</CardDescription>

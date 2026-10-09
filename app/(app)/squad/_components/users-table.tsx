@@ -53,7 +53,7 @@ export function UsersTable({ users }: UsersTableProps) {
 
   return (
     <section className="space-y-4">
-      <div className="flex flex-col gap-3 rounded-2xl border bg-card p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-5">
+      <div className="flex flex-col gap-3 border-b border-border/70 pb-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <Users className="size-4 text-muted-foreground" />
@@ -120,7 +120,7 @@ export function UsersTable({ users }: UsersTableProps) {
             ))}
           </div>
 
-          <div className="hidden overflow-hidden rounded-2xl border bg-card shadow-sm md:block">
+          <div className="hidden overflow-hidden rounded-2xl border border-border/70 bg-card md:block">
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/40 hover:bg-muted/40">

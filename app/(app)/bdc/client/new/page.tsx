@@ -18,7 +18,7 @@ export default async function NewClientPage() {
       aria-labelledby="page-title"
     >
       <div className="mx-auto w-full max-w-7xl space-y-6">
-        <header className="flex flex-col gap-4 rounded-2xl border bg-card p-5 shadow-sm sm:p-6">
+        <header className="flex flex-col gap-4 border-b border-border/70 pb-6">
           <div>
             <Link
               href="/bdc"

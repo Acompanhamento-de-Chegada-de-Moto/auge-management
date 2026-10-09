@@ -40,7 +40,7 @@ export default async function EditarClientePage({
   return (
     <main className="mx-auto min-w-0 w-full max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-[1600px] space-y-6">
-        <header className="flex flex-col gap-4 rounded-2xl border bg-card p-5 shadow-sm sm:p-6">
+        <header className="flex flex-col gap-4 border-b border-border/70 pb-6">
           <Link
             href="/bdc"
             className={buttonVariants({

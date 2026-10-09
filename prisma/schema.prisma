@@ -124,6 +124,7 @@ model Motorcycle {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([forecastArrivalStatus])
   @@index([updatedAt])
   @@map("motorcycles")
 }

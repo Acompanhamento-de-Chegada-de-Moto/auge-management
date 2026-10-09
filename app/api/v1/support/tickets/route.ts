@@ -6,7 +6,6 @@ import {
   readJsonBody,
 } from "@/lib/api/auth";
 import { createTicket } from "@/lib/data/ticket";
-import { prisma } from "@/lib/db";
 import { createTicketSchema } from "@/validators/create-ticket-schema";
 
 export async function POST(request: Request) {

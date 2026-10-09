@@ -30,7 +30,7 @@ export default async function EstoquePage({
 }) {
   return (
     <main className="mx-auto min-w-0 w-full max-w-[1600px] space-y-6 p-4 sm:p-6 lg:p-8">
-      <header className="flex flex-col gap-5 rounded-2xl border bg-card p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-6">
+      <header className="flex flex-col gap-5 border-b border-border/70 pb-6 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-1">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">
             Operação

@@ -23,7 +23,7 @@ export default async function DashboardPage() {
 
   return (
     <main className="mx-auto w-full max-w-[1600px] space-y-6 p-4 sm:p-6 lg:p-8">
-      <header className="flex items-center gap-3 rounded-2xl border bg-card p-5 shadow-sm sm:p-6">
+      <header className="flex items-center gap-3 border-b border-border/70 pb-6">
         <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
           <LayoutDashboard className="size-5" aria-hidden="true" />
         </div>

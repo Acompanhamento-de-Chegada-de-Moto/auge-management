@@ -26,7 +26,7 @@ import { CustomerSection } from "./customer-section";
 import { FormStepper, type WizardStep } from "./form-stepper";
 import { MotorcycleSection } from "./motorcycle-section";
 import { RegistrationSection } from "./registration-section";
-import type { MotorcycleLookupResult, MotorcycleLookupState } from "./types";
+import type { MotorcycleLookupState } from "./types";
 
 const steps: WizardStep[] = [
   { id: 1, title: "Motocicleta", icon: Bike },
