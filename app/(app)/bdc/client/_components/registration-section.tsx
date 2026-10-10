@@ -1,6 +1,5 @@
 "use client";
 
-import { isBefore, startOfDay } from "date-fns";
 import { ClipboardList } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
 import {
@@ -30,13 +29,7 @@ export function RegistrationSection({
   form,
   motorcycleFound,
 }: RegistrationSectionProps) {
-  const forecastDate = form.watch("forecastDate");
-  const arrivalStatus = form.watch("arrivalStatus");
   const registrationStatus = form.watch("registrationStatus");
-
-  const forecastHasPassed =
-    forecastDate != null &&
-    isBefore(startOfDay(forecastDate), startOfDay(new Date()));
 
   return (
     <section className="min-w-0 pb-2">
@@ -68,7 +61,7 @@ export function RegistrationSection({
           render={({ field }) => (
             <FormItem>
               <FormLabel>
-                Status de Chegada
+                Recebimento físico
                 <span className="ml-0.5 text-destructive" aria-hidden="true">
                   *
                 </span>
@@ -80,28 +73,25 @@ export function RegistrationSection({
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="Sem Informação">Sem Informação</SelectItem>
-                  <SelectItem value="Chegou">Chegou</SelectItem>
-                  <SelectItem value="Atrasada">Atrasada</SelectItem>
+                  <SelectItem value="Sem Informação">
+                    Ainda não recebida
+                  </SelectItem>
+                  <SelectItem value="Chegou">Confirmar que chegou</SelectItem>
+                  {field.value === "Atrasada" && (
+                    <SelectItem value="Atrasada" disabled>
+                      Atrasada · calculado automaticamente
+                    </SelectItem>
+                  )}
                 </SelectContent>
               </Select>
               <FormMessage />
+              <p className="text-xs text-base-content/60">
+                O atraso é automático. Uma chegada confirmada não é desfeita
+                pela edição.
+              </p>
             </FormItem>
           )}
         />
-
-        {forecastHasPassed && arrivalStatus === "Sem Informação" && (
-          <div
-            role="alert"
-            className="flex items-start gap-2 rounded-lg border border-amber-200/60 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-400 sm:col-span-2"
-          >
-            <span aria-hidden="true">⚠️</span>
-            <span>
-              A data prevista para chegada já passou. Confirme se a moto chegou
-              ou está atrasada.
-            </span>
-          </div>
-        )}
 
         <FormField
           control={form.control}

@@ -1,7 +1,6 @@
 ﻿"use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import dayjs from "dayjs";
 import { LoaderCircle, Save } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
@@ -61,12 +60,11 @@ export function MotorcycleForm({
         ? new Date(initialValues.forecastArrival)
         : undefined,
       forecastArrivalStatus:
-        initialValues?.forecastArrivalStatus ?? "NO_INFORMATION",
+        initialValues?.forecastArrivalStatus === "ARRIVED"
+          ? "ARRIVED"
+          : "NO_INFORMATION",
     },
   });
-
-  const forecastArrival = form.watch("forecastArrival");
-  const forecastArrivalStatus = form.watch("forecastArrivalStatus");
 
   function handleSubmit(values: CreateMotorcycleType) {
     startTransition(async () => {
@@ -192,10 +190,13 @@ export function MotorcycleForm({
                   name="forecastArrivalStatus"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Status de chegada</FormLabel>
+                      <FormLabel>Recebimento físico</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         value={field.value}
+                        disabled={
+                          initialValues?.forecastArrivalStatus === "ARRIVED"
+                        }
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -204,31 +205,22 @@ export function MotorcycleForm({
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="NO_INFORMATION">
-                            Sem confirmação
+                            Ainda não recebida
                           </SelectItem>
-                          <SelectItem value="ARRIVED">Chegou</SelectItem>
-                          <SelectItem value="DELAYED">Atrasada</SelectItem>
+                          <SelectItem value="ARRIVED">
+                            Confirmar que chegou
+                          </SelectItem>
                         </SelectContent>
                       </Select>
+                      <FormDescription>
+                        O atraso é calculado automaticamente pela previsão. Uma
+                        chegada confirmada é preservada.
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
-
-              {forecastArrival &&
-                dayjs(forecastArrival)
-                  .startOf("day")
-                  .isBefore(dayjs().startOf("day")) &&
-                forecastArrivalStatus === "NO_INFORMATION" && (
-                  <p
-                    aria-live="polite"
-                    className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200"
-                  >
-                    A previsão já passou. Atualize o status para confirmar a
-                    chegada ou registrar o atraso.
-                  </p>
-                )}
             </section>
 
             {form.formState.errors.root?.serverError?.message && (

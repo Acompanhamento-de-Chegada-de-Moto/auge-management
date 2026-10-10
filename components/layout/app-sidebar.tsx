@@ -7,6 +7,7 @@ import {
   LogOut,
   type LucideIcon,
   Package,
+  QrCode,
   Search,
   UserRound,
   UsersRound,
@@ -57,6 +58,7 @@ const navigation: NavSection[] = [
     items: [
       { title: "Clientes · BDC", href: "/bdc", icon: UsersRound },
       { title: "Estoque", href: "/inventory", icon: Package },
+      { title: "Recebimento", href: "/check-in", icon: QrCode },
     ],
   },
   {
@@ -77,6 +79,12 @@ const navigation: NavSection[] = [
   {
     title: "Administração",
     items: [
+      {
+        title: "Operadores de recebimento",
+        href: "/squad/check-in",
+        icon: QrCode,
+        adminOnly: true,
+      },
       {
         title: "Equipe",
         href: "/squad",

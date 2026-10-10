@@ -25,12 +25,7 @@ export function DelayAlert({
   model,
   chassis,
 }: DelayAlertProps) {
-  if (forecastArrivalStatus === "ARRIVED") return null;
-
-  const hoje = dayjs().startOf("day");
-  const prazo = dayjs(forecastDate).startOf("day");
-
-  if (prazo.isAfter(hoje) || prazo.isSame(hoje, "day")) return null;
+  if (forecastArrivalStatus !== "DELAYED") return null;
 
   const dataFormatada = dayjs(forecastDate).format("DD/MM/YYYY");
   const phone = contactPhone || "(telefone não configurado)";
