@@ -11,6 +11,7 @@ import {
   revokeOperatorAction,
   rotateOperatorPinAction,
 } from "../_actions/operators";
+import { DeleteOperatorDialog } from "./DeleteOperatorDialog";
 
 type Operator = {
   id: string;
@@ -157,27 +158,34 @@ export function OperatorsPanel({ operators }: { operators: Operator[] }) {
                     {operator.active ? "Ativo" : "Revogado"}
                   </span>
                 </td>
-                <td className="flex gap-2">
-                  <button
-                    className="btn btn-sm"
-                    type="button"
-                    disabled={busy || form.formState.isSubmitting}
-                    onClick={() => manage(operator, true)}
-                  >
-                    {operator.active
-                      ? "Gerar novo PIN"
-                      : "Reativar com novo PIN"}
-                  </button>
-                  {operator.active && (
+                <td>
+                  <div className="flex flex-wrap items-center gap-2">
                     <button
-                      className="btn btn-sm btn-outline"
+                      className="btn btn-sm"
                       type="button"
                       disabled={busy || form.formState.isSubmitting}
-                      onClick={() => manage(operator, false)}
+                      onClick={() => manage(operator, true)}
                     >
-                      Revogar
+                      {operator.active
+                        ? "Gerar novo PIN"
+                        : "Reativar com novo PIN"}
                     </button>
-                  )}
+                    {operator.active && (
+                      <button
+                        className="btn btn-sm btn-outline"
+                        type="button"
+                        disabled={busy || form.formState.isSubmitting}
+                        onClick={() => manage(operator, false)}
+                      >
+                        Revogar
+                      </button>
+                    )}
+                    <DeleteOperatorDialog
+                      operator={operator}
+                      disabled={busy || form.formState.isSubmitting}
+                      onDeleted={() => setCredential(null)}
+                    />
+                  </div>
                 </td>
               </tr>
             ))}

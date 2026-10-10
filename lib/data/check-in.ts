@@ -30,6 +30,8 @@ export const createCheckInOperator = (data: {
   identifier: string;
   pinHash: string;
 }) => prisma.checkInOperator.create({ data, select: { id: true } });
+export const deleteCheckInOperator = (id: string) =>
+  prisma.checkInOperator.deleteMany({ where: { id } });
 export async function changeOperatorCredentials(id: string, pinHash?: string) {
   return prisma.$transaction(async (tx) => {
     await tx.checkInOperator.update({

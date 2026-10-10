@@ -6,6 +6,7 @@ import { operatorSchema } from "@/lib/check-in/schemas";
 import {
   changeOperatorCredentials,
   createCheckInOperator,
+  deleteCheckInOperator,
 } from "@/lib/data/check-in";
 import { runActionMutation } from "@/lib/server/action-mutation";
 import { mutationError, mutationSuccess } from "@/lib/server/mutation-result";
@@ -81,6 +82,26 @@ export async function revokeOperatorAction(id: string) {
       revalidatePath("/squad/check-in");
       return mutationSuccess({
         message: "Acesso revogado e sessões encerradas.",
+      });
+    },
+  });
+}
+
+export async function deleteOperatorAction(id: string) {
+  return runActionMutation({
+    input: id,
+    scope: "/check-in/operators",
+    method: "DELETE",
+    roles: ["ADMIN"],
+    execute: async () => {
+      if (!z.string().uuid().safeParse(id).success)
+        return mutationError("Operador inválido.", 400);
+      // FK rules revoke sessions and detach receipts, keeping actorLabel intact.
+      const result = await deleteCheckInOperator(id);
+      if (!result.count) return mutationError("Operador não encontrado.", 404);
+      revalidatePath("/squad/check-in");
+      return mutationSuccess({
+        message: "Operador excluído. Histórico de recebimentos preservado.",
       });
     },
   });

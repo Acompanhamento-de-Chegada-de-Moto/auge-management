@@ -12,6 +12,9 @@ restritos a `/check-in`. Tokens aleatórios de 256 bits são armazenados como SH
 Após 5 falhas o operador fica bloqueado por 15 minutos. Há também limites persistentes
 por identificação e IP. O proxy da hospedagem deve sobrescrever `x-forwarded-for`.
 Revogar ou renovar o PIN encerra as sessões. Renovar também reativa o operador.
+ADMINs também podem excluir operadores mediante confirmação. A exclusão remove
+as sessões e desvincula o operador dos recibos, preservando os recebimentos e
+`actorLabel` (nome registrado na confirmação).
 
 ## Recebimento
 
@@ -29,8 +32,8 @@ Importações de previsão não confirmam chegada.
 
 `forecastArrival` mantém a previsão; `arrivedAt` registra o instante real do servidor.
 Registros históricos ARRIVED continuam recebidos, sem inventar horário retroativo.
-O histórico do check-in é armazenado em `motorcycle_receipts`; operadores são revogados,
-não excluídos. Exclusão explícita da motocicleta exclui também seu recibo.
+O histórico do check-in é armazenado em `motorcycle_receipts`. Exclusão explícita
+da motocicleta exclui também seu recibo.
 
 ## Atrasos e agendamento
 

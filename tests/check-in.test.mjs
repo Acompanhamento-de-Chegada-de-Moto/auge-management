@@ -25,6 +25,7 @@ function load(path, dependencies = {}) {
     Date,
     Intl,
     Buffer,
+    TextEncoder,
     Response,
     process,
     console,
@@ -35,6 +36,49 @@ const arrival = load("lib/arrival.ts");
 const schemas = load("lib/check-in/schemas.ts");
 const credentials = load("lib/check-in/credentials.ts");
 const where = load("lib/data/arrival-status.ts", { "@/lib/arrival": arrival });
+
+test("excluir operador exige ADMIN, valida UUID e trata cadastro inexistente", async () => {
+  let role = "USER";
+  let deletions = 0;
+  let count = 1;
+  const runAction = load("lib/server/action-mutation.ts", {
+    "next/headers": { headers: async () => new Headers() },
+    "@/lib/auth": {
+      auth: {
+        api: {
+          getSession: async () =>
+            role ? { user: { id: "admin", role } } : null,
+        },
+      },
+    },
+    "@/lib/api/auth": { checkMutationRateLimit: async () => null },
+  });
+  const actions = load("app/(app)/squad/check-in/_actions/operators.ts", {
+    "next/cache": { revalidatePath() {} },
+    "@/lib/check-in/credentials": credentials,
+    "@/lib/check-in/schemas": schemas,
+    "@/lib/data/check-in": {
+      deleteCheckInOperator: async () => {
+        deletions++;
+        return { count };
+      },
+    },
+    "@/lib/server/action-mutation": runAction,
+    "@/lib/server/mutation-result": load("lib/server/mutation-result.ts"),
+  });
+  const id = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+  assert.equal((await actions.deleteOperatorAction(id)).status, "error");
+  role = null;
+  assert.equal((await actions.deleteOperatorAction(id)).status, "error");
+  assert.equal(deletions, 0);
+  role = "ADMIN";
+  assert.equal((await actions.deleteOperatorAction("invalid")).status, "error");
+  assert.equal(deletions, 0);
+  assert.equal((await actions.deleteOperatorAction(id)).status, "success");
+  count = 0;
+  assert.equal((await actions.deleteOperatorAction(id)).status, "error");
+  assert.equal(deletions, 2);
+});
 
 test("a previsão vale até 23:59:59 em São Paulo e vence à meia-noite", () => {
   const motorcycle = {
