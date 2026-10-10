@@ -1,16 +1,22 @@
 import { cookies } from "next/headers";
+import { Suspense } from "react";
+import { requireAuth } from "@/app/data/user/require-auth";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppTopbar } from "@/components/layout/app-topbar";
+import { RoutePending } from "@/components/layout/RoutePending";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { SIDEBAR_COOKIE_NAME } from "@/lib/constants";
 import { getSetting } from "@/lib/data/settings";
-import { requireAuth } from "@/app/data/user/require-auth";
 
-export default async function AppLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function AppLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <Suspense fallback={<RoutePending />}>
+      <AuthenticatedShell>{children}</AuthenticatedShell>
+    </Suspense>
+  );
+}
+
+async function AuthenticatedShell({ children }: { children: React.ReactNode }) {
   const session = await requireAuth();
 
   const [logoUrl, cookieStore] = await Promise.all([

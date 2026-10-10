@@ -1,4 +1,6 @@
-﻿import {
+import "server-only";
+
+import {
   arrivalArrivedWhere,
   arrivalDelayedWhere,
   arrivalInTransitWhere,

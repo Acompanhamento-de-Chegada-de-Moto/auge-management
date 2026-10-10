@@ -1,4 +1,6 @@
-﻿import { prisma } from "@/lib/db";
+import "server-only";
+
+import { prisma } from "@/lib/db";
 
 type RegistrationStatus = "NO_PLATE" | "PLATING" | "PLATED";
 

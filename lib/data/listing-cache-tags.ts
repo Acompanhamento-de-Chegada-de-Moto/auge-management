@@ -1,3 +1,5 @@
+import "server-only";
+
 export const listingCacheTags = {
   bdcFilters: "listing-bdc-filters",
   bdcCounts: "listing-bdc-counts",

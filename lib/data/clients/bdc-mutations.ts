@@ -1,4 +1,6 @@
-﻿import { prisma } from "@/lib/db";
+import "server-only";
+
+import { prisma } from "@/lib/db";
 
 type BDCArrivalStatus = "NO_INFORMATION" | "ARRIVED" | "DELAYED";
 type BDCRegistrationStatus = "NO_PLATE" | "PLATING" | "PLATED";

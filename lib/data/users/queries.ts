@@ -1,4 +1,6 @@
-﻿import { prisma } from "@/lib/db";
+import "server-only";
+
+import { prisma } from "@/lib/db";
 
 export async function getUsers() {
   return prisma.user.findMany({

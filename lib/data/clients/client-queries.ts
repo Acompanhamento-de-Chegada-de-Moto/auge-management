@@ -1,4 +1,5 @@
-import { unstable_cache } from "next/cache";
+import "server-only";
+import { cacheLife, cacheTag } from "next/cache";
 import { stripCPF } from "@/lib/cpf";
 import { arrivalArrivedWhere } from "@/lib/data/arrival-status";
 import { listingCacheTags } from "@/lib/data/listing-cache-tags";
@@ -71,53 +72,51 @@ export async function searchClientsByName(name: string) {
   });
 }
 
-const getCachedBDCFilterOptions = unstable_cache(
-  async () => {
-    const [sellers, cities, models] = await Promise.all([
-      prisma.client.findMany({
-        select: { sellersName: true },
-        distinct: ["sellersName"],
-        where: { sellersName: { not: "" } },
-        orderBy: { sellersName: "asc" },
-      }),
-      prisma.client.findMany({
-        select: { city: true },
-        distinct: ["city"],
-        where: { city: { not: "" } },
-        orderBy: { city: "asc" },
-      }),
-      prisma.motorcycle.findMany({
-        select: { model: true },
-        distinct: ["model"],
-        where: { model: { not: "" } },
-        orderBy: { model: "asc" },
-      }),
-    ]);
+async function getCachedBDCFilterOptions() {
+  "use cache";
+  cacheLife({ stale: 300, revalidate: 300, expire: 3000 });
+  cacheTag(listingCacheTags.bdcFilters);
+  const [sellers, cities, models] = await Promise.all([
+    prisma.client.findMany({
+      select: { sellersName: true },
+      distinct: ["sellersName"],
+      where: { sellersName: { not: "" } },
+      orderBy: { sellersName: "asc" },
+    }),
+    prisma.client.findMany({
+      select: { city: true },
+      distinct: ["city"],
+      where: { city: { not: "" } },
+      orderBy: { city: "asc" },
+    }),
+    prisma.motorcycle.findMany({
+      select: { model: true },
+      distinct: ["model"],
+      where: { model: { not: "" } },
+      orderBy: { model: "asc" },
+    }),
+  ]);
 
-    return {
-      sellers: sellers.map((seller) => seller.sellersName),
-      cities: cities.map((city) => city.city),
-      models: models.map((model) => model.model),
-    };
-  },
-  ["bdc-filter-options"],
-  { revalidate: 300, tags: [listingCacheTags.bdcFilters] },
-);
+  return {
+    sellers: sellers.map((seller) => seller.sellersName),
+    cities: cities.map((city) => city.city),
+    models: models.map((model) => model.model),
+  };
+}
 
-const getCachedBDCStatusCounts = unstable_cache(
-  async () => {
-    const arrivedFilter = { motorcycles: { some: arrivalArrivedWhere() } };
-    const [total, arrived, waiting] = await Promise.all([
-      prisma.client.count(),
-      prisma.client.count({ where: arrivedFilter }),
-      prisma.client.count({ where: { NOT: arrivedFilter } }),
-    ]);
+async function getCachedBDCStatusCounts() {
+  "use cache";
+  cacheLife({ stale: 60, revalidate: 60, expire: 600 });
+  cacheTag(listingCacheTags.bdcCounts);
+  const arrivedFilter = { motorcycles: { some: arrivalArrivedWhere() } };
+  const [total, arrived, waiting] = await Promise.all([
+    prisma.client.count(),
+    prisma.client.count({ where: arrivedFilter }),
+    prisma.client.count({ where: { NOT: arrivedFilter } }),
+  ]);
 
-    return { total, arrived, waiting };
-  },
-  ["bdc-status-counts"],
-  { revalidate: 60, tags: [listingCacheTags.bdcCounts] },
-);
+  return { total, arrived, waiting };
+}
 
 export function getBDCFilterOptions() {
   return getCachedBDCFilterOptions();

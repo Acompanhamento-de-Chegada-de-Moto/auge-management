@@ -1,4 +1,5 @@
-import { unstable_cache } from "next/cache";
+import "server-only";
+import { cacheLife, cacheTag } from "next/cache";
 import type { Prisma } from "@/generated/prisma/client";
 import {
   arrivalArrivedWhere,
@@ -24,37 +25,35 @@ export async function getAllMotorcycles() {
   });
 }
 
-const getCachedEstoqueFilterOptions = unstable_cache(
-  async () => {
-    const models = await prisma.motorcycle.findMany({
-      select: { model: true },
-      distinct: ["model"],
-      where: { model: { not: "" } },
-      orderBy: { model: "asc" },
-    });
+async function getCachedEstoqueFilterOptions() {
+  "use cache";
+  cacheLife({ stale: 300, revalidate: 300, expire: 3000 });
+  cacheTag(listingCacheTags.inventoryFilters);
+  const models = await prisma.motorcycle.findMany({
+    select: { model: true },
+    distinct: ["model"],
+    where: { model: { not: "" } },
+    orderBy: { model: "asc" },
+  });
 
-    return { models: models.map((motorcycle) => motorcycle.model) };
-  },
-  ["inventory-filter-options"],
-  { revalidate: 300, tags: [listingCacheTags.inventoryFilters] },
-);
+  return { models: models.map((motorcycle) => motorcycle.model) };
+}
 
-const getCachedMotorcycleStatusCounts = unstable_cache(
-  async () => {
-    const [total, inTransit, arrived, delayed] = await Promise.all([
-      prisma.motorcycle.count(),
-      prisma.motorcycle.count({
-        where: { forecastArrivalStatus: "NO_INFORMATION" },
-      }),
-      prisma.motorcycle.count({ where: { forecastArrivalStatus: "ARRIVED" } }),
-      prisma.motorcycle.count({ where: { forecastArrivalStatus: "DELAYED" } }),
-    ]);
+async function getCachedMotorcycleStatusCounts() {
+  "use cache";
+  cacheLife({ stale: 60, revalidate: 60, expire: 600 });
+  cacheTag(listingCacheTags.inventoryCounts);
+  const [total, inTransit, arrived, delayed] = await Promise.all([
+    prisma.motorcycle.count(),
+    prisma.motorcycle.count({
+      where: { forecastArrivalStatus: "NO_INFORMATION" },
+    }),
+    prisma.motorcycle.count({ where: { forecastArrivalStatus: "ARRIVED" } }),
+    prisma.motorcycle.count({ where: { forecastArrivalStatus: "DELAYED" } }),
+  ]);
 
-    return { total, inTransit, arrived, delayed };
-  },
-  ["inventory-status-counts"],
-  { revalidate: 60, tags: [listingCacheTags.inventoryCounts] },
-);
+  return { total, inTransit, arrived, delayed };
+}
 
 export function getEstoqueFilterOptions() {
   return getCachedEstoqueFilterOptions();

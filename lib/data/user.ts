@@ -1,1 +1,3 @@
-﻿export * from "./users/index";
+import "server-only";
+
+export * from "./users/index";

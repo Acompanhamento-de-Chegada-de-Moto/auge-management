@@ -1,4 +1,6 @@
-﻿import { stripCPF } from "@/lib/cpf";
+import "server-only";
+
+import { stripCPF } from "@/lib/cpf";
 import { prisma } from "@/lib/db";
 
 export async function createClient(data: {

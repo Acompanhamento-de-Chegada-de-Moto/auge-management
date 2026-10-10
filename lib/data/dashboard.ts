@@ -1,1 +1,3 @@
-﻿export * from "./dashboard/index";
+import "server-only";
+
+export * from "./dashboard/index";

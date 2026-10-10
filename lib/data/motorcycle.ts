@@ -1,1 +1,3 @@
-﻿export * from "./motorcycles/index";
+import "server-only";
+
+export * from "./motorcycles/index";

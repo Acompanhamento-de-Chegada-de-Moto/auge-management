@@ -1,4 +1,6 @@
-﻿import { prisma } from "@/lib/db";
+import "server-only";
+
+import { prisma } from "@/lib/db";
 
 export async function upsertSetting(key: string, value: string) {
   return prisma.setting.upsert({
