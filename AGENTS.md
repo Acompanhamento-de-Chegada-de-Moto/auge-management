@@ -43,7 +43,7 @@ app/
     bdc/
       _components/          # Tabelas, formulários e diálogos do BDC
       page.tsx              # Server Component consulta a DAL para renderização inicial
-      _actions/              # Removido; mutações estão em app/api/v1/bdc
+      _actions/              # Server Actions de mutações; serviços compartilhados com REST
       client/
         new/                # page.tsx + formulário; POST /api/v1/bdc/clients
         [clientId]/edit/    # page.tsx + _components/EditClientForm.tsx
@@ -92,7 +92,7 @@ app/
 
 components/                 # APENAS compartilhados/globais
   ui/                       # wrappers compartilhados: classes daisyUI + HTML nativo
-  layout/                   # header.tsx, navbar.tsx (shell do app — usados por app/(app)/layout)
+  layout/                   # app-sidebar, app-topbar e composição compartilhada de páginas
   providers/                # query-provider.tsx
   ThemeProvider.tsx         # ThemeColorSync, ModeToggle, CookieConsentBanner (layout raiz / globais)
 
@@ -151,25 +151,30 @@ prisma.config.ts            # Config do Prisma 7 (datasource + migrations.seed)
 
 ---
 
-## Arquitetura — Route Handlers + DAL
+## Arquitetura — Server Actions + serviços + DAL
 
-Operações interativas do cliente usam Route Handlers versionados em `app/api/v1/**/route.ts`. As páginas Server Component consultam a DAL diretamente para renderização inicial; não faça uma chamada HTTP interna da página para a própria aplicação. **Não usa TanStack React Query**.
+As mutações da interface usam Server Actions co-localizadas em `app/(app)/<módulo>/_actions/`. O pedido de refatoração de 2026-10-10 substitui a arquitetura anterior que exigia REST para todas as interações. Os endpoints REST continuam disponíveis como adaptadores dos mesmos serviços. Consultas iniciadas no cliente (busca de chassi), Better Auth e upload de arquivos usam Route Handlers.
 
 ```
-Client Component
-  → chama /api/v1/... com fetch
-Route Handler (app/api/v1/**/route.ts)
-  → valida origem em mutações
-  → resolve sessão Better Auth e papel exigido
-  → valida payload com Zod e limita tamanho
-  ↓ chama
-DAL (lib/data/*.ts)
-  → executa queries Prisma; nunca faz auth
+Client Component → Server Action → runActionMutation → serviço → DAL → Prisma
+Cliente REST → Route Handler → runApiMutation → mesmo serviço → DAL → Prisma
+Server Component → app/data (guard + consultas) → DAL
 ```
 
-**Segurança**: `proxy.ts` é uma barreira antecipada para navegação, não a autorização final. O layout autenticado usa `requireAuth()`. Cada Route Handler deve autenticar e autorizar a operação por conta própria; nunca confiar apenas na existência do cookie ou no proxy. Mutação autenticada por cookie exige validação de mesma origem. Rotas públicas devem selecionar somente os dados necessários.
+- `lib/server/`: adaptadores de autenticação, autorização, rate limit e resultado serializável.
+- `lib/services/`: validação Zod, orquestração das mutações e invalidação de cache. Nunca importar esses módulos no cliente.
+- `lib/data/`: consultas e transações Prisma protegidas com `server-only`; não resolve sessão.
+- Cada Action e Route Handler exige sessão e papel por operação. Respostas a tickets também validam o dono. O proxy e o layout não substituem essas verificações.
+- Server Actions usam a proteção de origem do Next.js. REST mantém validação explícita de mesma origem.
+- Rate limits de Actions e REST compartilham os mesmos buckets PostgreSQL por usuário, método e escopo. Importações mantêm o limite de 3 em 10 minutos.
+- Payloads comuns: 64 KiB; importações: 5 MiB e até 10.000 linhas. O limite global de Actions é 5 MiB, com limites menores por operação.
+- `cacheComponents: true`: filtros e contadores usam `use cache`, `cacheLife` e `cacheTag`. Sessões e registros pessoais não usam cache compartilhado.
+- Actions invalidam tags com `updateTag`; REST usa `revalidateTag(tag, { expire: 0 })`. Serviços também revalidam os caminhos afetados.
+- `headers()`, `cookies()`, parâmetros de URL e consultas sem cache ficam abaixo de `Suspense`. Guards ficam fora de funções persistentes de cache.
+- UI: `Page`/`PageHeader` por composição; `FilterViews` e `ListPagination` compartilhados; containers de listagem controlam URL/transição, tabelas recebem dados e callbacks.
+- Não usa TanStack React Query.
 
-**Rate limit**: Better Auth usa a tabela `rateLimit` no PostgreSQL. Route Handlers usam `ApiRateLimit` com incremento atômico por usuário, método e rota; importações e upload de avatar têm limites próprios. As tabelas são criadas pela migration `20261009000000_add_rate_limits`.
+Consulte `docs/architecture.md` para a análise, decisões e limites da refatoração.
 
 ---
 
@@ -521,7 +526,7 @@ O seed (`prisma/seed.ts`) reusa `createUser` de `lib/data/user.ts` (via `auth.ap
 1. **Use daisyUI** para os estilos de novos componentes de UI e prefira elementos HTML nativos para interações acessíveis.
 2. **Sempre valide formulários com Zod** + react-hook-form. Não use estado local descontrolado.
 3. **Datas**: use `date-fns` para formatação e `dayjs` para cálculos/comparações.
-4. **DAL**: nunca coloque lógica de auth em `lib/data/*.ts`. Auth e autorização ficam nos Route Handlers; as páginas autenticadas também passam pelos guards server-side.
+4. **DAL**: nunca coloque lógica de auth em `lib/data/*.ts`. Auth e autorização ficam nas Actions, nos Route Handlers e nas fachadas de consulta de `app/data/`; as páginas autenticadas também passam pelos guards server-side.
 5. **Modo edição**: nunca adicione stepper. O formulário deve ser direto.
 6. **Sidebar**: em modo edição, sempre visível. Em criação, aparece apenas no Step 2.
 7. **Não commite** sem pedir confirmação do usuário (exceto se ele pedir explicitamente).
@@ -529,7 +534,7 @@ O seed (`prisma/seed.ts`) reusa `createUser` de `lib/data/user.ts` (via `auth.ap
 9. **Formate com Biome** antes de commits.
 10. **Chassi editável**: no Estoque, o chassi pode ser alterado na edição. Sempre verificar duplicata no banco.
 11. **Importação de planilha**: usar `xlsx` (SheetJS) para parse no client-side. Colunas obrigatórias: CLIENTE, CHASSI, VENDEDOR. Campo "MOTO CHEGOU" = "SIM" → `forecastDate = hoje`.
-12. **TanStack React Query não é usado** — nunca importe `@tanstack/react-query`. Operações iniciadas no cliente usam `fetch` para `/api/v1/**`; mutações atualizam a tela com `router.refresh()` / `router.push()`.
+12. **TanStack React Query não é usado** — nunca importe `@tanstack/react-query`. Mutações da interface usam Server Actions; consultas interativas e uploads usam Route Handlers. Preserve validação, permissões e rate limits em cada entrada.
 13. **Páginas de listagem (BDC/Estoque)**: Server Components leem os parâmetros de URL e consultam a DAL diretamente. Filtros e página são controlados por URL, não por estado local.
 14. **Tabelas (BDCTable/MotorcycleTable)**: puramente apresentação. Props: dados, opções de filtro, filtros ativos, totalRows, page, totalPages, e callbacks (`onFilterChange`, `onPageChange`, etc.). Sem fetch, sem `useMemo` para filtro, sem estado de paginação.
 15. **Client indexes**: `Client` tem `@@index([sellerName])`, `@@index([city])`, `@@index([createdAt])` para performance dos filtros server-side.
@@ -557,4 +562,4 @@ O seed (`prisma/seed.ts`) reusa `createUser` de `lib/data/user.ts` (via `auth.ap
 
 ---
 
-*Última atualização: 2026-10-09 — operações interativas migradas para Route Handlers `/api/v1`; proxy atua como redirecionamento antecipado, layouts e endpoints verificam sessão; configurados cabeçalhos básicos de segurança e rate limits em PostgreSQL.*
+*Última atualização: 2026-10-10 — Server Actions, serviços compartilhados, Cache Components e UI por composição. Histórico: 2026-10-09 — operações interativas migradas para Route Handlers `/api/v1`; proxy atua como redirecionamento antecipado, layouts e endpoints verificam sessão; configurados cabeçalhos básicos de segurança e rate limits em PostgreSQL.*
