@@ -23,6 +23,20 @@ async function checkApiRateLimit(
   request: Request,
   options: ApiRateLimitOptions = {},
 ) {
+  return checkMutationRateLimit(
+    userId,
+    request.method,
+    normalizeApiPath(new URL(request.url).pathname),
+    options,
+  );
+}
+
+export async function checkMutationRateLimit(
+  userId: string,
+  requestMethod: string,
+  routeScope: string,
+  options: ApiRateLimitOptions = {},
+) {
   await cleanupExpiredRateLimits();
 
   const maxRequests = options.maxRequests ?? 60;
@@ -33,9 +47,8 @@ async function checkApiRateLimit(
   const windowStart = new Date(windowStartMs);
   const windowEndMs = windowStartMs + windowMs;
   const expiresAt = new Date(windowEndMs + 24 * 60 * 60 * 1000);
-  const method = request.method.toUpperCase();
-  const route =
-    options.scope ?? normalizeApiPath(new URL(request.url).pathname);
+  const method = requestMethod.toUpperCase();
+  const route = options.scope ?? routeScope;
   const key = createHash("sha256")
     .update(`${userId}:${method}:${route}`)
     .digest("hex");
@@ -152,19 +165,4 @@ export async function readJsonBody(
   return JSON.parse(text) as unknown;
 }
 
-export function normalizeDateFields(
-  value: unknown,
-  fields: readonly string[],
-): unknown {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
-
-  const body = { ...value } as Record<string, unknown>;
-  for (const field of fields) {
-    const entry = body[field];
-    if (typeof entry === "string") {
-      const date = new Date(entry);
-      if (!Number.isNaN(date.getTime())) body[field] = date;
-    }
-  }
-  return body;
-}
+export { normalizeDateFields } from "@/lib/server/normalize-date-fields";

@@ -1,8 +1,11 @@
-import { revalidateTag } from "next/cache";
+import { revalidateTag, updateTag } from "next/cache";
 import { listingCacheTags } from "@/lib/data/listing-cache-tags";
 
-export function revalidateListingCache() {
+export function revalidateListingCache(
+  transport: "action" | "route" = "route",
+) {
   for (const tag of Object.values(listingCacheTags)) {
-    revalidateTag(tag, { expire: 0 });
+    if (transport === "action") updateTag(tag);
+    else revalidateTag(tag, { expire: 0 });
   }
 }
