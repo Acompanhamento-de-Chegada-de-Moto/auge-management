@@ -1,11 +1,10 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import type * as React from "react";
-
-import { cn } from "@/lib/utils";
 import { Slot } from "@/components/ui/slot";
+import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "btn group/button min-h-10 shrink-0 rounded-xl border-transparent text-sm font-medium normal-case shadow-none transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-error aria-invalid:ring-2 aria-invalid:ring-error/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "btn group/button min-h-10 shrink-0 rounded-lg border-transparent text-sm font-medium normal-case shadow-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-error aria-invalid:ring-2 aria-invalid:ring-error/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {

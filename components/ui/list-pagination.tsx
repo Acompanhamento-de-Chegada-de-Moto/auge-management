@@ -18,7 +18,7 @@ export function ListPagination({
   return (
     <nav
       aria-label={label}
-      className="flex flex-wrap items-center justify-center gap-4 border-t border-base-300/70 py-4"
+      className="flex flex-wrap items-center justify-between gap-3 border-t border-base-300 px-4 py-3 sm:px-5"
     >
       <Button
         variant="outline"

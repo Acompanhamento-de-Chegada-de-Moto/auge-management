@@ -5,11 +5,11 @@ import {
   LifeBuoy,
   LoaderCircle,
   LogOut,
+  type LucideIcon,
   Package,
   Search,
   UserRound,
   UsersRound,
-  type LucideIcon,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -27,6 +27,7 @@ import {
   SidebarHeader,
   SidebarMenu,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { authClient } from "@/lib/auth-client";
 
@@ -52,15 +53,14 @@ type NavSection = {
 
 const navigation: NavSection[] = [
   {
-    title: "Workspace",
+    title: "Operação",
     items: [
-      { title: "Acompanhamento", href: "/tracking", icon: Search },
-      { title: "Relacionamento", href: "/bdc", icon: UsersRound },
+      { title: "Clientes · BDC", href: "/bdc", icon: UsersRound },
       { title: "Estoque", href: "/inventory", icon: Package },
     ],
   },
   {
-    title: "Visão geral",
+    title: "Análises",
     items: [
       {
         title: "Dashboard",
@@ -69,6 +69,10 @@ const navigation: NavSection[] = [
         adminOnly: true,
       },
     ],
+  },
+  {
+    title: "Portal do cliente",
+    items: [{ title: "Acompanhamento", href: "/tracking", icon: Search }],
   },
   {
     title: "Administração",
@@ -113,6 +117,7 @@ export function AppSidebar({
   user: SidebarUser;
 }) {
   const pathname = usePathname();
+  const { setOpenMobile } = useSidebar();
   const [isSigningOut, setIsSigningOut] = useState(false);
   const userInitials = initials(user.name);
 
@@ -142,8 +147,9 @@ export function AppSidebar({
     <Sidebar collapsible="icon" variant="sidebar">
       <SidebarHeader className="border-b border-sidebar-border/60 px-3 py-4">
         <Link
-          href="/tracking"
-          aria-label="Auge Management — acompanhamento"
+          href="/bdc"
+          aria-label="Auge Management — clientes"
+          onClick={() => setOpenMobile(false)}
           title="Auge Management"
           className="group flex h-12 items-center gap-3 rounded-2xl px-2 transition-colors hover:bg-sidebar-accent/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         >
@@ -157,10 +163,10 @@ export function AppSidebar({
           />
           <span className="grid min-w-0 text-left leading-tight group-data-[collapsible=icon]:hidden">
             <span className="truncate text-sm font-semibold tracking-tight">
-              Auge Management
+              Auge
             </span>
             <span className="truncate pt-1 text-xs text-muted-foreground">
-              Operação de concessionária
+              Console de operações
             </span>
           </span>
         </Link>
@@ -190,11 +196,12 @@ export function AppSidebar({
                       <SidebarMenuItem key={item.href}>
                         <Link
                           href={item.href}
+                          onClick={() => setOpenMobile(false)}
                           aria-current={active ? "page" : undefined}
                           aria-label={item.title}
                           title={item.title}
                           data-active={active}
-                          className="group/nav-link relative flex h-10 items-center gap-3 overflow-hidden rounded-xl px-3 text-sm font-medium text-sidebar-foreground/75 outline-none transition-colors hover:bg-sidebar-accent/70 hover:text-sidebar-foreground focus-visible:ring-2 focus-visible:ring-primary data-[active=true]:bg-primary/10 data-[active=true]:text-primary group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0 [&_svg]:size-[18px] [&_svg]:shrink-0"
+                          className="group/nav-link relative flex h-10 items-center gap-3 overflow-hidden rounded-lg px-3 text-sm font-medium text-sidebar-foreground/75 outline-none transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:ring-2 focus-visible:ring-primary data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-foreground group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0 [&_svg]:size-[18px] [&_svg]:shrink-0"
                         >
                           <Icon aria-hidden="true" />
                           <span className="truncate group-data-[collapsible=icon]:hidden">

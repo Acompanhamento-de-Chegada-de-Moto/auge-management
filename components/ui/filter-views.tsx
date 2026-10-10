@@ -16,7 +16,7 @@ export function FilterViews({
   return (
     <fieldset
       className={cn(
-        "grid gap-2",
+        "grid gap-px overflow-hidden rounded-xl border border-base-300 bg-base-300",
         views.length === 4
           ? "grid-cols-2 sm:grid-cols-4"
           : "grid-cols-1 sm:grid-cols-3",
@@ -31,21 +31,21 @@ export function FilterViews({
           disabled={isPending}
           onClick={() => onChange(view.value)}
           className={cn(
-            "btn h-auto min-h-16 justify-between border-base-300/80 bg-base-100 px-4 text-left font-normal hover:bg-base-200",
+            "group relative flex min-h-24 flex-col items-start justify-center gap-2 border-0 bg-base-100 px-5 py-4 text-left outline-none transition-colors hover:bg-base-200 focus-visible:z-10 disabled:opacity-60",
             value === view.value &&
-              "border-primary bg-primary/5 ring-1 ring-primary/20",
+              "bg-base-200 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:bg-primary",
           )}
         >
           <span
             className={cn(
-              "text-sm",
+              "text-xs",
               value === view.value ? "font-medium" : "text-base-content/65",
             )}
           >
             {view.label}
           </span>
-          <span className="text-lg font-semibold tabular-nums">
-            {view.count}
+          <span className="text-2xl font-semibold tracking-tight tabular-nums">
+            {view.count.toLocaleString("pt-BR")}
           </span>
         </button>
       ))}

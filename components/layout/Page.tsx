@@ -11,7 +11,7 @@ export function Page({
   return (
     <section
       className={cn(
-        "mx-auto w-full min-w-0 max-w-[1600px] space-y-6 p-4 sm:p-6 lg:p-8",
+        "mx-auto w-full min-w-0 max-w-[1600px] space-y-6 p-4 sm:p-6 lg:px-8 lg:py-7",
         className,
       )}
     >
@@ -34,7 +34,7 @@ export function PageHeader({
   icon?: ReactNode;
 }) {
   return (
-    <header className="flex min-w-0 flex-col gap-5 border-b border-base-300/80 pb-6 sm:flex-row sm:items-end sm:justify-between">
+    <header className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex min-w-0 items-center gap-3">
         {icon && (
           <div
@@ -46,14 +46,14 @@ export function PageHeader({
         )}
         <div className="min-w-0 space-y-1">
           {eyebrow && (
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">
+            <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
               {eyebrow}
             </p>
           )}
-          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-            {title}
-          </h1>
-          <p className="text-sm text-base-content/65">{description}</p>
+          <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+            {description}
+          </p>
         </div>
       </div>
       {actions && (
