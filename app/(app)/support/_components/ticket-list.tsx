@@ -12,6 +12,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { updateTicketStatusAction } from "@/app/(app)/support/_actions/tickets";
 import type {
   AdminTicket,
   ManagerTicket,
@@ -33,7 +34,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { apiMutation } from "@/lib/api/client";
 import { TicketDialog } from "./ticket-dialog";
 import { priorityConfig, statusConfig, statusOptions } from "./tickets-config";
 
@@ -103,11 +103,7 @@ export function TicketList({ tickets, canManageStatus }: TicketListProps) {
   async function handleStatusChange(ticketId: string, status: string) {
     setUpdatingId(ticketId);
     try {
-      const result = await apiMutation(
-        `/api/v1/support/tickets/${ticketId}`,
-        "PATCH",
-        { status },
-      );
+      const result = await updateTicketStatusAction(ticketId, { status });
       if (result.status !== "success") {
         toast.error(result.message);
         return;

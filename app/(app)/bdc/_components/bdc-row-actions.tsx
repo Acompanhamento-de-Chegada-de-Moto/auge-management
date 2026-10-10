@@ -1,5 +1,6 @@
 import { PencilIcon } from "lucide-react";
 import Link from "next/link";
+import { deleteClientAction } from "@/app/(app)/bdc/_actions/clients";
 import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 import { buttonVariants } from "@/components/ui/button";
 
@@ -32,7 +33,7 @@ export function BDCRowActions({
         <PencilIcon className="mr-2 size-4" /> Editar
       </Link>
       <ConfirmDeleteDialog
-        endpoint={`/api/v1/bdc/clients/${clientId}`}
+        action={() => deleteClientAction(clientId)}
         itemType="Cliente"
         itemName={clientName}
         description="A exclusão remove o cadastro e desfaz o vínculo com as motocicletas associadas. Essa ação não pode ser desfeita."

@@ -7,13 +7,12 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-
+import { createClientAction } from "@/app/(app)/bdc/_actions/clients";
 import { CustomerSection } from "@/app/(app)/bdc/client/_components/customer-section";
 import { MotorcycleSection } from "@/app/(app)/bdc/client/_components/motorcycle-section";
 import { RegistrationSection } from "@/app/(app)/bdc/client/_components/registration-section";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
-import { apiMutation } from "@/lib/api/client";
 import {
   type CustomerFormData,
   customerSchema,
@@ -47,7 +46,7 @@ export function CreateClientForm() {
   function handleSubmit(data: CustomerFormData) {
     startTransition(async () => {
       try {
-        const result = await apiMutation("/api/v1/bdc/clients", "POST", data);
+        const result = await createClientAction(data);
 
         if (result.status === "success") {
           toast.success(result.message || "Cliente cadastrado com sucesso!");

@@ -3,8 +3,6 @@
 import {
   Bike,
   CheckIcon,
-  ChevronLeft,
-  ChevronRight,
   CopyIcon,
   LoaderCircle,
   PencilIcon,
@@ -12,11 +10,13 @@ import {
   XIcon,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useState, useTransition } from "react";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { useState } from "react";
+import { deleteMotorcycleAction } from "@/app/(app)/inventory/_actions/motorcycles";
 import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { FilterViews } from "@/components/ui/filter-views";
 import { Input } from "@/components/ui/input";
+import { ListPagination } from "@/components/ui/list-pagination";
 import {
   Select,
   SelectContent,
@@ -43,7 +43,7 @@ interface MotorcycleRow {
   forecastArrivalStatus: string | null;
 }
 
-interface MotorcycleTableProps {
+export interface MotorcycleTableProps {
   motorcycles: MotorcycleRow[];
   total: number;
   totalPages: number;
@@ -69,6 +69,15 @@ const statusViews = [
   { label: "Atrasadas", value: "delayed", countKey: "delayed" },
 ] as const;
 
+interface MotorcycleTableViewProps extends MotorcycleTableProps {
+  isPending: boolean;
+  chassisInput: string;
+  onChassisInputChange: (value: string) => void;
+  onParamsChange: (updates: Record<string, string | null>) => void;
+  onPageChange: (page: number) => void;
+  onClearFilters: () => void;
+}
+
 export default function MotorcycleTable({
   motorcycles,
   total,
@@ -77,31 +86,14 @@ export default function MotorcycleTable({
   statusCounts,
   filterOptions,
   activeFilters,
-}: MotorcycleTableProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const [isPending, startTransition] = useTransition();
+  isPending,
+  chassisInput,
+  onChassisInputChange,
+  onParamsChange,
+  onPageChange,
+  onClearFilters,
+}: MotorcycleTableViewProps) {
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [chassisInput, setChassisInput] = useState(activeFilters.chassis);
-
-  function navigate(updates: Record<string, string | null>, resetPage = true) {
-    const params = new URLSearchParams(searchParams.toString());
-    for (const [key, value] of Object.entries(updates)) {
-      if (!value || value === "all") params.delete(key);
-      else params.set(key, value);
-    }
-    if (resetPage) params.delete("page");
-    startTransition(() => {
-      const query = params.toString();
-      router.replace(query ? `${pathname}?${query}` : pathname);
-    });
-  }
-
-  function clearFilters() {
-    setChassisInput("");
-    startTransition(() => router.replace(pathname));
-  }
 
   function copyChassis(motorcycle: MotorcycleRow) {
     void navigator.clipboard.writeText(motorcycle.chassi).then(() => {
@@ -152,7 +144,7 @@ export default function MotorcycleTable({
           <span className="hidden lg:inline">Editar</span>
         </Link>
         <ConfirmDeleteDialog
-          endpoint={`/api/v1/inventory/motorcycles/${motorcycle.id}`}
+          action={() => deleteMotorcycleAction(motorcycle.id)}
           itemType="Motocicleta"
           itemName={`${motorcycle.model} · ${motorcycle.chassi}`}
           description="A exclusão é permanente e remove esta unidade do estoque."
@@ -164,34 +156,16 @@ export default function MotorcycleTable({
 
   return (
     <section aria-label="Motocicletas e filtros" className="w-full space-y-4">
-      <div className="mb-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
-        {statusViews.map((view) => {
-          const selected = (activeFilters.status || "all") === view.value;
-          return (
-            <button
-              key={view.value}
-              type="button"
-              aria-pressed={selected}
-              onClick={() => navigate({ status: view.value, arrived: null })}
-              disabled={isPending}
-              className={`flex min-h-16 items-center justify-between rounded-lg border border-base-300/80 bg-base-100 px-4 text-left transition-colors hover:bg-base-200 ${
-                selected
-                  ? "border-primary bg-primary/5 ring-1 ring-primary/20"
-                  : "hover:bg-base-200"
-              }`}
-            >
-              <span
-                className={`text-sm ${selected ? "font-medium text-foreground" : "text-muted-foreground"}`}
-              >
-                {view.label}
-              </span>
-              <span className="text-lg font-semibold tabular-nums">
-                {statusCounts[view.countKey]}
-              </span>
-            </button>
-          );
-        })}
-      </div>
+      <FilterViews
+        label="Visualizações do estoque"
+        value={activeFilters.status || "all"}
+        isPending={isPending}
+        onChange={(value) => onParamsChange({ status: value, arrived: null })}
+        views={statusViews.map((view) => ({
+          ...view,
+          count: statusCounts[view.countKey],
+        }))}
+      />
 
       <div className="flex flex-col gap-3 rounded-xl border border-base-300/80 bg-base-100 p-3 sm:flex-row sm:items-center sm:p-4">
         <div className="relative w-full sm:max-w-sm">
@@ -200,10 +174,10 @@ export default function MotorcycleTable({
             aria-label="Buscar motocicleta pelo chassi"
             placeholder="Buscar pelo chassi"
             value={chassisInput}
-            onChange={(event) => setChassisInput(event.target.value)}
+            onChange={(event) => onChassisInputChange(event.target.value)}
             onKeyDown={(event) => {
               if (event.key === "Enter")
-                navigate({ chassis: chassisInput.trim() });
+                onParamsChange({ chassis: chassisInput.trim() });
             }}
             className="pl-9 pr-9"
             disabled={isPending}
@@ -212,8 +186,8 @@ export default function MotorcycleTable({
             <button
               type="button"
               onClick={() => {
-                setChassisInput("");
-                navigate({ chassis: null });
+                onChassisInputChange("");
+                onParamsChange({ chassis: null });
               }}
               aria-label="Limpar busca"
               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
@@ -224,7 +198,7 @@ export default function MotorcycleTable({
         </div>
         <Select
           value={activeFilters.model || "all"}
-          onValueChange={(value) => navigate({ model: value })}
+          onValueChange={(value) => onParamsChange({ model: value })}
           disabled={isPending}
         >
           <SelectTrigger
@@ -244,7 +218,7 @@ export default function MotorcycleTable({
         </Select>
         <Button
           variant="outline"
-          onClick={() => navigate({ chassis: chassisInput.trim() })}
+          onClick={() => onParamsChange({ chassis: chassisInput.trim() })}
           disabled={isPending}
         >
           Buscar
@@ -252,7 +226,7 @@ export default function MotorcycleTable({
         {(activeFilters.model ||
           activeFilters.status ||
           activeFilters.chassis) && (
-          <Button variant="ghost" onClick={clearFilters} disabled={isPending}>
+          <Button variant="ghost" onClick={onClearFilters} disabled={isPending}>
             Limpar filtros
           </Button>
         )}
@@ -266,7 +240,7 @@ export default function MotorcycleTable({
           {total} {total === 1 ? "motocicleta" : "motocicletas"}
         </span>
         {isPending && (
-          <span className="inline-flex items-center gap-2" role="status">
+          <span className="inline-flex items-center gap-2" aria-live="polite">
             <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
             Atualizando lista…
           </span>
@@ -275,7 +249,7 @@ export default function MotorcycleTable({
 
       {motorcycles.length === 0 ? (
         <div
-          role="status"
+          aria-live="polite"
           className="flex flex-col items-center rounded-xl border border-dashed border-base-300 bg-base-100 px-6 py-12 text-center"
         >
           <div className="mb-4 flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
@@ -291,7 +265,7 @@ export default function MotorcycleTable({
           {activeFilters.model ||
           activeFilters.status ||
           activeFilters.chassis ? (
-            <Button variant="outline" className="mt-4" onClick={clearFilters}>
+            <Button variant="outline" className="mt-4" onClick={onClearFilters}>
               Limpar filtros
             </Button>
           ) : (
@@ -386,32 +360,13 @@ export default function MotorcycleTable({
             </Table>
           </div>
 
-          {totalPages > 1 && (
-            <nav
-              aria-label="Paginação do estoque"
-              className="flex items-center justify-center gap-4 border-t py-4"
-            >
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page <= 1 || isPending}
-                onClick={() => navigate({ page: String(page - 1) }, false)}
-              >
-                <ChevronLeft className="mr-1 size-4" /> Anterior
-              </Button>
-              <span className="text-sm text-muted-foreground">
-                Página {page} de {totalPages}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page >= totalPages || isPending}
-                onClick={() => navigate({ page: String(page + 1) }, false)}
-              >
-                Próxima <ChevronRight className="ml-1 size-4" />
-              </Button>
-            </nav>
-          )}
+          <ListPagination
+            page={page}
+            totalPages={totalPages}
+            isPending={isPending}
+            onPageChange={onPageChange}
+            label="Paginação do estoque"
+          />
         </div>
       )}
     </section>

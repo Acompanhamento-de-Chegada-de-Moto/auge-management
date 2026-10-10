@@ -16,6 +16,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { updateClientAction } from "@/app/(app)/bdc/_actions/clients";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -26,15 +27,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { searchMotorcycleByChassis } from "@/lib/api/client";
 import { formatCPF } from "@/lib/cpf";
-import { apiMutation, searchMotorcycleByChassis } from "@/lib/api/client";
 import type { getClientById } from "@/lib/data/client";
 import { cn } from "@/lib/utils";
 import {
@@ -145,14 +139,10 @@ export function EditClientForm({
 
   const handleSubmit = async (formData: CustomerFormData) => {
     startTransition(async () => {
-      const result = await apiMutation(
-        `/api/v1/bdc/clients/${client.id}`,
-        "PUT",
-        {
-          motorcycleId: selectedMotorcycle?.id ?? null,
-          values: formData,
-        },
-      );
+      const result = await updateClientAction(client.id, {
+        motorcycleId: selectedMotorcycle?.id ?? null,
+        values: formData,
+      });
 
       if (result.status === "error") {
         toast.error(result.message);

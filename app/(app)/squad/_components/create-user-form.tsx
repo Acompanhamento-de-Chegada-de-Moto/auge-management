@@ -2,16 +2,12 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, UserPlus } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useId } from "react";
 import { useForm } from "react-hook-form";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-import { apiMutation } from "@/lib/api/client";
-import {
-  type CreateUserInput,
-  createUserSchema,
-} from "@/validators/create-user-schema";
+import { createUserAction } from "@/app/(app)/squad/_actions/users";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,6 +18,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  type CreateUserInput,
+  createUserSchema,
+} from "@/validators/create-user-schema";
 
 export function CreateUserForm() {
   const router = useRouter();
@@ -52,7 +52,7 @@ export function CreateUserForm() {
 
   async function onSubmit(data: CreateUserInput) {
     try {
-      const result = await apiMutation("/api/v1/admin/users", "POST", data);
+      const result = await createUserAction(data);
 
       if (result.status !== "success") {
         setError("root", { message: result.message });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   CheckCircle2,
   Loader2,
@@ -10,8 +10,9 @@ import {
   X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-
-import { apiMutation } from "@/lib/api/client";
+import { type ReactNode, useEffect, useId, useRef, useState } from "react";
+import { useForm } from "react-hook-form";
+import { updateUserAction } from "@/app/(app)/squad/_actions/users";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,7 +26,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { initialsOf } from "@/lib/utils";
-import { UserComponentProps } from "../types";
+import {
+  type UpdateUserInput,
+  updateUserSchema,
+} from "@/validators/update-user-schema";
+import type { UserComponentProps } from "../types";
 
 interface EditUserDialogProps extends UserComponentProps {
   trigger?: ReactNode;
@@ -34,14 +39,23 @@ interface EditUserDialogProps extends UserComponentProps {
 export function EditUserDialog({ user, trigger }: EditUserDialogProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [name, setName] = useState(user.name);
-  const [newPassword, setNewPassword] = useState("");
+  const form = useForm<UpdateUserInput>({
+    resolver: zodResolver(updateUserSchema),
+    defaultValues: {
+      userId: user.id,
+      name: user.name,
+      newPassword: "",
+      image: user.image ?? "",
+    },
+  });
+  const name = form.watch("name");
+  const { errors } = form.formState;
   const [enablePassword, setEnablePassword] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(
     user.image ?? null,
   );
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { isSubmitting } = form.formState;
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
@@ -60,8 +74,12 @@ export function EditUserDialog({ user, trigger }: EditUserDialogProps) {
 
   function resetForm() {
     releasePreviewUrl();
-    setName(user.name);
-    setNewPassword("");
+    form.reset({
+      userId: user.id,
+      name: user.name,
+      newPassword: "",
+      image: user.image ?? "",
+    });
     setEnablePassword(false);
     setImagePreview(user.image ?? null);
     setSelectedFile(null);
@@ -74,14 +92,8 @@ export function EditUserDialog({ user, trigger }: EditUserDialogProps) {
   }
 
   useEffect(() => {
-    if (open) {
-      resetForm();
-    }
-  }, [open, user.id, user.name, user.image]);
-
-  useEffect(() => {
     return () => {
-      releasePreviewUrl();
+      if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
 
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
@@ -126,20 +138,7 @@ export function EditUserDialog({ user, trigger }: EditUserDialogProps) {
     }
   }
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    if (!name.trim()) {
-      setError("O nome é obrigatório.");
-      return;
-    }
-
-    if (enablePassword && newPassword.length > 0 && newPassword.length < 6) {
-      setError("A nova senha deve ter pelo menos 6 caracteres.");
-      return;
-    }
-
-    setIsSubmitting(true);
+  async function handleSubmit(data: UpdateUserInput) {
     setError(null);
 
     try {
@@ -165,16 +164,12 @@ export function EditUserDialog({ user, trigger }: EditUserDialogProps) {
         imageUrl = uploadResult.url;
       }
 
-      const result = await apiMutation(
-        `/api/v1/admin/users/${user.id}`,
-        "PUT",
-        {
-          userId: user.id,
-          name: name.trim(),
-          newPassword: enablePassword ? newPassword : "",
-          image: imageUrl,
-        },
-      );
+      const result = await updateUserAction(user.id, {
+        userId: user.id,
+        name: data.name.trim(),
+        newPassword: enablePassword ? data.newPassword : "",
+        image: imageUrl,
+      });
 
       if (result.status !== "success") {
         setError(result.message);
@@ -193,8 +188,6 @@ export function EditUserDialog({ user, trigger }: EditUserDialogProps) {
           ? cause.message
           : "Não foi possível atualizar o usuário.",
       );
-    } finally {
-      setIsSubmitting(false);
     }
   }
 
@@ -232,10 +225,10 @@ export function EditUserDialog({ user, trigger }: EditUserDialogProps) {
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
           {success && (
             <div
-              role="status"
+              aria-live="polite"
               className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800 dark:border-green-900 dark:bg-green-950/40 dark:text-green-300"
             >
               <CheckCircle2 className="size-4 shrink-0" />
@@ -243,12 +236,12 @@ export function EditUserDialog({ user, trigger }: EditUserDialogProps) {
             </div>
           )}
 
-          {error && (
+          {(error || errors.name || errors.newPassword) && (
             <p
               role="alert"
               className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive"
             >
-              {error}
+              {error || errors.name?.message || errors.newPassword?.message}
             </p>
           )}
 
@@ -316,8 +309,8 @@ export function EditUserDialog({ user, trigger }: EditUserDialogProps) {
               </label>
               <Input
                 id={nameId}
-                value={name}
-                onChange={(event) => setName(event.target.value)}
+                {...form.register("name")}
+                aria-invalid={Boolean(errors.name)}
                 autoComplete="name"
                 maxLength={120}
                 disabled={isSubmitting}
@@ -376,8 +369,8 @@ export function EditUserDialog({ user, trigger }: EditUserDialogProps) {
                 <Input
                   id={passwordId}
                   type="password"
-                  value={newPassword}
-                  onChange={(event) => setNewPassword(event.target.value)}
+                  {...form.register("newPassword")}
+                  aria-invalid={Boolean(errors.newPassword)}
                   autoComplete="new-password"
                   placeholder="Mínimo de 6 caracteres"
                   minLength={6}
@@ -388,7 +381,7 @@ export function EditUserDialog({ user, trigger }: EditUserDialogProps) {
                   className="text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground"
                   onClick={() => {
                     setEnablePassword(false);
-                    setNewPassword("");
+                    form.setValue("newPassword", "");
                   }}
                   disabled={isSubmitting}
                 >

@@ -3,12 +3,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { MotorcycleSpreadsheetUploadDialog } from "@/app/(app)/inventory/_components/MotorcycleSpreadsheetUploadDialog";
+import { getInventoryListing } from "@/app/data/user/get-listings";
+import { Page, PageHeader } from "@/components/layout/Page";
 import { Button } from "@/components/ui/button";
-import {
-  getEstoqueFilterOptions,
-  getMotorcycleStatusCounts,
-  getMotorcyclesPaginated,
-} from "@/lib/data/motorcycle";
 import {
   Table,
   TableBody,
@@ -17,7 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import MotorcycleTable from "./_components/MotorcycleTable";
+import { InventoryPageClient } from "./_components/InventoryPageClient";
 
 export const metadata: Metadata = {
   title: "Estoque",
@@ -29,35 +26,28 @@ export default async function EstoquePage({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   return (
-    <main className="mx-auto min-w-0 w-full max-w-[1600px] space-y-6 p-4 sm:p-6 lg:p-8">
-      <header className="flex flex-col gap-5 border-b border-border/70 pb-6 sm:flex-row sm:items-end sm:justify-between">
-        <div className="space-y-1">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">
-            Operação
-          </p>
-          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-            Estoque
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Acompanhe chegadas, prazos e motocicletas disponíveis.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <MotorcycleSpreadsheetUploadDialog />
-
-          <Button asChild>
-            <Link href="/inventory/motorcycle/new">
-              <PlusIcon className="mr-2 size-4" />
-              Adicionar motocicleta
-            </Link>
-          </Button>
-        </div>
-      </header>
+    <Page>
+      <PageHeader
+        title="Estoque"
+        eyebrow="Operação"
+        description="Acompanhe chegadas, prazos e motocicletas disponíveis."
+        actions={
+          <>
+            <MotorcycleSpreadsheetUploadDialog />
+            <Button asChild>
+              <Link href="/inventory/motorcycle/new">
+                <PlusIcon className="mr-2 size-4" />
+                Adicionar motocicleta
+              </Link>
+            </Button>
+          </>
+        }
+      />
 
       <Suspense fallback={<EstoquePageSkeletonLayout />}>
         <RenderMotorcycles searchParams={searchParams} />
       </Suspense>
-    </main>
+    </Page>
   );
 }
 
@@ -74,21 +64,17 @@ async function RenderMotorcycles({
     typeof params.status === "string"
       ? arrivalFilters.find((value) => value === params.status)
       : undefined;
-  const [filterOptions, statusCounts, paginated] = await Promise.all([
-    getEstoqueFilterOptions(),
-    getMotorcycleStatusCounts(),
-    getMotorcyclesPaginated({
-      page,
-      pageSize: 10,
-      model: typeof params.model === "string" ? params.model.trim() : undefined,
-      status,
-      chassisSearch:
-        typeof params.chassis === "string" ? params.chassis.trim() : undefined,
-    }),
-  ]);
+  const { paginated, filterOptions, statusCounts } = await getInventoryListing({
+    page,
+    pageSize: 10,
+    model: typeof params.model === "string" ? params.model.trim() : undefined,
+    status,
+    chassisSearch:
+      typeof params.chassis === "string" ? params.chassis.trim() : undefined,
+  });
 
   return (
-    <MotorcycleTable
+    <InventoryPageClient
       motorcycles={paginated.motorcycles}
       total={paginated.total}
       totalPages={paginated.totalPages}

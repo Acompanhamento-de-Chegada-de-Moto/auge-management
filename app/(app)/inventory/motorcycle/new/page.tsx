@@ -1,6 +1,7 @@
 import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Page, PageHeader } from "@/components/layout/Page";
 import { buttonVariants } from "@/components/ui/button";
 import { CreateMotorcycleForm } from "../_components/CreateMotorcycleForm";
 
@@ -10,28 +11,25 @@ export const metadata: Metadata = {
 
 export default function NovaMotocicletaPage() {
   return (
-    <main className="mx-auto min-w-0 w-full max-w-[1600px] space-y-6 p-4 sm:p-6 lg:p-8">
-      <header className="flex flex-col gap-4 border-b border-border/70 pb-6 sm:flex-row sm:items-end sm:justify-between">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Adicionar motocicleta
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Cadastre os dados da unidade e acompanhe a previsão de chegada.
-          </p>
-        </div>
-        <Link
-          href="/inventory"
-          className={buttonVariants({
-            variant: "outline",
-          })}
-        >
-          <ArrowLeft className="mr-2 size-4" /> Voltar ao estoque
-        </Link>
-      </header>
+    <Page>
+      <PageHeader
+        title="Adicionar motocicleta"
+        description={
+          "Cadastre os dados da unidade e acompanhe a previsão de chegada."
+        }
+        actions={
+          <Link
+            href="/inventory"
+            className={buttonVariants({ variant: "outline" })}
+          >
+            <ArrowLeft className="mr-2 size-4" />
+            Voltar ao estoque
+          </Link>
+        }
+      />
       <div className="mx-auto w-full max-w-4xl">
         <CreateMotorcycleForm />
       </div>
-    </main>
+    </Page>
   );
 }

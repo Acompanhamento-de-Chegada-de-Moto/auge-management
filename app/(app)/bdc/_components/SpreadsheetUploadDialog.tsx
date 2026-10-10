@@ -1,8 +1,8 @@
 "use client";
 
 import * as XLSX from "xlsx";
+import { importClientsAction } from "@/app/(app)/bdc/_actions/clients";
 import { SpreadsheetImportDialog } from "@/components/SpreadsheetImportDialog";
-import { apiMutation } from "@/lib/api/client";
 
 const COLUMN_MAP: Record<string, string> = {
   CLIENTE: "cliente",
@@ -127,7 +127,7 @@ export function SpreadsheetUploadDialog() {
       description="Envie uma planilha com os dados dos clientes. Formatos aceitos: Excel, LibreOffice ou CSV."
       emptyRowsMessage="Verifique se as colunas CLIENTE, CHASSI e CONSULTOR estão preenchidas."
       parseFile={async (file) => (await parseSpreadsheet(file)).rows}
-      importRows={(rows) => apiMutation("/api/v1/bdc/import", "POST", rows)}
+      importRows={(rows) => importClientsAction(rows)}
     />
   );
 }

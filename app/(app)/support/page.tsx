@@ -5,6 +5,7 @@ import {
   managerGetOwnTickets,
 } from "@/app/data/admin/admin-get-tickets";
 import { requireManager } from "@/app/data/admin/require-manager";
+import { Page, PageHeader } from "@/components/layout/Page";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -55,25 +56,17 @@ async function RenderSupport() {
   );
 }
 
-export default async function SupportPage() {
-  await requireManager();
-
+export default function SupportPage() {
   return (
-    <main className="mx-auto w-full max-w-[1600px] space-y-6 p-4 sm:p-6 lg:p-8">
-      <header className="border-b border-border/70 pb-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">
-          Atendimento
-        </p>
-        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-          Suporte
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Abra um chamado e acompanhe as solicitações da equipe.
-        </p>
-      </header>
+    <Page>
+      <PageHeader
+        title="Suporte"
+        eyebrow="Atendimento"
+        description="Abra um chamado e acompanhe as solicitações da equipe."
+      />
       <Suspense fallback={<SupportSkeleton />}>
         <RenderSupport />
       </Suspense>
-    </main>
+    </Page>
   );
 }

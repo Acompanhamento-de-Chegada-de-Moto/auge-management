@@ -1,14 +1,21 @@
 ﻿"use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useTransition } from "react";
 import { LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+import { FilterViews } from "@/components/ui/filter-views";
+import { ListPagination } from "@/components/ui/list-pagination";
 import type { BDCTableProps } from "../bdc-table.types";
 import { BDCDesktopTable } from "./bdc-desktop-table";
 import { BDCFilters } from "./bdc-filters";
 import { BDCMobileCard } from "./bdc-mobile-card";
+
+interface BdcTableViewProps extends BDCTableProps {
+  isPending: boolean;
+  onParamsChange: (updates: Record<string, string | null>) => void;
+  onPageChange: (page: number) => void;
+  onClearFilters: () => void;
+}
 
 export function BDCTable({
   rows,
@@ -18,52 +25,19 @@ export function BDCTable({
   statusCounts,
   filterOptions,
   activeFilters,
-}: BDCTableProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const [isPending, startTransition] = useTransition();
-
-  function updateParams(
-    updates: Record<string, string | null>,
-    resetPage = true,
-  ) {
-    const params = new URLSearchParams(searchParams.toString());
-
-    for (const [key, value] of Object.entries(updates)) {
-      if (!value || value === "all") {
-        params.delete(key);
-      } else {
-        params.set(key, value);
-      }
-    }
-
-    if (resetPage) {
-      params.delete("page");
-    }
-
-    const query = params.toString();
-
-    startTransition(() => {
-      router.replace(query ? `${pathname}?${query}` : pathname);
-    });
-  }
-
-  function handlePageChange(nextPage: number) {
-    updateParams({ page: String(nextPage) }, false);
-  }
-
-  function handleClearFilters() {
-    startTransition(() => {
-      router.replace(pathname);
-    });
-  }
-
+  isPending,
+  onParamsChange,
+  onPageChange,
+  onClearFilters,
+}: BdcTableViewProps) {
   return (
     <section aria-label="Clientes e filtros" className="min-w-0 space-y-4">
-      <fieldset className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-        <legend className="sr-only">Visualizações por chegada</legend>
-        {[
+      <FilterViews
+        label="Visualizações por chegada"
+        value={activeFilters.arrived || "all"}
+        isPending={isPending}
+        onChange={(value) => onParamsChange({ arrived: value })}
+        views={[
           {
             label: "Todos os clientes",
             value: "all",
@@ -75,41 +49,16 @@ export function BDCTable({
             value: "false",
             count: statusCounts.waiting,
           },
-        ].map((view) => {
-          const selected = (activeFilters.arrived || "all") === view.value;
-          return (
-            <button
-              key={view.value}
-              type="button"
-              aria-pressed={selected}
-              disabled={isPending}
-              onClick={() => updateParams({ arrived: view.value })}
-              className={`flex min-h-16 items-center justify-between rounded-lg border border-base-300/80 bg-base-100 px-4 text-left transition-colors hover:bg-base-200 ${
-                selected
-                  ? "border-primary bg-primary/5 ring-1 ring-primary/20"
-                  : "hover:bg-base-200"
-              }`}
-            >
-              <span
-                className={`text-sm ${selected ? "font-medium" : "text-muted-foreground"}`}
-              >
-                {view.label}
-              </span>
-              <span className="text-lg font-semibold tabular-nums">
-                {view.count}
-              </span>
-            </button>
-          );
-        })}
-      </fieldset>
+        ]}
+      />
 
       <BDCFilters
         filterOptions={filterOptions}
         activeFilters={activeFilters}
         isPending={isPending}
-        onFilterChange={(key, value) => updateParams({ [key]: value })}
-        onSearch={(value) => updateParams({ search: value })}
-        onClear={handleClearFilters}
+        onFilterChange={(key, value) => onParamsChange({ [key]: value })}
+        onSearch={(value) => onParamsChange({ search: value })}
+        onClear={onClearFilters}
       />
 
       <div
@@ -120,7 +69,7 @@ export function BDCTable({
           {totalClients} {totalClients === 1 ? "cliente" : "clientes"}
         </span>
         {isPending && (
-          <span className="inline-flex items-center gap-2" role="status">
+          <span className="inline-flex items-center gap-2" aria-live="polite">
             <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
             Atualizando lista…
           </span>
@@ -129,7 +78,7 @@ export function BDCTable({
 
       {rows.length === 0 ? (
         <div
-          role="status"
+          aria-live="polite"
           className="flex flex-col items-center rounded-xl border border-dashed border-base-300 bg-base-100 px-6 py-12 text-center"
         >
           <h2 className="font-medium">Nenhum cliente nesta visualização</h2>
@@ -137,11 +86,7 @@ export function BDCTable({
             Altere os filtros ou cadastre um cliente para acompanhar o
             atendimento.
           </p>
-          <Button
-            variant="outline"
-            className="mt-4"
-            onClick={handleClearFilters}
-          >
+          <Button variant="outline" className="mt-4" onClick={onClearFilters}>
             Limpar filtros
           </Button>
         </div>
@@ -162,31 +107,13 @@ export function BDCTable({
 
           <BDCDesktopTable rows={rows} />
 
-          {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-4 pt-4">
-              <button
-                type="button"
-                className="min-h-11 rounded-lg border bg-card px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-50"
-                disabled={page <= 1 || isPending}
-                onClick={() => handlePageChange(page - 1)}
-              >
-                Anterior
-              </button>
-
-              <span className="text-sm text-muted-foreground">
-                Página {page} de {totalPages}
-              </span>
-
-              <button
-                type="button"
-                className="min-h-11 rounded-lg border bg-card px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-50"
-                disabled={page >= totalPages || isPending}
-                onClick={() => handlePageChange(page + 1)}
-              >
-                Próxima
-              </button>
-            </div>
-          )}
+          <ListPagination
+            page={page}
+            totalPages={totalPages}
+            isPending={isPending}
+            onPageChange={onPageChange}
+            label="Paginação de clientes"
+          />
         </div>
       )}
     </section>

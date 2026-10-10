@@ -1,9 +1,12 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, MessageSquarePlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { createTicketAction } from "@/app/(app)/support/_actions/tickets";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -23,58 +26,40 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { apiMutation } from "@/lib/api/client";
+import {
+  type CreateTicketInput,
+  createTicketSchema,
+} from "@/validators/create-ticket-schema";
 import { priorityConfig } from "./tickets-config";
 
 export function TicketForm() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [subject, setSubject] = useState("");
-  const [description, setDescription] = useState("");
-  const [priority, setPriority] = useState("NORMAL");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const form = useForm<CreateTicketInput>({
+    resolver: zodResolver(createTicketSchema),
+    defaultValues: { subject: "", description: "", priority: "NORMAL" },
+  });
+  const subject = form.watch("subject");
+  const description = form.watch("description");
+  const priority = form.watch("priority");
+  const { isSubmitting, errors } = form.formState;
+  const formError =
+    errors.subject?.message ??
+    errors.description?.message ??
+    errors.priority?.message;
   const [error, setError] = useState<string | null>(null);
 
   const subjectId = useId();
   const descriptionId = useId();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!subject.trim()) {
-      setError("Assunto é obrigatório");
-      return;
-    }
-
-    if (!description.trim()) {
-      setError("Descrição é obrigatória");
-      return;
-    }
-
-    if (subject.trim().length > 200) {
-      setError("O assunto deve ter no máximo 200 caracteres.");
-      return;
-    }
-
-    if (description.trim().length > 2000) {
-      setError("A descrição deve ter no máximo 2.000 caracteres.");
-      return;
-    }
-
-    setIsSubmitting(true);
+  const handleSubmit = async (data: CreateTicketInput) => {
     setError(null);
 
     try {
-      const result = await apiMutation("/api/v1/support/tickets", "POST", {
-        subject: subject.trim(),
-        description: description.trim(),
-        priority: priority as "NORMAL" | "HIGH" | "URGENT",
-      });
+      const result = await createTicketAction(data);
 
       if (result.status === "success") {
-        setSubject("");
-        setDescription("");
-        setPriority("NORMAL");
+        form.reset();
         toast.success(
           "Ticket aberto. A equipe poderá acompanhar sua solicitação.",
         );
@@ -85,8 +70,6 @@ export function TicketForm() {
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao criar ticket");
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -111,13 +94,13 @@ export function TicketForm() {
             por aqui.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {error && (
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-5">
+          {(error || formError) && (
             <p
               role="alert"
               className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm font-medium text-destructive"
             >
-              {error}
+              {error || formError}
             </p>
           )}
 
@@ -125,15 +108,11 @@ export function TicketForm() {
             <Label htmlFor={subjectId}>Assunto</Label>
             <Input
               id={subjectId}
-              value={subject}
-              onChange={(e) => {
-                setSubject(e.target.value);
-                setError(null);
-              }}
+              {...form.register("subject", { onChange: () => setError(null) })}
               placeholder="Ex.: Erro ao importar planilha"
               disabled={isSubmitting}
               maxLength={200}
-              aria-invalid={Boolean(error && !subject.trim())}
+              aria-invalid={Boolean(errors.subject)}
             />
             <p
               className="text-right text-xs text-muted-foreground"
@@ -147,16 +126,14 @@ export function TicketForm() {
             <Label htmlFor={descriptionId}>Descrição</Label>
             <textarea
               id={descriptionId}
-              value={description}
-              onChange={(e) => {
-                setDescription(e.target.value);
-                setError(null);
-              }}
+              {...form.register("description", {
+                onChange: () => setError(null),
+              })}
               placeholder="Descreva o problema e os passos que levaram a ele..."
               rows={5}
               maxLength={2000}
               disabled={isSubmitting}
-              aria-invalid={Boolean(error && !description.trim())}
+              aria-invalid={Boolean(errors.description)}
               className="flex min-h-32 w-full resize-y rounded-xl border border-base-300 bg-base-100 px-3.5 py-3 text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-2 focus:outline-primary/30 disabled:cursor-not-allowed disabled:opacity-50"
             />
             <p
@@ -172,7 +149,13 @@ export function TicketForm() {
             <Select
               id={`${subjectId}-priority`}
               value={priority}
-              onValueChange={setPriority}
+              onValueChange={(value) =>
+                form.setValue(
+                  "priority",
+                  value as CreateTicketInput["priority"],
+                  { shouldValidate: true },
+                )
+              }
               disabled={isSubmitting}
             >
               <SelectTrigger id={`${subjectId}-priority`}>

@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
 import { Loader2, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { type ReactNode, useState } from "react";
 import { toast } from "sonner";
 
-import { apiMutation } from "@/lib/api/client";
-import { Button } from "@/components/ui/button";
+import { deleteUserAction } from "@/app/(app)/squad/_actions/users";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,6 +17,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 
 interface DeleteUserDialogProps {
   userId: string;
@@ -38,10 +38,7 @@ export function DeleteUserDialog({
     setIsDeleting(true);
 
     try {
-      const result = await apiMutation(
-        `/api/v1/admin/users/${userId}`,
-        "DELETE",
-      );
+      const result = await deleteUserAction(userId);
 
       if (result.status !== "success") {
         toast.error(result.message);

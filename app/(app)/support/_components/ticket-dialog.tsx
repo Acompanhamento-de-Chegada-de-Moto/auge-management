@@ -1,8 +1,11 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, SendHorizonal } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
+import { useForm } from "react-hook-form";
+import { replyToTicketAction } from "@/app/(app)/support/_actions/tickets";
 import type {
   AdminTicket,
   ManagerTicket,
@@ -18,8 +21,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { apiMutation } from "@/lib/api/client";
 import { initialsOf } from "@/lib/utils";
+import {
+  type ReplyTicketInput,
+  replyTicketSchema,
+} from "@/validators/reply-ticket-schema";
 import { priorityConfig, statusConfig } from "./tickets-config";
 
 type Ticket = AdminTicket | ManagerTicket;
@@ -32,39 +38,31 @@ interface TicketDialogProps {
 export function TicketDialog({ ticket, children }: TicketDialogProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [message, setMessage] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const form = useForm<ReplyTicketInput>({
+    resolver: zodResolver(replyTicketSchema),
+    defaultValues: { message: "" },
+  });
+  const message = form.watch("message");
+  const { isSubmitting, errors } = form.formState;
   const [error, setError] = useState<string | null>(null);
 
   const messageId = useId();
   const ticketId = ticket.id.slice(0, 8);
 
-  const handleReply = async () => {
-    if (!message.trim()) {
-      setError("Mensagem não pode estar vazia");
-      return;
-    }
-
-    setIsSubmitting(true);
+  const handleReply = async (data: ReplyTicketInput) => {
     setError(null);
 
     try {
-      const result = await apiMutation(
-        `/api/v1/support/tickets/${ticket.id}`,
-        "POST",
-        { message },
-      );
+      const result = await replyToTicketAction(ticket.id, data);
 
       if (result.status === "success") {
-        setMessage("");
+        form.reset();
         router.refresh();
       } else {
         setError(result.message);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao enviar");
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -172,9 +170,9 @@ export function TicketDialog({ ticket, children }: TicketDialogProps) {
         {/* Rodapé — Reply */}
         {(ticket.status === "OPEN" || ticket.status === "IN_PROGRESS") && (
           <div className="border-t pt-4 space-y-3">
-            {error && (
+            {(error || errors.message) && (
               <p role="alert" className="text-sm font-medium text-red-600">
-                {error}
+                {error || errors.message?.message}
               </p>
             )}
             <div className="flex gap-2">
@@ -183,8 +181,8 @@ export function TicketDialog({ ticket, children }: TicketDialogProps) {
               </label>
               <textarea
                 id={messageId}
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
+                {...form.register("message")}
+                aria-invalid={Boolean(errors.message)}
                 placeholder="Escreva uma resposta..."
                 rows={2}
                 disabled={isSubmitting}
@@ -192,13 +190,14 @@ export function TicketDialog({ ticket, children }: TicketDialogProps) {
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
-                    handleReply();
+                    void form.handleSubmit(handleReply)();
                   }
                 }}
               />
               <Button
                 size="icon"
-                onClick={handleReply}
+                onClick={() => void form.handleSubmit(handleReply)()}
+                aria-label="Enviar resposta"
                 disabled={isSubmitting || !message.trim()}
                 className="shrink-0 self-end"
               >

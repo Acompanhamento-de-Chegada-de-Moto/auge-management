@@ -17,10 +17,10 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { apiMutation } from "@/lib/api/client";
+import type { ApiResponse } from "@/lib/types";
 
 interface ConfirmDeleteDialogProps {
-  endpoint: string;
+  action: () => Promise<ApiResponse>;
   itemType: string;
   itemName: string;
   description: string;
@@ -28,7 +28,7 @@ interface ConfirmDeleteDialogProps {
 }
 
 export function ConfirmDeleteDialog({
-  endpoint,
+  action,
   itemType,
   itemName,
   description,
@@ -43,7 +43,7 @@ export function ConfirmDeleteDialog({
     setIsDeleting(true);
 
     try {
-      const result = await apiMutation(endpoint, "DELETE");
+      const result = await action();
       if (result.status === "error") {
         toast.error(result.message);
         return;
