@@ -15,7 +15,8 @@
     "test": "node --test tests/mutations.test.mjs tests/check-in.test.mjs tests/sidebar-navigation.test.mjs",
     "cron:arrivals": "node tools/arrival-cron.mjs",
     "format": "biome format --write",
-    "db:seed": "prisma db seed"
+    "db:seed": "prisma db seed",
+    "db:seed:workflows": "tsx prisma/seed-workflows.ts"
   },
   "dependencies": {
     "@better-auth/prisma-adapter": "^1.6.11",
