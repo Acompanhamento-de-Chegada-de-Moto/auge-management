@@ -5,45 +5,6 @@ import { arrivalArrivedWhere } from "@/lib/data/arrival-status";
 import { listingCacheTags } from "@/lib/data/listing-cache-tags";
 import { prisma } from "@/lib/db";
 
-export async function getClients() {
-  return prisma.client.findMany({
-    select: {
-      id: true,
-      cpf: true,
-      name: true,
-      sellersName: true,
-      city: true,
-      billingDate: true,
-      motorcycles: {
-        select: {
-          id: true,
-          chassi: true,
-          model: true,
-          forecastArrival: true,
-          forecastArrivalStatus: true,
-          registrationStatus: true,
-        },
-      },
-    },
-    orderBy: {
-      updatedAt: "desc",
-    },
-    take: 500,
-  });
-}
-
-export async function getAllClientsForImport() {
-  return prisma.client.findMany({
-    select: {
-      id: true,
-      cpf: true,
-      name: true,
-      sellersName: true,
-      billingDate: true,
-    },
-  });
-}
-
 export async function getClientById(id: string) {
   return prisma.client.findUnique({
     where: { id },
@@ -51,23 +12,6 @@ export async function getClientById(id: string) {
       motorcycles: {
         orderBy: { createdAt: "asc" },
       },
-    },
-  });
-}
-
-export async function searchClientsByName(name: string) {
-  return prisma.client.findMany({
-    where: {
-      name: {
-        contains: name,
-        mode: "insensitive",
-      },
-    },
-    include: {
-      motorcycles: true,
-    },
-    orderBy: {
-      updatedAt: "desc",
     },
   });
 }
@@ -251,62 +195,5 @@ export async function searchClients(query: string) {
       updatedAt: "desc",
     },
     take: 500,
-  });
-}
-
-export async function getClientByNameAndSeller(
-  name: string,
-  sellerName: string,
-) {
-  return prisma.client.findFirst({
-    where: {
-      name: {
-        equals: name,
-        mode: "insensitive",
-      },
-      sellersName: {
-        equals: sellerName,
-        mode: "insensitive",
-      },
-    },
-    include: {
-      motorcycles: true,
-    },
-  });
-}
-
-export async function getClientByCpf(cpf: string) {
-  return prisma.client.findUnique({
-    where: { cpf },
-    include: {
-      motorcycles: true,
-    },
-  });
-}
-
-export async function getPublicClientByCpf(cpf: string) {
-  return prisma.client.findUnique({
-    where: { cpf },
-    select: {
-      id: true,
-      name: true,
-      cpf: true,
-      city: true,
-      sellersName: true,
-      billingDate: true,
-      createdAt: true,
-      motorcycles: {
-        select: {
-          id: true,
-          chassi: true,
-          model: true,
-          forecastArrival: true,
-          forecastArrivalStatus: true,
-          registrationStatus: true,
-          registrationDate: true,
-        },
-        orderBy: { createdAt: "desc" },
-      },
-    },
   });
 }

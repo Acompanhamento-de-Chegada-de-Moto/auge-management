@@ -32,40 +32,6 @@ export async function createClient(data: {
   });
 }
 
-export async function createClientsBatch(
-  clients: Array<{
-    cpf?: string;
-    name: string;
-    sellerName: string;
-    city: string;
-    billingDate?: Date | null;
-  }>,
-) {
-  if (clients.length === 0) return [];
-  let index = 0;
-  return prisma.client.createManyAndReturn({
-    data: clients.map((c) => {
-      const cpf = c.cpf
-        ? stripCPF(c.cpf)
-        : `TEMP-${index.toString().padStart(11, "0")}`;
-      index++;
-      return {
-        cpf,
-        name: c.name,
-        sellersName: c.sellerName,
-        city: c.city,
-        billingDate: c.billingDate ?? null,
-      };
-    }),
-    select: {
-      id: true,
-      cpf: true,
-      name: true,
-      sellersName: true,
-    },
-  });
-}
-
 export async function updateClient(
   id: string,
   data: {

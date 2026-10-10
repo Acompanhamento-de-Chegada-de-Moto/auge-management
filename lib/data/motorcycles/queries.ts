@@ -9,22 +9,6 @@ import {
 import { listingCacheTags } from "@/lib/data/listing-cache-tags";
 import { prisma } from "@/lib/db";
 
-export async function getAllMotorcycles() {
-  return prisma.motorcycle.findMany({
-    select: {
-      id: true,
-      chassi: true,
-      model: true,
-      forecastArrival: true,
-      forecastArrivalStatus: true,
-    },
-    orderBy: {
-      updatedAt: "desc",
-    },
-    take: 500,
-  });
-}
-
 async function getCachedEstoqueFilterOptions() {
   "use cache";
   cacheLife({ stale: 300, revalidate: 300, expire: 3000 });
@@ -135,30 +119,6 @@ export async function getMotorcyclesPaginated(params: {
   };
 }
 
-export async function getAllMotorcyclesForImport() {
-  return prisma.motorcycle.findMany({
-    select: {
-      id: true,
-      chassi: true,
-      model: true,
-      forecastArrival: true,
-      clientId: true,
-    },
-  });
-}
-
-export async function getMotorcycleByChassis(chassi: string) {
-  return prisma.motorcycle.findUnique({
-    where: { chassi },
-  });
-}
-
-export async function getMotorcycleById(id: string) {
-  return prisma.motorcycle.findUnique({
-    where: { id },
-  });
-}
-
 export async function getMotorcycleByIdWithClient(id: string) {
   return prisma.motorcycle.findUnique({
     where: { id },
@@ -180,24 +140,6 @@ export async function getPublicMotorcycleById(id: string) {
       model: true,
       registrationStatus: true,
       client: true,
-      createdAt: true,
-    },
-    orderBy: { createdAt: "desc" },
-  });
-}
-
-export async function getMotorcycleByChassisWithClient(chassis: string) {
-  return prisma.motorcycle.findFirst({
-    where: { chassi: chassis },
-    select: {
-      id: true,
-      chassi: true,
-      client: true,
-      clientId: true,
-      forecastArrival: true,
-      forecastArrivalStatus: true,
-      model: true,
-      registrationStatus: true,
       createdAt: true,
     },
     orderBy: { createdAt: "desc" },
