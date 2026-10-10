@@ -29,9 +29,9 @@ export default function BDCPage({ searchParams }: BDCPageProps) {
   return (
     <Page>
       <PageHeader
-        title="BDC"
-        eyebrow="Relacionamento"
-        description="Acompanhamento e gestão de clientes e motocicletas."
+        title="Clientes · BDC"
+        eyebrow="Operação"
+        description="Gerencie atendimentos, acompanhe chegadas e atualize o emplacamento."
         actions={
           <>
             <SpreadsheetUploadDialog />

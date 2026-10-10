@@ -6,14 +6,7 @@ import { MotorcycleSpreadsheetUploadDialog } from "@/app/(app)/inventory/_compon
 import { getInventoryListing } from "@/app/data/user/get-listings";
 import { Page, PageHeader } from "@/components/layout/Page";
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { ListWorkspaceSkeleton } from "@/components/ui/list-workspace-skeleton";
 import { InventoryPageClient } from "./_components/InventoryPageClient";
 
 export const metadata: Metadata = {
@@ -89,55 +82,6 @@ async function RenderMotorcycles({
     />
   );
 }
-
 export function EstoquePageSkeletonLayout() {
-  const skeletonRows = Array.from({ length: 5 }, (_, i) => i);
-
-  return (
-    <div className="w-full animate-pulse">
-      <div className="rounded-sm border">
-        <Table>
-          <TableHeader>
-            <TableRow className="hover:bg-transparent">
-              <TableHead>Modelo</TableHead>
-              <TableHead>Chassi</TableHead>
-              <TableHead className="hidden md:table-cell">
-                Previsão de Chegada
-              </TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="w-0 pr-4 text-end">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {skeletonRows.map((index) => (
-              <TableRow key={index} className="hover:bg-transparent">
-                <TableCell className="py-4">
-                  <div className="h-4 w-32 rounded bg-muted" />
-                </TableCell>
-
-                <TableCell className="py-4">
-                  <div className="h-4 w-40 rounded bg-muted/80 font-mono" />
-                </TableCell>
-
-                <TableCell className="hidden md:table-cell py-4">
-                  <div className="h-4 w-24 rounded bg-muted/60" />
-                </TableCell>
-
-                <TableCell className="py-4">
-                  <div className="h-5 w-24 rounded-full bg-muted/70" />
-                </TableCell>
-
-                <TableCell className="py-4">
-                  <div className="flex items-center justify-end gap-2">
-                    <div className="size-8 rounded-full bg-muted/80" />
-                    <div className="size-8 rounded-full bg-muted/80" />
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-    </div>
-  );
+  return <ListWorkspaceSkeleton views={4} />;
 }

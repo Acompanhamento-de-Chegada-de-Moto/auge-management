@@ -8,8 +8,9 @@ import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import type { z } from "zod/v3";
-import { Button } from "@/components/ui/button";
 import { DateInput } from "@/components/DateInput";
+import { FormWorkspace } from "@/components/layout/FormWorkspace";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -28,7 +29,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { ApiResponse } from "@/lib/types";
-import { cn } from "@/lib/utils";
 import {
   type CreateMotorcycleType,
   createMotorcycleSchema,
@@ -85,21 +85,26 @@ export function MotorcycleForm({
         router.push("/inventory");
         router.refresh();
       } catch {
-        toast.error(
-          "NÃ£o foi possÃ­vel salvar a motocicleta. Tente novamente.",
-        );
+        toast.error("Não foi possível salvar a motocicleta. Tente novamente.");
       }
     });
   }
 
   return (
-    <div className="w-full max-w-3xl rounded-xl border bg-card shadow-sm">
+    <FormWorkspace
+      title="Controle de estoque"
+      steps={[
+        "O chassi identifica uma unidade e deve ser único.",
+        "A previsão de chegada é opcional. Confirme o status conforme a situação real da unidade.",
+        "Na edição, alterar o chassi mantém o cadastro e o vínculo com o cliente.",
+      ]}
+    >
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)}>
-          <div className="space-y-7 p-5 sm:p-7">
+          <div className="space-y-7">
             <section className="space-y-4">
               <div>
-                <h2 className="text-base font-semibold">IdentificaÃ§Ã£o</h2>
+                <h2 className="text-base font-semibold">Identificação</h2>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Informe os dados que identificam esta motocicleta no estoque.
                 </p>
@@ -122,7 +127,7 @@ export function MotorcycleForm({
                           }
                         />
                       </FormControl>
-                      <FormDescription>AtÃ© 17 caracteres.</FormDescription>
+                      <FormDescription>Até 17 caracteres.</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -147,8 +152,8 @@ export function MotorcycleForm({
               <div>
                 <h2 className="text-base font-semibold">Chegada</h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  A previsÃ£o Ã© opcional. Sem data, a unidade permanece sem
-                  previsÃ£o.
+                  A previsão é opcional. Sem data, a unidade permanece sem
+                  previsão.
                 </p>
               </div>
               <div className="grid gap-5 sm:grid-cols-2">
@@ -157,7 +162,7 @@ export function MotorcycleForm({
                   name="forecastArrival"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
-                      <FormLabel>PrevisÃ£o de chegada</FormLabel>
+                      <FormLabel>Previsão de chegada</FormLabel>
                       <FormControl>
                         <DateInput
                           name={field.name}
@@ -199,7 +204,7 @@ export function MotorcycleForm({
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="NO_INFORMATION">
-                            Sem confirmaÃ§Ã£o
+                            Sem confirmação
                           </SelectItem>
                           <SelectItem value="ARRIVED">Chegou</SelectItem>
                           <SelectItem value="DELAYED">Atrasada</SelectItem>
@@ -220,7 +225,7 @@ export function MotorcycleForm({
                     aria-live="polite"
                     className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200"
                   >
-                    A previsÃ£o jÃ¡ passou. Atualize o status para confirmar a
+                    A previsão já passou. Atualize o status para confirmar a
                     chegada ou registrar o atraso.
                   </p>
                 )}
@@ -236,7 +241,7 @@ export function MotorcycleForm({
             )}
           </div>
 
-          <footer className="flex flex-col-reverse gap-2 border-t bg-muted/20 p-4 sm:flex-row sm:justify-end sm:px-7">
+          <footer className="flex flex-col-reverse gap-2 mt-6 border-t border-base-300 bg-base-100 pt-4 sm:flex-row sm:justify-end">
             <Button
               type="button"
               variant="outline"
@@ -253,15 +258,15 @@ export function MotorcycleForm({
               )}
               {isPending
                 ? mode === "create"
-                  ? "Salvandoâ€¦"
-                  : "Salvandoâ€¦"
+                  ? "Salvando…"
+                  : "Salvando…"
                 : mode === "create"
                   ? "Adicionar ao estoque"
-                  : "Salvar alteraÃ§Ãµes"}
+                  : "Salvar alterações"}
             </Button>
           </footer>
         </form>
       </Form>
-    </div>
+    </FormWorkspace>
   );
 }

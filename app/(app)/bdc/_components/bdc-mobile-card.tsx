@@ -31,7 +31,7 @@ export function BDCMobileCard({ row }: BDCMobileCardProps) {
     : null;
 
   return (
-    <article className="rounded-lg border p-4">
+    <article className="rounded-lg border border-base-300 bg-base-100 p-4">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="break-words font-medium">{row.name}</p>
@@ -66,7 +66,9 @@ export function BDCMobileCard({ row }: BDCMobileCardProps) {
           <dd className="mt-1">
             <Tooltip>
               <TooltipTrigger asChild>
-                <Badge className={`px-3 py-1 ${arrivalStatus.color}`}>
+                <Badge
+                  className={`max-w-full whitespace-normal px-2 py-1 ${arrivalStatus.color}`}
+                >
                   {arrivalStatus.label}
                 </Badge>
               </TooltipTrigger>
@@ -74,7 +76,14 @@ export function BDCMobileCard({ row }: BDCMobileCardProps) {
                 {formatDateBR(motorcycle?.forecastArrival) ?? "Sem previsão"}
               </TooltipContent>
             </Tooltip>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {formatDateBR(motorcycle?.forecastArrival) ?? "Sem previsão"}
+            </p>
           </dd>
+        </div>
+        <div className="min-w-0">
+          <dt className="text-muted-foreground">Faturamento</dt>
+          <dd>{formatDateBR(row.billingDate) ?? "Sem data"}</dd>
         </div>
       </dl>
 

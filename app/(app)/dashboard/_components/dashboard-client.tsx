@@ -5,10 +5,10 @@ import {
   ChartArea,
   ChartNoAxesColumnIncreasing,
   ClipboardList,
-  Users,
   type LucideIcon,
+  Users,
 } from "lucide-react";
-import type { DashboardSummary } from "@/lib/data/dashboard";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -25,6 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import type { DashboardSummary } from "@/lib/data/dashboard";
 
 interface KpiCardProps {
   title: string;
@@ -39,7 +40,7 @@ function KpiCard({ title, value, icon: Icon }: KpiCardProps) {
         <CardTitle className="text-sm font-medium text-muted-foreground">
           {title}
         </CardTitle>
-        <span className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+        <span className="flex size-9 items-center justify-center rounded-lg bg-base-200 text-muted-foreground">
           <Icon className="size-4" aria-hidden="true" />
         </span>
       </CardHeader>
@@ -112,6 +113,39 @@ export function DashboardClient({ data }: DashboardClientProps) {
 
   return (
     <div className="space-y-6">
+      <section
+        aria-label="Próximas ações"
+        className="grid gap-3 sm:grid-cols-2"
+      >
+        <Link
+          href="/inventory?status=delayed"
+          className="group flex items-center justify-between gap-4 rounded-xl border border-base-300 bg-base-100 p-5 hover:border-primary/40"
+        >
+          <div>
+            <h2 className="text-sm font-semibold">Revisar atrasos</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Confira as unidades com atraso confirmado.
+            </p>
+          </div>
+          <span className="badge badge-error badge-soft shrink-0 tabular-nums">
+            {data.arrivalStatus.atrasada.toLocaleString("pt-BR")}
+          </span>
+        </Link>
+        <Link
+          href="/bdc?arrived=true"
+          className="group flex items-center justify-between gap-4 rounded-xl border border-base-300 bg-base-100 p-5 hover:border-primary/40"
+        >
+          <div>
+            <h2 className="text-sm font-semibold">Acompanhar entregas</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Abra os clientes com chegada confirmada.
+            </p>
+          </div>
+          <span className="text-xs font-medium text-primary">
+            Ver clientes →
+          </span>
+        </Link>
+      </section>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard title="Clientes" value={data.totalClients} icon={Users} />
         <KpiCard

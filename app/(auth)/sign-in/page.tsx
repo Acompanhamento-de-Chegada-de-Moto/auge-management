@@ -19,11 +19,7 @@ export default async function LoginPage() {
   }
 
   return (
-    <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-primary/[0.08] via-background to-muted/40 px-4 py-10">
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -right-32 -top-32 size-96 rounded-full bg-primary/[0.08] blur-3xl"
-      />
+    <main className="flex min-h-screen flex-col items-center justify-center bg-base-200 px-4 py-10">
       <div className="relative mb-7 flex flex-col items-center gap-3 text-center">
         <Image
           src="/logo-auge.png"
@@ -33,7 +29,7 @@ export default async function LoginPage() {
           className="size-14 object-contain"
         />
         <p className="text-sm font-medium text-muted-foreground">
-          Acompanhamento de chegada de motocicletas
+          Auge · Console de operações
         </p>
       </div>
       <LoginForm />

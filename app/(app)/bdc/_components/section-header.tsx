@@ -14,7 +14,7 @@ export function SectionHeader({
   return (
     <div className="mb-5 flex items-start gap-2.5">
       <Icon
-        className="mt-0.5 size-4 shrink-0 text-primary"
+        className="mt-0.5 size-4 shrink-0 text-muted-foreground"
         aria-hidden="true"
       />
 

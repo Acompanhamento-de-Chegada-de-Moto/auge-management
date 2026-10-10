@@ -46,13 +46,13 @@ export default function LoginForm() {
   };
 
   return (
-    <Card className="w-full max-w-md border shadow-lg shadow-black/5">
+    <Card className="w-full max-w-md border-base-300 bg-base-100 shadow-none">
       <CardHeader className="pb-4">
-        <CardTitle className="text-center text-xl font-bold">
+        <CardTitle className="text-xl font-semibold tracking-tight">
           Acesse sua conta
         </CardTitle>
-        <CardDescription className="text-center">
-          Entre com suas credenciais para continuar
+        <CardDescription>
+          Entre para acessar sua área de trabalho.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -67,7 +67,7 @@ export default function LoginForm() {
                 type="email"
                 autoComplete="email"
                 placeholder="seu@email.com"
-                className="h-12 rounded-xl pl-10"
+                className="h-11 rounded-lg pl-10"
                 aria-invalid={Boolean(errors.email)}
                 aria-describedby={errors.email ? "email-error" : undefined}
               />
@@ -94,7 +94,7 @@ export default function LoginForm() {
                 type="password"
                 placeholder="Sua senha"
                 autoComplete="current-password"
-                className="h-12 rounded-xl pl-10"
+                className="h-11 rounded-lg pl-10"
                 aria-invalid={Boolean(errors.password)}
                 aria-describedby={
                   errors.password ? "password-error" : undefined
@@ -114,7 +114,7 @@ export default function LoginForm() {
           <Button
             type="submit"
             disabled={isPending}
-            className="h-12 w-full rounded-xl text-base font-semibold shadow-lg shadow-primary/30"
+            className="h-11 w-full text-sm font-medium"
           >
             {isPending ? "Entrando…" : "Entrar na plataforma"}
             <ArrowRight className="size-4" />

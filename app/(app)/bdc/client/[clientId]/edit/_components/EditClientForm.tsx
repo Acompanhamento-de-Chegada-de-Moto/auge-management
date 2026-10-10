@@ -17,6 +17,7 @@ import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { updateClientAction } from "@/app/(app)/bdc/_actions/clients";
+import { FormWorkspace } from "@/components/layout/FormWorkspace";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -155,7 +156,14 @@ export function EditClientForm({
   };
 
   return (
-    <div className="mx-auto w-full max-w-5xl">
+    <FormWorkspace
+      title="Revisão do atendimento"
+      steps={[
+        "Confira os dados do cliente e do responsável pelo atendimento.",
+        "Atualize as datas e o emplacamento da motocicleta selecionada.",
+        "Uma nova motocicleta pode ser adicionada sem substituir o vínculo existente.",
+      ]}
+    >
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(handleSubmit)}
@@ -387,6 +395,6 @@ export function EditClientForm({
           </div>
         </form>
       </Form>
-    </div>
+    </FormWorkspace>
   );
 }

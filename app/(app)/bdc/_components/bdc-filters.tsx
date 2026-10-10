@@ -3,6 +3,7 @@
 import { SearchIcon, XIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { ActiveFilters } from "@/components/ui/data-workspace";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -54,7 +55,7 @@ export function BDCFilters({
   );
 
   return (
-    <div className="space-y-3 rounded-xl border border-base-300/80 bg-base-100 p-3 sm:p-4">
+    <div className="space-y-3 border-b border-base-300 p-4 sm:px-5">
       <div className="flex flex-col gap-2 sm:flex-row">
         <div className="relative min-w-0 flex-1">
           <SearchIcon className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -171,6 +172,24 @@ export function BDCFilters({
           </Button>
         )}
       </div>
+      <ActiveFilters
+        disabled={isPending}
+        filters={[
+          { key: "search", label: "Busca", value: activeFilters.search },
+          {
+            key: "sellerName",
+            label: "Vendedor",
+            value: activeFilters.sellerName,
+          },
+          { key: "city", label: "Cidade", value: activeFilters.city },
+          { key: "model", label: "Modelo", value: activeFilters.model },
+        ]}
+        onRemove={(key) =>
+          key === "search"
+            ? onSearch("")
+            : onFilterChange(key as "sellerName" | "city" | "model", "all")
+        }
+      />
     </div>
   );
 }

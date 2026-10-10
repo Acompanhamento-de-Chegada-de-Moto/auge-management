@@ -11,6 +11,7 @@ import { createClientAction } from "@/app/(app)/bdc/_actions/clients";
 import { CustomerSection } from "@/app/(app)/bdc/client/_components/customer-section";
 import { MotorcycleSection } from "@/app/(app)/bdc/client/_components/motorcycle-section";
 import { RegistrationSection } from "@/app/(app)/bdc/client/_components/registration-section";
+import { FormWorkspace } from "@/components/layout/FormWorkspace";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import {
@@ -62,7 +63,14 @@ export function CreateClientForm() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-5xl">
+    <FormWorkspace
+      title="Cadastro de cliente"
+      steps={[
+        "Confira CPF, vendedor e cidade para identificar o atendimento.",
+        "Consulte o chassi para aproveitar os dados já cadastrados no estoque.",
+        "Defina as datas e o emplacamento conforme a situação da motocicleta.",
+      ]}
+    >
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(handleSubmit)}
@@ -105,6 +113,6 @@ export function CreateClientForm() {
           </div>
         </form>
       </Form>
-    </div>
+    </FormWorkspace>
   );
 }
