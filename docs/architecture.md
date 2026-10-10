@@ -4,7 +4,8 @@
 
 O projeto usa Next.js 16.2.6, React 19 com React Compiler, Prisma 7,
 Better Auth, daisyUI e Tailwind 4. A refatoração utiliza recursos disponíveis
-nessa versão; não altera versões de dependências nem o schema do banco.
+nessa versão; não atualiza versões nem o schema do banco. A limpeza posterior
+remove apenas dependências diretas sem consumidores.
 
 Antes da mudança:
 
