@@ -10,16 +10,7 @@ const arrivalStatusMap: Record<string, MotorcycleArrivalStatus> = {
 
 export function mapArrivalStatus(
   submitted: string | undefined,
-  current?: MotorcycleArrivalStatus | null,
 ): MotorcycleArrivalStatus {
-  if (
-    (!submitted || submitted === "Sem Informação") &&
-    current &&
-    current !== "NO_INFORMATION"
-  ) {
-    return current;
-  }
-
   return arrivalStatusMap[submitted ?? ""] ?? "NO_INFORMATION";
 }
 

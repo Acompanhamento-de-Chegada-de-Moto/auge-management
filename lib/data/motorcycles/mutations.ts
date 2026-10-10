@@ -1,5 +1,6 @@
 import "server-only";
 
+import { recordStaffArrival } from "@/lib/data/record-staff-arrival";
 import { prisma } from "@/lib/db";
 
 type RegistrationStatus = "NO_PLATE" | "PLATING" | "PLATED";
@@ -91,25 +92,37 @@ export async function importMotorcycleSpreadsheet(
   return counts;
 }
 
-export async function createMotorcycle(data: {
-  chassi: string;
-  model: string;
-  forecastArrival?: Date | null;
-  forecastArrivalStatus?: "NO_INFORMATION" | "ARRIVED" | "DELAYED";
-  registrationStatus?: RegistrationStatus;
-  registrationDate?: Date | null;
-  clientId?: string;
-}) {
-  return prisma.motorcycle.create({
-    data: {
-      chassi: data.chassi,
-      model: data.model,
-      forecastArrival: data.forecastArrival,
-      forecastArrivalStatus: data.forecastArrivalStatus ?? "NO_INFORMATION",
-      registrationStatus: data.registrationStatus ?? "NO_PLATE",
-      registrationDate: data.registrationDate ?? null,
-      clientId: data.clientId,
-    },
+export async function createMotorcycle(
+  data: {
+    chassi: string;
+    model: string;
+    forecastArrival?: Date | null;
+    forecastArrivalStatus?: "NO_INFORMATION" | "ARRIVED" | "DELAYED";
+    registrationStatus?: RegistrationStatus;
+    registrationDate?: Date | null;
+    clientId?: string;
+  },
+  actorLabel = "Usuário do sistema",
+) {
+  return prisma.$transaction(async (tx) => {
+    const motorcycle = await tx.motorcycle.create({
+      data: {
+        chassi: data.chassi,
+        model: data.model,
+        forecastArrival: data.forecastArrival,
+        forecastArrivalStatus: "NO_INFORMATION",
+        registrationStatus: data.registrationStatus ?? "NO_PLATE",
+        registrationDate: data.registrationDate ?? null,
+        clientId: data.clientId,
+      },
+    });
+    await recordStaffArrival(
+      tx,
+      motorcycle.id,
+      data.forecastArrivalStatus === "ARRIVED",
+      actorLabel,
+    );
+    return motorcycle;
   });
 }
 
@@ -121,6 +134,7 @@ export async function updateMotorcycleSafely(
     forecastArrival?: Date | null;
     forecastArrivalStatus?: "NO_INFORMATION" | "ARRIVED" | "DELAYED";
   },
+  actorLabel = "Usuário do sistema",
 ): Promise<string | null> {
   return prisma.$transaction(async (tx) => {
     const current = await tx.motorcycle.findUnique({
@@ -144,9 +158,14 @@ export async function updateMotorcycleSafely(
         chassi: data.chassi,
         model: data.model,
         forecastArrival: data.forecastArrival ?? null,
-        forecastArrivalStatus: data.forecastArrivalStatus ?? "NO_INFORMATION",
       },
     });
+    await recordStaffArrival(
+      tx,
+      id,
+      data.forecastArrivalStatus === "ARRIVED",
+      actorLabel,
+    );
     return null;
   });
 }

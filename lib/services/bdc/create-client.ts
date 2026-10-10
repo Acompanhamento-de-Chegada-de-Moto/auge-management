@@ -31,22 +31,24 @@ export async function createClient(
     }
 
     const data = parsed.data;
-    await createBDCClient({
-      cpf: data.cpf,
-      name: data.customerName,
-      sellerName: data.sellerName,
-      city: data.city,
-      billingDate: data.billingDate,
-      motorcycle: {
-        chassis: data.chassis.trim().toUpperCase(),
-        model: data.model,
-        forecastDate: data.forecastDate,
-        arrivalStatus: mapArrivalStatus(data.arrivalStatus),
-        arrivalStatusInput: data.arrivalStatus,
-        registrationStatus: mapRegistrationStatus(data.registrationStatus),
-        registrationDate: data.registrationDate,
+    await createBDCClient(
+      {
+        cpf: data.cpf,
+        name: data.customerName,
+        sellerName: data.sellerName,
+        city: data.city,
+        billingDate: data.billingDate,
+        motorcycle: {
+          chassis: data.chassis.trim().toUpperCase(),
+          model: data.model,
+          forecastDate: data.forecastDate,
+          arrivalStatus: mapArrivalStatus(data.arrivalStatus),
+          registrationStatus: mapRegistrationStatus(data.registrationStatus),
+          registrationDate: data.registrationDate,
+        },
       },
-    });
+      `${actor.user.name} (${actor.user.id})`,
+    );
 
     revalidateListingCache(actor.transport);
     revalidatePath("/bdc");

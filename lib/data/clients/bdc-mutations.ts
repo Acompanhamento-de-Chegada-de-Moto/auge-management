@@ -1,5 +1,6 @@
 import "server-only";
 
+import { recordStaffArrival } from "@/lib/data/record-staff-arrival";
 import { prisma } from "@/lib/db";
 
 type BDCArrivalStatus = "NO_INFORMATION" | "ARRIVED" | "DELAYED";
@@ -16,13 +17,15 @@ export interface CreateBDCClientInput {
     model: string;
     forecastDate?: Date;
     arrivalStatus: BDCArrivalStatus;
-    arrivalStatusInput?: string;
     registrationStatus: BDCRegistrationStatus;
     registrationDate?: Date;
   };
 }
 
-export async function createBDCClient(input: CreateBDCClientInput) {
+export async function createBDCClient(
+  input: CreateBDCClientInput,
+  actorLabel = "Usuário do sistema",
+) {
   return prisma.$transaction(async (tx) => {
     const existingClient = await tx.client.findUnique({
       where: { cpf: input.cpf },
@@ -59,44 +62,35 @@ export async function createBDCClient(input: CreateBDCClientInput) {
         where: { id: existingMotorcycle.id },
         data: {
           clientId,
-          forecastArrivalStatus: resolveBDCArrivalStatus(
-            input.motorcycle.arrivalStatus,
-            input.motorcycle.arrivalStatusInput,
-            existingMotorcycle.forecastArrivalStatus,
-          ),
           registrationDate: input.motorcycle.registrationDate ?? null,
         },
       });
+      await recordStaffArrival(
+        tx,
+        existingMotorcycle.id,
+        input.motorcycle.arrivalStatus === "ARRIVED",
+        actorLabel,
+      );
       return;
     }
 
-    await tx.motorcycle.create({
+    const motorcycle = await tx.motorcycle.create({
       data: {
         chassi: input.motorcycle.chassis,
         model: input.motorcycle.model,
         forecastArrival: input.motorcycle.forecastDate ?? null,
-        forecastArrivalStatus: input.motorcycle.arrivalStatus,
         registrationStatus: input.motorcycle.registrationStatus,
         registrationDate: input.motorcycle.registrationDate ?? null,
         clientId,
       },
     });
+    await recordStaffArrival(
+      tx,
+      motorcycle.id,
+      input.motorcycle.arrivalStatus === "ARRIVED",
+      actorLabel,
+    );
   });
-}
-
-function resolveBDCArrivalStatus(
-  status: BDCArrivalStatus,
-  submitted: string | undefined,
-  current?: BDCArrivalStatus | null,
-): BDCArrivalStatus {
-  if (
-    (!submitted || submitted === "Sem InformaÃ§Ã£o") &&
-    current &&
-    current !== "NO_INFORMATION"
-  ) {
-    return current;
-  }
-  return status;
 }
 
 export interface UpdateBDCClientInput
@@ -111,7 +105,10 @@ export interface UpdateBDCClientInput
   };
 }
 
-export async function updateBDCClient(input: UpdateBDCClientInput) {
+export async function updateBDCClient(
+  input: UpdateBDCClientInput,
+  actorLabel = "Usuário do sistema",
+) {
   return prisma.$transaction(async (tx) => {
     const client = await tx.client.findUnique({
       where: { id: input.clientId },
@@ -178,11 +175,6 @@ export async function updateBDCClient(input: UpdateBDCClientInput) {
       chassi: input.motorcycle.chassis,
       model: input.motorcycle.model,
       forecastArrival: input.motorcycle.forecastDate ?? null,
-      forecastArrivalStatus: resolveBDCArrivalStatus(
-        input.motorcycle.arrivalStatus,
-        input.motorcycle.arrivalStatusInput,
-        currentMotorcycle?.forecastArrivalStatus,
-      ),
       registrationStatus: input.motorcycle.registrationStatus,
       registrationDate: input.motorcycle.registrationDate ?? null,
       clientId: input.clientId,
@@ -193,8 +185,20 @@ export async function updateBDCClient(input: UpdateBDCClientInput) {
         where: { id: currentMotorcycle.id },
         data: motorcycleData,
       });
+      await recordStaffArrival(
+        tx,
+        currentMotorcycle.id,
+        input.motorcycle.arrivalStatus === "ARRIVED",
+        actorLabel,
+      );
     } else {
-      await tx.motorcycle.create({ data: motorcycleData });
+      const motorcycle = await tx.motorcycle.create({ data: motorcycleData });
+      await recordStaffArrival(
+        tx,
+        motorcycle.id,
+        input.motorcycle.arrivalStatus === "ARRIVED",
+        actorLabel,
+      );
     }
 
     if (existingAdditional) {

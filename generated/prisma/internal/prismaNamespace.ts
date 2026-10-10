@@ -392,6 +392,9 @@ export const ModelName = {
   ApiRateLimit: 'ApiRateLimit',
   Client: 'Client',
   Motorcycle: 'Motorcycle',
+  CheckInOperator: 'CheckInOperator',
+  CheckInSession: 'CheckInSession',
+  MotorcycleReceipt: 'MotorcycleReceipt',
   Setting: 'Setting',
   Ticket: 'Ticket',
   TicketMessage: 'TicketMessage'
@@ -410,7 +413,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "session" | "account" | "verification" | "rateLimit" | "apiRateLimit" | "client" | "motorcycle" | "setting" | "ticket" | "ticketMessage"
+    modelProps: "user" | "session" | "account" | "verification" | "rateLimit" | "apiRateLimit" | "client" | "motorcycle" | "checkInOperator" | "checkInSession" | "motorcycleReceipt" | "setting" | "ticket" | "ticketMessage"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1006,6 +1009,228 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    CheckInOperator: {
+      payload: Prisma.$CheckInOperatorPayload<ExtArgs>
+      fields: Prisma.CheckInOperatorFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.CheckInOperatorFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CheckInOperatorPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.CheckInOperatorFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CheckInOperatorPayload>
+        }
+        findFirst: {
+          args: Prisma.CheckInOperatorFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CheckInOperatorPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.CheckInOperatorFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CheckInOperatorPayload>
+        }
+        findMany: {
+          args: Prisma.CheckInOperatorFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CheckInOperatorPayload>[]
+        }
+        create: {
+          args: Prisma.CheckInOperatorCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CheckInOperatorPayload>
+        }
+        createMany: {
+          args: Prisma.CheckInOperatorCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.CheckInOperatorCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CheckInOperatorPayload>[]
+        }
+        delete: {
+          args: Prisma.CheckInOperatorDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CheckInOperatorPayload>
+        }
+        update: {
+          args: Prisma.CheckInOperatorUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CheckInOperatorPayload>
+        }
+        deleteMany: {
+          args: Prisma.CheckInOperatorDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.CheckInOperatorUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.CheckInOperatorUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CheckInOperatorPayload>[]
+        }
+        upsert: {
+          args: Prisma.CheckInOperatorUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CheckInOperatorPayload>
+        }
+        aggregate: {
+          args: Prisma.CheckInOperatorAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateCheckInOperator>
+        }
+        groupBy: {
+          args: Prisma.CheckInOperatorGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CheckInOperatorGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.CheckInOperatorCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CheckInOperatorCountAggregateOutputType> | number
+        }
+      }
+    }
+    CheckInSession: {
+      payload: Prisma.$CheckInSessionPayload<ExtArgs>
+      fields: Prisma.CheckInSessionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.CheckInSessionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CheckInSessionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.CheckInSessionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CheckInSessionPayload>
+        }
+        findFirst: {
+          args: Prisma.CheckInSessionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CheckInSessionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.CheckInSessionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CheckInSessionPayload>
+        }
+        findMany: {
+          args: Prisma.CheckInSessionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CheckInSessionPayload>[]
+        }
+        create: {
+          args: Prisma.CheckInSessionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CheckInSessionPayload>
+        }
+        createMany: {
+          args: Prisma.CheckInSessionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.CheckInSessionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CheckInSessionPayload>[]
+        }
+        delete: {
+          args: Prisma.CheckInSessionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CheckInSessionPayload>
+        }
+        update: {
+          args: Prisma.CheckInSessionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CheckInSessionPayload>
+        }
+        deleteMany: {
+          args: Prisma.CheckInSessionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.CheckInSessionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.CheckInSessionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CheckInSessionPayload>[]
+        }
+        upsert: {
+          args: Prisma.CheckInSessionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CheckInSessionPayload>
+        }
+        aggregate: {
+          args: Prisma.CheckInSessionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateCheckInSession>
+        }
+        groupBy: {
+          args: Prisma.CheckInSessionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CheckInSessionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.CheckInSessionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CheckInSessionCountAggregateOutputType> | number
+        }
+      }
+    }
+    MotorcycleReceipt: {
+      payload: Prisma.$MotorcycleReceiptPayload<ExtArgs>
+      fields: Prisma.MotorcycleReceiptFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.MotorcycleReceiptFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MotorcycleReceiptPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.MotorcycleReceiptFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MotorcycleReceiptPayload>
+        }
+        findFirst: {
+          args: Prisma.MotorcycleReceiptFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MotorcycleReceiptPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.MotorcycleReceiptFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MotorcycleReceiptPayload>
+        }
+        findMany: {
+          args: Prisma.MotorcycleReceiptFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MotorcycleReceiptPayload>[]
+        }
+        create: {
+          args: Prisma.MotorcycleReceiptCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MotorcycleReceiptPayload>
+        }
+        createMany: {
+          args: Prisma.MotorcycleReceiptCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.MotorcycleReceiptCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MotorcycleReceiptPayload>[]
+        }
+        delete: {
+          args: Prisma.MotorcycleReceiptDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MotorcycleReceiptPayload>
+        }
+        update: {
+          args: Prisma.MotorcycleReceiptUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MotorcycleReceiptPayload>
+        }
+        deleteMany: {
+          args: Prisma.MotorcycleReceiptDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.MotorcycleReceiptUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.MotorcycleReceiptUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MotorcycleReceiptPayload>[]
+        }
+        upsert: {
+          args: Prisma.MotorcycleReceiptUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MotorcycleReceiptPayload>
+        }
+        aggregate: {
+          args: Prisma.MotorcycleReceiptAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateMotorcycleReceipt>
+        }
+        groupBy: {
+          args: Prisma.MotorcycleReceiptGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MotorcycleReceiptGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.MotorcycleReceiptCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MotorcycleReceiptCountAggregateOutputType> | number
+        }
+      }
+    }
     Setting: {
       payload: Prisma.$SettingPayload<ExtArgs>
       fields: Prisma.SettingFieldRefs
@@ -1372,12 +1597,50 @@ export const MotorcycleScalarFieldEnum = {
   forecastArrivalStatus: 'forecastArrivalStatus',
   registrationStatus: 'registrationStatus',
   registrationDate: 'registrationDate',
+  arrivedAt: 'arrivedAt',
   clientId: 'clientId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
 export type MotorcycleScalarFieldEnum = (typeof MotorcycleScalarFieldEnum)[keyof typeof MotorcycleScalarFieldEnum]
+
+
+export const CheckInOperatorScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  identifier: 'identifier',
+  pinHash: 'pinHash',
+  active: 'active',
+  failedAttempts: 'failedAttempts',
+  lockedUntil: 'lockedUntil',
+  createdAt: 'createdAt'
+} as const
+
+export type CheckInOperatorScalarFieldEnum = (typeof CheckInOperatorScalarFieldEnum)[keyof typeof CheckInOperatorScalarFieldEnum]
+
+
+export const CheckInSessionScalarFieldEnum = {
+  id: 'id',
+  tokenHash: 'tokenHash',
+  operatorId: 'operatorId',
+  expiresAt: 'expiresAt',
+  createdAt: 'createdAt'
+} as const
+
+export type CheckInSessionScalarFieldEnum = (typeof CheckInSessionScalarFieldEnum)[keyof typeof CheckInSessionScalarFieldEnum]
+
+
+export const MotorcycleReceiptScalarFieldEnum = {
+  id: 'id',
+  motorcycleId: 'motorcycleId',
+  operatorId: 'operatorId',
+  actorLabel: 'actorLabel',
+  source: 'source',
+  arrivedAt: 'arrivedAt'
+} as const
+
+export type MotorcycleReceiptScalarFieldEnum = (typeof MotorcycleReceiptScalarFieldEnum)[keyof typeof MotorcycleReceiptScalarFieldEnum]
 
 
 export const SettingScalarFieldEnum = {
@@ -1667,6 +1930,9 @@ export type GlobalOmitConfig = {
   apiRateLimit?: Prisma.ApiRateLimitOmit
   client?: Prisma.ClientOmit
   motorcycle?: Prisma.MotorcycleOmit
+  checkInOperator?: Prisma.CheckInOperatorOmit
+  checkInSession?: Prisma.CheckInSessionOmit
+  motorcycleReceipt?: Prisma.MotorcycleReceiptOmit
   setting?: Prisma.SettingOmit
   ticket?: Prisma.TicketOmit
   ticketMessage?: Prisma.TicketMessageOmit

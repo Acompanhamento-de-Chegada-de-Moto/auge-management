@@ -82,6 +82,21 @@ export type Client = Prisma.ClientModel
  */
 export type Motorcycle = Prisma.MotorcycleModel
 /**
+ * Model CheckInOperator
+ * 
+ */
+export type CheckInOperator = Prisma.CheckInOperatorModel
+/**
+ * Model CheckInSession
+ * 
+ */
+export type CheckInSession = Prisma.CheckInSessionModel
+/**
+ * Model MotorcycleReceipt
+ * 
+ */
+export type MotorcycleReceipt = Prisma.MotorcycleReceiptModel
+/**
  * Model Setting
  * 
  */

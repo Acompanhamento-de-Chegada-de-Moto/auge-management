@@ -34,12 +34,16 @@ export async function updateInventoryMotorcycle(
     }
 
     const data = parsed.data;
-    const error = await updateMotorcycleSafely(motorcycleId, {
-      chassi: data.chassi.trim().toUpperCase(),
-      model: data.model.trim(),
-      forecastArrival: data.forecastArrival,
-      forecastArrivalStatus: data.forecastArrivalStatus,
-    });
+    const error = await updateMotorcycleSafely(
+      motorcycleId,
+      {
+        chassi: data.chassi.trim().toUpperCase(),
+        model: data.model.trim(),
+        forecastArrival: data.forecastArrival,
+        forecastArrivalStatus: data.forecastArrivalStatus,
+      },
+      `${actor.user.name} (${actor.user.id})`,
+    );
     if (error) return mutationError(error, 409);
 
     revalidateListingCache(actor.transport);

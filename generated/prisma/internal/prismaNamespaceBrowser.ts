@@ -59,6 +59,9 @@ export const ModelName = {
   ApiRateLimit: 'ApiRateLimit',
   Client: 'Client',
   Motorcycle: 'Motorcycle',
+  CheckInOperator: 'CheckInOperator',
+  CheckInSession: 'CheckInSession',
+  MotorcycleReceipt: 'MotorcycleReceipt',
   Setting: 'Setting',
   Ticket: 'Ticket',
   TicketMessage: 'TicketMessage'
@@ -185,12 +188,50 @@ export const MotorcycleScalarFieldEnum = {
   forecastArrivalStatus: 'forecastArrivalStatus',
   registrationStatus: 'registrationStatus',
   registrationDate: 'registrationDate',
+  arrivedAt: 'arrivedAt',
   clientId: 'clientId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
 export type MotorcycleScalarFieldEnum = (typeof MotorcycleScalarFieldEnum)[keyof typeof MotorcycleScalarFieldEnum]
+
+
+export const CheckInOperatorScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  identifier: 'identifier',
+  pinHash: 'pinHash',
+  active: 'active',
+  failedAttempts: 'failedAttempts',
+  lockedUntil: 'lockedUntil',
+  createdAt: 'createdAt'
+} as const
+
+export type CheckInOperatorScalarFieldEnum = (typeof CheckInOperatorScalarFieldEnum)[keyof typeof CheckInOperatorScalarFieldEnum]
+
+
+export const CheckInSessionScalarFieldEnum = {
+  id: 'id',
+  tokenHash: 'tokenHash',
+  operatorId: 'operatorId',
+  expiresAt: 'expiresAt',
+  createdAt: 'createdAt'
+} as const
+
+export type CheckInSessionScalarFieldEnum = (typeof CheckInSessionScalarFieldEnum)[keyof typeof CheckInSessionScalarFieldEnum]
+
+
+export const MotorcycleReceiptScalarFieldEnum = {
+  id: 'id',
+  motorcycleId: 'motorcycleId',
+  operatorId: 'operatorId',
+  actorLabel: 'actorLabel',
+  source: 'source',
+  arrivedAt: 'arrivedAt'
+} as const
+
+export type MotorcycleReceiptScalarFieldEnum = (typeof MotorcycleReceiptScalarFieldEnum)[keyof typeof MotorcycleReceiptScalarFieldEnum]
 
 
 export const SettingScalarFieldEnum = {

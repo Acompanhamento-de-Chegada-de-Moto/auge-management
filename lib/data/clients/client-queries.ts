@@ -1,12 +1,13 @@
 import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
+import { withArrivalStatus } from "@/lib/arrival";
 import { stripCPF } from "@/lib/cpf";
 import { arrivalArrivedWhere } from "@/lib/data/arrival-status";
 import { listingCacheTags } from "@/lib/data/listing-cache-tags";
 import { prisma } from "@/lib/db";
 
 export async function getClientById(id: string) {
-  return prisma.client.findUnique({
+  const client = await prisma.client.findUnique({
     where: { id },
     include: {
       motorcycles: {
@@ -14,6 +15,9 @@ export async function getClientById(id: string) {
       },
     },
   });
+  return client
+    ? { ...client, motorcycles: client.motorcycles.map(withArrivalStatus) }
+    : null;
 }
 
 async function getCachedBDCFilterOptions() {
@@ -145,6 +149,7 @@ export async function getClientsPaginated(params: {
             model: true,
             forecastArrival: true,
             forecastArrivalStatus: true,
+            arrivedAt: true,
             registrationStatus: true,
             registrationDate: true,
           },
@@ -157,7 +162,10 @@ export async function getClientsPaginated(params: {
   ]);
 
   return {
-    clients: data,
+    clients: data.map((client) => ({
+      ...client,
+      motorcycles: client.motorcycles.map(withArrivalStatus),
+    })),
     total,
     page: params.page,
     pageSize: params.pageSize,
@@ -169,7 +177,7 @@ export async function searchClients(query: string) {
   const stripped = stripCPF(query);
   if (!stripped) return [];
 
-  return prisma.client.findMany({
+  const clients = await prisma.client.findMany({
     where: {
       cpf: { contains: stripped },
     },
@@ -187,6 +195,7 @@ export async function searchClients(query: string) {
           model: true,
           forecastArrival: true,
           forecastArrivalStatus: true,
+          arrivedAt: true,
           registrationStatus: true,
         },
       },
@@ -196,4 +205,8 @@ export async function searchClients(query: string) {
     },
     take: 500,
   });
+  return clients.map((client) => ({
+    ...client,
+    motorcycles: client.motorcycles.map(withArrivalStatus),
+  }));
 }

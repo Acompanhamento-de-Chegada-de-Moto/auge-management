@@ -24,15 +24,18 @@ export async function createInventoryMotorcycle(
     }
 
     const data = parsed.data;
-    await createMotorcycle({
-      chassi: data.chassi.trim().toUpperCase(),
-      model: data.model.trim(),
-      forecastArrival: data.forecastArrival ?? null,
-      forecastArrivalStatus: data.forecastArrivalStatus,
-      registrationStatus: data.registrationStatus ?? undefined,
-      registrationDate: data.registrationDate ?? null,
-      clientId: data.clientId ?? undefined,
-    });
+    await createMotorcycle(
+      {
+        chassi: data.chassi.trim().toUpperCase(),
+        model: data.model.trim(),
+        forecastArrival: data.forecastArrival ?? null,
+        forecastArrivalStatus: data.forecastArrivalStatus,
+        registrationStatus: data.registrationStatus ?? undefined,
+        registrationDate: data.registrationDate ?? null,
+        clientId: data.clientId ?? undefined,
+      },
+      `${actor.user.name} (${actor.user.id})`,
+    );
 
     revalidateListingCache(actor.transport);
     revalidatePath("/inventory");

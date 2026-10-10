@@ -1,6 +1,7 @@
 import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
 import type { Prisma } from "@/generated/prisma/client";
+import { businessDate, withArrivalStatus } from "@/lib/arrival";
 import {
   arrivalArrivedWhere,
   arrivalDelayedWhere,
@@ -23,17 +24,17 @@ async function getCachedEstoqueFilterOptions() {
   return { models: models.map((motorcycle) => motorcycle.model) };
 }
 
-async function getCachedMotorcycleStatusCounts() {
+async function getCachedMotorcycleStatusCounts(_businessDay: string) {
   "use cache";
   cacheLife({ stale: 60, revalidate: 60, expire: 600 });
   cacheTag(listingCacheTags.inventoryCounts);
   const [total, inTransit, arrived, delayed] = await Promise.all([
     prisma.motorcycle.count(),
     prisma.motorcycle.count({
-      where: { forecastArrivalStatus: "NO_INFORMATION" },
+      where: arrivalInTransitWhere(),
     }),
-    prisma.motorcycle.count({ where: { forecastArrivalStatus: "ARRIVED" } }),
-    prisma.motorcycle.count({ where: { forecastArrivalStatus: "DELAYED" } }),
+    prisma.motorcycle.count({ where: arrivalArrivedWhere() }),
+    prisma.motorcycle.count({ where: arrivalDelayedWhere() }),
   ]);
 
   return { total, inTransit, arrived, delayed };
@@ -44,7 +45,7 @@ export function getEstoqueFilterOptions() {
 }
 
 export function getMotorcycleStatusCounts() {
-  return getCachedMotorcycleStatusCounts();
+  return getCachedMotorcycleStatusCounts(businessDate());
 }
 export async function getMotorcyclesPaginated(params: {
   page: number;
@@ -103,6 +104,7 @@ export async function getMotorcyclesPaginated(params: {
         model: true,
         forecastArrival: true,
         forecastArrivalStatus: true,
+        arrivedAt: true,
         registrationStatus: true,
       },
       orderBy: { updatedAt: "desc" },
@@ -111,7 +113,7 @@ export async function getMotorcyclesPaginated(params: {
   ]);
 
   return {
-    motorcycles: data,
+    motorcycles: data.map(withArrivalStatus),
     total,
     page: params.page,
     pageSize: params.pageSize,
@@ -120,16 +122,17 @@ export async function getMotorcyclesPaginated(params: {
 }
 
 export async function getMotorcycleByIdWithClient(id: string) {
-  return prisma.motorcycle.findUnique({
+  const motorcycle = await prisma.motorcycle.findUnique({
     where: { id },
     include: {
       client: true,
     },
   });
+  return motorcycle ? withArrivalStatus(motorcycle) : null;
 }
 
 export async function getPublicMotorcycleById(id: string) {
-  return prisma.motorcycle.findFirst({
+  const motorcycle = await prisma.motorcycle.findFirst({
     where: { id },
     select: {
       id: true,
@@ -137,6 +140,7 @@ export async function getPublicMotorcycleById(id: string) {
       clientId: true,
       forecastArrival: true,
       forecastArrivalStatus: true,
+      arrivedAt: true,
       model: true,
       registrationStatus: true,
       client: true,
@@ -144,16 +148,19 @@ export async function getPublicMotorcycleById(id: string) {
     },
     orderBy: { createdAt: "desc" },
   });
+  return motorcycle ? withArrivalStatus(motorcycle) : null;
 }
 
 export async function getMotorcycleLookupByChassis(chassis: string) {
-  return prisma.motorcycle.findFirst({
+  const motorcycle = await prisma.motorcycle.findFirst({
     where: { chassi: chassis },
     select: {
       model: true,
       forecastArrival: true,
       forecastArrivalStatus: true,
+      arrivedAt: true,
     },
     orderBy: { createdAt: "desc" },
   });
+  return motorcycle ? withArrivalStatus(motorcycle) : null;
 }

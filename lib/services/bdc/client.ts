@@ -57,31 +57,33 @@ export async function updateClient(
       );
     }
 
-    const error = await updateBDCClient({
-      clientId,
-      motorcycleId: payload.data.motorcycleId ?? null,
-      cpf: data.cpf,
-      name: data.customerName,
-      sellerName: data.sellerName,
-      city: data.city,
-      billingDate: data.billingDate,
-      motorcycle: {
-        chassis,
-        model: data.model,
-        forecastDate: data.forecastDate,
-        arrivalStatus: mapArrivalStatus(data.arrivalStatus),
-        arrivalStatusInput: data.arrivalStatus,
-        registrationStatus: mapRegistrationStatus(data.registrationStatus),
-        registrationDate: data.registrationDate,
+    const error = await updateBDCClient(
+      {
+        clientId,
+        motorcycleId: payload.data.motorcycleId ?? null,
+        cpf: data.cpf,
+        name: data.customerName,
+        sellerName: data.sellerName,
+        city: data.city,
+        billingDate: data.billingDate,
+        motorcycle: {
+          chassis,
+          model: data.model,
+          forecastDate: data.forecastDate,
+          arrivalStatus: mapArrivalStatus(data.arrivalStatus),
+          registrationStatus: mapRegistrationStatus(data.registrationStatus),
+          registrationDate: data.registrationDate,
+        },
+        additionalMotorcycle: additionalChassis
+          ? {
+              chassis: additionalChassis,
+              model: data.newModel ?? "",
+              forecastDate: data.newForecastDate,
+            }
+          : undefined,
       },
-      additionalMotorcycle: additionalChassis
-        ? {
-            chassis: additionalChassis,
-            model: data.newModel ?? "",
-            forecastDate: data.newForecastDate,
-          }
-        : undefined,
-    });
+      `${actor.user.name} (${actor.user.id})`,
+    );
 
     if (error) return mutationError(error, 409);
     revalidateListingCache(actor.transport);
