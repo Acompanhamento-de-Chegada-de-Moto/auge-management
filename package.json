@@ -12,7 +12,7 @@
     "start": "next start",
     "lint": "biome check",
     "typecheck": "tsc --noEmit",
-    "test": "node --test tests/mutations.test.mjs",
+    "test": "node --test tests/mutations.test.mjs tests/check-in.test.mjs",
     "cron:arrivals": "node tools/arrival-cron.mjs",
     "format": "biome format --write",
     "db:seed": "prisma db seed"

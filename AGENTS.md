@@ -6,6 +6,13 @@
 
 ## Visão Geral
 
+**Check-in público:** `/check-in` usa identificação + PIN individual, com sessão
+limitada ao recebimento (independente de Better Auth). ADMINs gerenciam operadores
+em `/squad/check-in`. Consulte `docs/check-in.md` para a arquitetura e instalação.
+`arrivedAt` é o recebimento real; `forecastArrival` continua sendo a previsão.
+Não desfaça uma chegada ao editar/importar uma previsão. Atrasos são calculados
+no servidor pelo dia em `America/Sao_Paulo`; cron externo persiste o resultado.
+
 Sistema de gerenciamento de concessionária de motocicletas. Módulos atuais:
 
 - **BDC** (Business Development Center) — cadastro e acompanhamento de clientes e status de emplacamento de veículos.
