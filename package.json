@@ -12,6 +12,7 @@
     "start": "next start",
     "lint": "biome check",
     "typecheck": "tsc --noEmit",
+    "test": "node --test tests/mutations.test.mjs",
     "format": "biome format --write",
     "db:seed": "prisma db seed"
   },
