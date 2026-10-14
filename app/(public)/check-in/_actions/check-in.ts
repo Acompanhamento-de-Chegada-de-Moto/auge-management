@@ -3,6 +3,7 @@
 import { cookies, headers } from "next/headers";
 import { checkMutationRateLimit } from "@/lib/api/auth";
 import { withArrivalStatus } from "@/lib/arrival";
+import { getCheckInAccess } from "@/lib/check-in/access";
 import {
   generateToken,
   tokenHash,
@@ -15,7 +16,7 @@ import {
   confirmationSchema,
   pinLoginSchema,
 } from "@/lib/check-in/schemas";
-import { CHECK_IN_COOKIE, getCheckInSession } from "@/lib/check-in/session";
+import { CHECK_IN_COOKIE } from "@/lib/check-in/session";
 import {
   closeCheckInSession,
   findCheckInMotorcycle,
@@ -23,12 +24,15 @@ import {
   openCheckInSession,
   recordPinFailure,
 } from "@/lib/data/check-in";
-import { receiveCheckInMotorcycle } from "@/lib/services/check-in/receive";
+import {
+  receiveCheckInMotorcycle,
+  receiveStaffCheckInMotorcycle,
+} from "@/lib/services/check-in/receive";
 
 type Result = { ok: boolean; message: string; motorcycle?: CheckInMotorcycle };
 const unavailable = {
   ok: false,
-  message: "Sessão encerrada. Entre novamente com seu PIN.",
+  message: "Sessão encerrada. Entre com sua conta ou com nome e PIN.",
 };
 const serializeMotorcycle = (
   motorcycle: NonNullable<Awaited<ReturnType<typeof findCheckInMotorcycle>>>,
@@ -43,7 +47,7 @@ export async function loginCheckInAction(input: unknown): Promise<Result> {
   if (!parsed.success)
     return {
       ok: false,
-      message: "Informe a identificação e o PIN de 8 dígitos.",
+      message: "Informe o nome e o PIN de 8 dígitos.",
     };
   const { identifier, pin } = parsed.data;
   const requestHeaders = await headers();
@@ -73,8 +77,7 @@ export async function loginCheckInAction(input: unknown): Promise<Result> {
   const operator = await findCheckInOperator(identifier);
   const invalid = {
     ok: false,
-    message:
-      "Identificação ou PIN inválido, ou acesso temporariamente bloqueado.",
+    message: "Nome ou PIN inválido, ou acesso temporariamente bloqueado.",
   };
   if (
     !operator?.active ||
@@ -117,11 +120,9 @@ export async function logoutCheckInAction() {
 }
 
 export async function lookupMotorcycleAction(input: unknown): Promise<Result> {
-  const session = await getCheckInSession();
+  const session = await getCheckInAccess();
   if (!session) return unavailable;
-  if (
-    await checkMutationRateLimit(session.operatorId, "POST", "/check-in/lookup")
-  )
+  if (await checkMutationRateLimit(session.id, "POST", "/check-in/lookup"))
     return { ok: false, message: "Muitas consultas. Aguarde um minuto." };
   const parsed = chassisSchema.safeParse(input);
   if (!parsed.success) return { ok: false, message: "Chassi inválido." };
@@ -136,15 +137,9 @@ export async function lookupMotorcycleAction(input: unknown): Promise<Result> {
 }
 
 export async function confirmArrivalAction(input: unknown): Promise<Result> {
-  const session = await getCheckInSession();
+  const session = await getCheckInAccess();
   if (!session) return unavailable;
-  if (
-    await checkMutationRateLimit(
-      session.operatorId,
-      "POST",
-      "/check-in/confirm",
-    )
-  )
+  if (await checkMutationRateLimit(session.id, "POST", "/check-in/confirm"))
     return { ok: false, message: "Muitas confirmações. Aguarde um minuto." };
   const parsed = confirmationSchema.safeParse(input);
   if (!parsed.success)
@@ -152,11 +147,18 @@ export async function confirmArrivalAction(input: unknown): Promise<Result> {
       ok: false,
       message: "Confirmação inválida. Consulte novamente o chassi.",
     };
-  const motorcycle = await receiveCheckInMotorcycle({
-    ...parsed.data,
-    sessionId: session.id,
-    operatorId: session.operatorId,
-  });
+  const motorcycle =
+    session.kind === "staff"
+      ? await receiveStaffCheckInMotorcycle({
+          ...parsed.data,
+          sessionId: session.sessionId,
+          userId: session.id,
+        })
+      : await receiveCheckInMotorcycle({
+          ...parsed.data,
+          sessionId: session.sessionId,
+          operatorId: session.id,
+        });
   if (!motorcycle)
     return {
       ok: false,

@@ -28,6 +28,7 @@ export async function createOperatorAction(input: unknown) {
       try {
         await createCheckInOperator({
           ...parsed.data,
+          identifier: parsed.data.name.toLowerCase(),
           pinHash: await hashPin(pin),
         });
       } catch (error) {
@@ -37,13 +38,13 @@ export async function createOperatorAction(input: unknown) {
           "code" in error &&
           error.code === "P2002"
         )
-          return mutationError("Identificação já cadastrada.", 409);
+          return mutationError("Nome já cadastrado. Use o nome completo.", 409);
         throw error;
       }
       revalidatePath("/squad/check-in");
       return mutationSuccess({
         message: "Operador cadastrado.",
-        data: { pin, identifier: parsed.data.identifier },
+        data: { pin, identifier: parsed.data.name },
       });
     },
   });

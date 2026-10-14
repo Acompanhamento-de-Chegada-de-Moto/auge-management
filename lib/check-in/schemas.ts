@@ -2,17 +2,14 @@ import { z } from "zod";
 
 export const operatorSchema = z.object({
   name: z.string().trim().min(2, "Informe o nome.").max(100),
+});
+export const pinLoginSchema = z.object({
   identifier: z
     .string()
     .trim()
     .toLowerCase()
-    .regex(
-      /^[a-z0-9._-]{3,40}$/,
-      "Use de 3 a 40 letras, números, ponto, hífen ou sublinhado.",
-    ),
-});
-export const pinLoginSchema = z.object({
-  identifier: operatorSchema.shape.identifier,
+    .min(2, "Informe seu nome.")
+    .max(100),
   pin: z.string().regex(/^\d{8}$/, "Informe o PIN de 8 dígitos."),
 });
 export const chassisSchema = z.object({
@@ -25,6 +22,20 @@ export const chassisSchema = z.object({
       "Informe um chassi válido, com até 17 letras ou números.",
     ),
 });
+export const qrChassisSchema = z
+  .string()
+  .trim()
+  .max(4096)
+  .transform((value, ctx) => {
+    if (!value.startsWith("{")) return { chassi: value };
+    try {
+      return JSON.parse(value) as unknown;
+    } catch {
+      ctx.addIssue({ code: "custom", message: "QR code inválido." });
+      return z.NEVER;
+    }
+  })
+  .pipe(chassisSchema);
 export const confirmationSchema = z.object({
   motorcycleId: z.string().uuid(),
   chassi: chassisSchema.shape.chassi,

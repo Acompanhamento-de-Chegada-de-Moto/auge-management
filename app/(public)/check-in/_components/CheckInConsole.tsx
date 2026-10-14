@@ -1,6 +1,7 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CheckCircle2, QrCode } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -10,6 +11,7 @@ import {
   type CheckInMotorcycle,
   chassisSchema,
   pinLoginSchema,
+  qrChassisSchema,
 } from "@/lib/check-in/schemas";
 import { formatDateBR } from "@/lib/utils";
 import {
@@ -23,11 +25,16 @@ import { QrScanner } from "./QrScanner";
 export function CheckInConsole({
   operator,
 }: {
-  operator: { name: string; expiresAt: string } | null;
+  operator: {
+    name: string;
+    expiresAt: string;
+    kind: "operator" | "staff";
+  } | null;
 }) {
   const router = useRouter();
   const [message, setMessage] = useState("");
-  const [camera, setCamera] = useState(false);
+  const [camera, setCamera] = useState(true);
+  const [inputMode, setInputMode] = useState<"qr" | "manual">("qr");
   const [busy, setBusy] = useState(false);
   const [motorcycle, setMotorcycle] = useState<CheckInMotorcycle | null>(null);
   const [source, setSource] = useState<"MANUAL" | "QR_CODE">("MANUAL");
@@ -60,8 +67,10 @@ export function CheckInConsole({
       setConfirmed(false);
       setSource(method);
       try {
-        // V1 accepts a plain chassis. Never navigate to a URL supplied by a QR.
-        const parsed = chassisSchema.safeParse({ chassi });
+        const parsed =
+          method === "QR_CODE"
+            ? qrChassisSchema.safeParse(chassi)
+            : chassisSchema.safeParse({ chassi });
         if (!parsed.success) {
           setMessage(
             "QR/chassi inválido. Digite o chassi indicado na motocicleta.",
@@ -112,14 +121,20 @@ export function CheckInConsole({
       <section className="rounded-xl border border-base-300 bg-base-100 p-6">
         <h2 className="font-semibold">Acesso do operador</h2>
         <p className="mt-2 text-sm text-base-content/65">
-          Use a identificação e o PIN fornecidos pelo administrador.
+          Use seu nome e o PIN fornecido pelo administrador.
         </p>
+        <Link
+          href="/sign-in?next=/check-in"
+          className="btn btn-outline mt-4 w-full"
+        >
+          Entrar com minha conta da plataforma
+        </Link>
         <form className="mt-5 space-y-4" onSubmit={login.handleSubmit(unlock)}>
           <label className="block text-sm">
-            Identificação
+            Nome completo
             <input
               autoComplete="username"
-              autoCapitalize="none"
+              autoCapitalize="words"
               className="input mt-1 w-full"
               {...login.register("identifier")}
             />
@@ -179,55 +194,106 @@ export function CheckInConsole({
           disabled={busy}
           onClick={async () => {
             setCamera(false);
+            if (operator.kind === "staff") {
+              router.push("/inventory");
+              return;
+            }
             await logoutCheckInAction();
             setMotorcycle(null);
             router.refresh();
           }}
         >
-          Sair
+          {operator.kind === "staff" ? "Voltar à plataforma" : "Sair"}
         </button>
       </div>
       {!motorcycle && (
         <>
-          <button
-            type="button"
-            className="btn btn-primary min-h-14 w-full"
-            disabled={busy || camera}
-            onClick={() => setCamera(true)}
+          <div
+            className="tabs tabs-box"
+            role="tablist"
+            aria-label="Forma de consulta"
           >
-            <QrCode className="size-5" />
-            Ler QR code
-          </button>
-          {camera && (
-            <QrScanner onRead={readQr} onClose={() => setCamera(false)} />
-          )}
-          <form
-            className="rounded-xl border border-base-300 bg-base-100 p-5"
-            onSubmit={chassis.handleSubmit((values) =>
-              lookup(values.chassi, "MANUAL"),
-            )}
-          >
-            <label className="text-sm font-medium">
-              Ou digite o chassi
-              <input
-                autoCapitalize="characters"
-                autoComplete="off"
-                maxLength={17}
-                className="input mt-2 w-full font-mono uppercase"
-                {...chassis.register("chassi")}
-              />
-              <span className="text-sm text-error">
-                {chassis.formState.errors.chassi?.message}
-              </span>
-            </label>
             <button
-              type="submit"
-              disabled={busy || camera}
-              className="btn btn-outline mt-3 w-full"
+              type="button"
+              role="tab"
+              id="qr-tab"
+              aria-controls="qr-panel"
+              aria-selected={inputMode === "qr"}
+              className={`tab flex-1 gap-2 ${inputMode === "qr" ? "tab-active" : ""}`}
+              disabled={busy}
+              onClick={() => {
+                setInputMode("qr");
+                setCamera(true);
+                setMessage("");
+              }}
             >
-              {busy ? "Consultando…" : "Consultar motocicleta"}
+              <QrCode className="size-4" />
+              Ler QR code
             </button>
-          </form>
+            <button
+              type="button"
+              role="tab"
+              id="manual-tab"
+              aria-controls="manual-panel"
+              aria-selected={inputMode === "manual"}
+              className={`tab flex-1 ${inputMode === "manual" ? "tab-active" : ""}`}
+              disabled={busy}
+              onClick={() => {
+                setInputMode("manual");
+                setCamera(false);
+                setMessage("");
+              }}
+            >
+              Digitar chassi
+            </button>
+          </div>
+          {inputMode === "qr" && (
+            <div id="qr-panel" role="tabpanel" aria-labelledby="qr-tab">
+              {camera && !busy ? (
+                <QrScanner onRead={readQr} onClose={() => setCamera(false)} />
+              ) : (
+                <button
+                  type="button"
+                  className="btn btn-primary min-h-14 w-full"
+                  disabled={busy}
+                  onClick={() => setCamera(true)}
+                >
+                  {busy ? "Consultando…" : "Abrir câmera novamente"}
+                </button>
+              )}
+            </div>
+          )}
+          {inputMode === "manual" && (
+            <div id="manual-panel" role="tabpanel" aria-labelledby="manual-tab">
+              <form
+                className="rounded-xl border border-base-300 bg-base-100 p-5"
+                onSubmit={chassis.handleSubmit((values) =>
+                  lookup(values.chassi, "MANUAL"),
+                )}
+              >
+                <label className="text-sm font-medium">
+                  Chassi
+                  <input
+                    autoCapitalize="characters"
+                    autoComplete="off"
+                    maxLength={17}
+                    className="input mt-2 w-full font-mono uppercase"
+                    {...chassis.register("chassi")}
+                  />
+                  <span className="text-sm text-error">
+                    {chassis.formState.errors.chassi?.message}
+                  </span>
+                </label>
+                <button
+                  type="submit"
+                  disabled={busy || camera}
+                  className="btn btn-outline mt-3 w-full"
+                >
+                  {busy ? "Consultando…" : "Consultar motocicleta"}
+                </button>
+              </form>
+            </div>
+          )}
         </>
       )}
       {motorcycle && (
@@ -304,6 +370,7 @@ export function CheckInConsole({
               setConfirmed(false);
               setMessage("");
               chassis.reset();
+              setCamera(inputMode === "qr");
             }}
           >
             {received ? "Receber próxima moto" : "Voltar à consulta"}

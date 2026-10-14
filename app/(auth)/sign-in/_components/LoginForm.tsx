@@ -18,7 +18,11 @@ import { Label } from "@/components/ui/label";
 import { authClient } from "@/lib/auth-client";
 import { type LoginInputType, loginSchema } from "@/validators/login-schema";
 
-export default function LoginForm() {
+export default function LoginForm({
+  callbackURL = "/bdc",
+}: {
+  callbackURL?: "/bdc" | "/check-in";
+}) {
   const [isPending, startEmailAndPasswordTransition] = useTransition();
 
   const {
@@ -34,7 +38,7 @@ export default function LoginForm() {
       const result = await authClient.signIn.email({
         email: data.email,
         password: data.password,
-        callbackURL: "/bdc",
+        callbackURL,
       });
 
       if (result.error) {

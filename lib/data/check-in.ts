@@ -23,8 +23,19 @@ export const listCheckInOperators = () =>
     },
     orderBy: { name: "asc" },
   });
-export const findCheckInOperator = (identifier: string) =>
-  prisma.checkInOperator.findUnique({ where: { identifier } });
+export async function findCheckInOperator(identifier: string) {
+  const operators = await prisma.checkInOperator.findMany({
+    where: {
+      OR: [
+        { identifier },
+        { name: { equals: identifier, mode: "insensitive" } },
+      ],
+    },
+    take: 2,
+  });
+  // Ambiguous names must never select an arbitrary person's credentials.
+  return operators.length === 1 ? operators[0] : null;
+}
 export const createCheckInOperator = (data: {
   name: string;
   identifier: string;
@@ -96,7 +107,7 @@ export async function receiveMotorcycle(
     motorcycleId: string;
     chassi: string;
     source: "MANUAL" | "QR_CODE";
-    operatorId: string;
+    operatorId: string | null;
     actorLabel: string;
   },
 ) {

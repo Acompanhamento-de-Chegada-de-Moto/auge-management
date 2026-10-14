@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { getCheckInSession } from "@/lib/check-in/session";
+import { getCheckInAccess } from "@/lib/check-in/access";
 import { CheckInConsole } from "./_components/CheckInConsole";
 
 export const metadata = { title: "Recebimento de motocicletas" };
@@ -26,13 +26,14 @@ export default function CheckInPage() {
   );
 }
 async function CheckInContent() {
-  const session = await getCheckInSession();
+  const session = await getCheckInAccess();
   return (
     <CheckInConsole
       operator={
         session
           ? {
-              name: session.operator.name,
+              name: session.name,
+              kind: session.kind,
               expiresAt: session.expiresAt.toISOString(),
             }
           : null

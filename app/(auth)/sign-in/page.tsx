@@ -9,13 +9,18 @@ export const metadata: Metadata = {
   title: "Entrar",
 };
 
-export default async function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  const next = (await searchParams).next === "/check-in" ? "/check-in" : "/bdc";
   const session = await auth.api.getSession({
     headers: await headers(),
   });
 
   if (session) {
-    return redirect("/bdc");
+    return redirect(next);
   }
 
   return (
@@ -32,7 +37,7 @@ export default async function LoginPage() {
           Auge · Console de operações
         </p>
       </div>
-      <LoginForm />
+      <LoginForm callbackURL={next} />
       <p className="relative mt-8 text-center text-xs text-muted-foreground">
         &copy; 2026 Auge Management
       </p>

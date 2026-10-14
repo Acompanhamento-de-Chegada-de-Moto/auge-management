@@ -37,6 +37,134 @@ const schemas = load("lib/check-in/schemas.ts");
 const credentials = load("lib/check-in/credentials.ts");
 const where = load("lib/data/arrival-status.ts", { "@/lib/arrival": arrival });
 
+test("check-in aceita conta existente, rejeita usuário banido e prioriza o PIN ativo", async () => {
+  let operator = null;
+  let staff = null;
+  const access = load("lib/check-in/access.ts", {
+    "next/headers": { headers: async () => new Headers() },
+    "@/lib/auth": { auth: { api: { getSession: async () => staff } } },
+    "./session": { getCheckInSession: async () => operator },
+  });
+  assert.equal(await access.getCheckInAccess(), null);
+  staff = {
+    user: { id: "user", name: "Maria", banned: false },
+    session: { id: "staff-session", expiresAt: new Date(Date.now() + 10000) },
+  };
+  let result = await access.getCheckInAccess();
+  assert.equal(result.kind, "staff");
+  assert.equal(result.id, "user");
+  staff.user.banned = true;
+  assert.equal(await access.getCheckInAccess(), null);
+  operator = {
+    id: "pin-session",
+    operatorId: "operator",
+    operator: { name: "João" },
+    expiresAt: new Date(Date.now() + 10000),
+  };
+  result = await access.getCheckInAccess();
+  assert.equal(result.kind, "operator");
+  assert.equal(result.id, "operator");
+});
+
+test("nome de operador aceita espaços e homônimos não selecionam credenciais arbitrárias", async () => {
+  assert.equal(
+    schemas.operatorSchema.safeParse({ name: "Maria Silva" }).success,
+    true,
+  );
+  assert.equal(
+    schemas.pinLoginSchema.parse({
+      identifier: " Maria Silva ",
+      pin: "12345678",
+    }).identifier,
+    "maria silva",
+  );
+  let operators = [{ id: "one" }];
+  const dal = load("lib/data/check-in.ts", {
+    "@/lib/db": {
+      prisma: { checkInOperator: { findMany: async () => operators } },
+    },
+    "./arrival-status": where,
+  });
+  assert.equal((await dal.findCheckInOperator("maria silva")).id, "one");
+  operators = [{ id: "one" }, { id: "two" }];
+  assert.equal(await dal.findCheckInOperator("maria silva"), null);
+});
+
+test("recebimento por conta revalida sessão na transação e registra o usuário", async () => {
+  let authorized = true;
+  let received = null;
+  const service = load("lib/services/check-in/receive.ts", {
+    "@/lib/db": {
+      prisma: {
+        $transaction: (callback) =>
+          callback({
+            $queryRaw: async () => (authorized ? [{ name: "Maria" }] : []),
+          }),
+      },
+    },
+    "@/lib/data/check-in": {
+      receiveMotorcycle: async (_tx, input) => {
+        received = input;
+        return { id: "moto" };
+      },
+    },
+  });
+  const input = {
+    motorcycleId: "moto",
+    chassi: "ABC",
+    source: "QR_CODE",
+    sessionId: "s",
+    userId: "user",
+  };
+  assert.equal((await service.receiveStaffCheckInMotorcycle(input)).id, "moto");
+  assert.equal(received.operatorId, null);
+  assert.equal(received.actorLabel, "Maria (user)");
+  assert.equal(received.source, "QR_CODE");
+  authorized = false;
+  received = null;
+  assert.equal(await service.receiveStaffCheckInMotorcycle(input), null);
+  assert.equal(received, null);
+});
+
+test("QR aceita JSON com chassi e texto puro, normalizando o valor", () => {
+  for (const value of [
+    ' {"chassi":" testauge000000003 "} ',
+    '{"chassi":"testauge000000003","modelo":"Moto"}',
+    " testauge000000003 ",
+  ]) {
+    const result = schemas.qrChassisSchema.safeParse(value);
+    assert.equal(result.success, true);
+    assert.equal(result.data.chassi, "TESTAUGE000000003");
+  }
+});
+
+test("etiqueta real do fornecedor contém chassi em texto com espaços finais", () => {
+  const result = schemas.qrChassisSchema.safeParse(
+    "9C2KC2500TR102752            ",
+  );
+  assert.equal(result.success, true);
+  assert.equal(result.data.chassi, "9C2KC2500TR102752");
+});
+
+test("QR rejeita JSON malformado, chassi ausente e valores inválidos", () => {
+  for (const value of [
+    '{"chassi":',
+    "{}",
+    '{"chassi":123}',
+    '{"chassi":null}',
+    '{"chassi":""}',
+    '{"chassi":"TEST AUGE"}',
+    '{"chassi":"https://example.com"}',
+    '[{"chassi":"TESTAUGE000000003"}]',
+    "https://example.com",
+    "A".repeat(18),
+    " ",
+    `{"chassi":"TESTAUGE000000003","extra":"${"A".repeat(4096)}"}`,
+  ]) {
+    assert.equal(schemas.qrChassisSchema.safeParse(value).success, false);
+  }
+});
+
 test("excluir operador exige ADMIN, valida UUID e trata cadastro inexistente", async () => {
   let role = "USER";
   let deletions = 0;
@@ -308,6 +436,7 @@ test("ações públicas exigem sessão antes de consultar ou confirmar", async (
     "@/lib/check-in/revalidate": {},
     "@/lib/check-in/schemas": schemas,
     "@/lib/check-in/session": { getCheckInSession: async () => null },
+    "@/lib/check-in/access": { getCheckInAccess: async () => null },
     "@/lib/services/check-in/receive": {},
     "@/lib/data/check-in": {},
   });
@@ -369,6 +498,7 @@ test("PIN inválido registra falha e jamais emite cookie ou sessão", async () =
     "@/lib/check-in/revalidate": {},
     "@/lib/check-in/schemas": schemas,
     "@/lib/check-in/session": {},
+    "@/lib/check-in/access": {},
     "@/lib/services/check-in/receive": {},
     "@/lib/data/check-in": {
       findCheckInOperator: async () => ({
@@ -399,6 +529,7 @@ test("bloqueio de tentativas interrompe login antes da verificação do PIN", as
     "@/lib/check-in/revalidate": {},
     "@/lib/check-in/schemas": schemas,
     "@/lib/check-in/session": {},
+    "@/lib/check-in/access": {},
     "@/lib/services/check-in/receive": {},
     "@/lib/data/check-in": {},
   });

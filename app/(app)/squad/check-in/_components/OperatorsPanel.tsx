@@ -29,7 +29,7 @@ export function OperatorsPanel({ operators }: { operators: Operator[] }) {
   const [busy, setBusy] = useState(false);
   const form = useForm<z.infer<typeof operatorSchema>>({
     resolver: zodResolver(operatorSchema),
-    defaultValues: { name: "", identifier: "" },
+    defaultValues: { name: "" },
   });
   async function create(values: z.infer<typeof operatorSchema>) {
     setCredential(null);
@@ -56,7 +56,7 @@ export function OperatorsPanel({ operators }: { operators: Operator[] }) {
       else {
         if (rotate)
           setCredential({
-            identifier: operator.identifier,
+            identifier: operator.name,
             pin: (result.data as { pin: string }).pin,
           });
         router.refresh();
@@ -107,24 +107,17 @@ export function OperatorsPanel({ operators }: { operators: Operator[] }) {
         onSubmit={form.handleSubmit(create)}
         className="rounded-xl border border-base-300 bg-base-100 p-5"
       >
-        <h2 className="mb-4 font-semibold">Novo operador</h2>
+        <h2 className="mb-2 font-semibold">Acesso para quem só recebe motos</h2>
+        <p className="mb-4 text-sm text-base-content/65">
+          Quem já tem conta usa o login da plataforma. Para os demais, cadastre
+          apenas o nome completo e entregue o PIN individual.
+        </p>
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="space-y-1 text-sm">
             Nome
             <input className="input w-full" {...form.register("name")} />
             <span className="block text-error">
               {form.formState.errors.name?.message}
-            </span>
-          </label>
-          <label className="space-y-1 text-sm">
-            Identificação
-            <input
-              autoCapitalize="none"
-              className="input w-full"
-              {...form.register("identifier")}
-            />
-            <span className="block text-error">
-              {form.formState.errors.identifier?.message}
             </span>
           </label>
         </div>
@@ -141,7 +134,6 @@ export function OperatorsPanel({ operators }: { operators: Operator[] }) {
           <thead>
             <tr>
               <th>Operador</th>
-              <th>Identificação</th>
               <th>Acesso</th>
               <th>Ações</th>
             </tr>
@@ -150,7 +142,6 @@ export function OperatorsPanel({ operators }: { operators: Operator[] }) {
             {operators.map((operator) => (
               <tr key={operator.id}>
                 <td>{operator.name}</td>
-                <td>{operator.identifier}</td>
                 <td>
                   <span
                     className={`badge ${operator.active ? "badge-success" : "badge-ghost"}`}

@@ -2,9 +2,13 @@
 
 ## Acesso
 
-`/check-in` é público, mas a consulta e confirmação exigem uma sessão de operador,
-independente da sessão Better Auth. ADMINs cadastram operadores em `/squad/check-in`.
-Cada operador tem identificação única e PIN de 8 dígitos gerado com `randomInt`.
+`/check-in` é público, mas a consulta e confirmação exigem autenticação. Quem já
+tem conta usa a sessão Better Auth, sem cadastro adicional de operador. O botão
+de login retorna diretamente ao check-in. Para quem só recebe motos, ADMINs
+cadastram apenas o nome completo em `/squad/check-in` e entregam um PIN individual
+de 8 dígitos gerado com `randomInt`. O acesso usa nome + PIN; identificações antigas
+continuam aceitas. Nomes ambíguos não autorizam acesso: use nomes completos distintos.
+O nome normalizado ocupa a identificação única existente, sem migration.
 O PIN é exibido uma vez, armazenado com scrypt + sal e nunca incluído no QR.
 
 Sessões duram 8 horas; cookies são HttpOnly, SameSite=Strict e Secure em produção,
@@ -12,16 +16,28 @@ restritos a `/check-in`. Tokens aleatórios de 256 bits são armazenados como SH
 Após 5 falhas o operador fica bloqueado por 15 minutos. Há também limites persistentes
 por identificação e IP. O proxy da hospedagem deve sobrescrever `x-forwarded-for`.
 Revogar ou renovar o PIN encerra as sessões. Renovar também reativa o operador.
+Cada consulta e confirmação resolve novamente o acesso. Confirmações com conta
+validam e bloqueiam usuário/sessão na transação, rejeitando usuários banidos e
+sessões encerradas; o recibo registra nome e ID do usuário em `actorLabel`.
 ADMINs também podem excluir operadores mediante confirmação. A exclusão remove
 as sessões e desvincula o operador dos recibos, preservando os recebimentos e
 `actorLabel` (nome registrado na confirmação).
 
 ## Recebimento
 
-V1 lê QR com o chassi em texto puro, usando `@zxing/browser`, carregado sob demanda.
-URLs e payloads desconhecidos são rejeitados; não há navegação automática. Ajustar o
-parser somente após verificar uma etiqueta real do fornecedor. Digitação é alternativa.
+O leitor usa `@zxing/browser`, carregado sob demanda, e aceita o chassi em texto puro
+ou JSON com uma propriedade `chassi` textual, por exemplo
+`{"chassi":"TESTAUGE000000003"}`. O chassi é normalizado para maiúsculas e validado
+antes da consulta. Outros campos do JSON são ignorados. URLs, JSON malformado e
+chassis inválidos são rejeitados; não há navegação automática. Digitação é alternativa.
 A câmera exige permissão do navegador e HTTPS (localhost é exceção).
+O leitor tenta cada imagem com as cores originais e invertidas para aceitar
+etiquetas com QR branco sobre fundo preto. As duas fotos de etiqueta fornecidas
+em 14/10/2026 foram decodificadas como `9C2KC2500TR102752` com espaços finais,
+removidos pela validação. A prévia mostra o quadro completo da câmera, sem corte.
+A câmera abre automaticamente após autenticação. As abas “Ler QR code” e
+“Digitar chassi” alternam a entrada e desligam a câmera na digitação. A câmera
+para ao consultar uma etiqueta e reabre ao receber a próxima moto no modo QR.
 
 Consulta retorna somente identificação da moto, modelo, previsão, situação e horário
 de recebimento. A confirmação é explícita. Uma transação valida e bloqueia operador/
