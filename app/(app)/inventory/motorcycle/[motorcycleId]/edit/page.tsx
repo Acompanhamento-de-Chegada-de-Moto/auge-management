@@ -2,6 +2,7 @@ import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { z } from "zod";
 import { requireAuth } from "@/app/data/user/require-auth";
 import { Page, PageHeader } from "@/components/layout/Page";
 import { buttonVariants } from "@/components/ui/button";
@@ -20,7 +21,7 @@ export default async function EditarMotocicletaPage({
   await requireAuth();
   const { motorcycleId } = await params;
 
-  if (!motorcycleId) {
+  if (!z.string().uuid().safeParse(motorcycleId).success) {
     notFound();
   }
 

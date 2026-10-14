@@ -60,8 +60,8 @@ export function BDCFilters({
         <div className="relative min-w-0 flex-1">
           <SearchIcon className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            aria-label="Buscar por cliente, CPF ou chassi"
-            placeholder="Buscar por cliente, CPF ou chassi"
+            aria-label="Buscar por cliente, CPF, CNPJ ou chassi"
+            placeholder="Buscar por cliente, CPF, CNPJ ou chassi"
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
             onKeyDown={(event) => {

@@ -2,6 +2,7 @@ import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { z } from "zod";
 import { requireAuth } from "@/app/data/user/require-auth";
 import { Page, PageHeader } from "@/components/layout/Page";
 import { buttonVariants } from "@/components/ui/button";
@@ -23,7 +24,7 @@ export default async function EditarClientePage({
   const { clientId } = await params;
   const { motorcycleId } = await searchParams;
 
-  if (!clientId) {
+  if (!z.string().uuid().safeParse(clientId).success) {
     notFound();
   }
 
@@ -39,6 +40,7 @@ export default async function EditarClientePage({
       : undefined) ??
     client.motorcycles[0] ??
     null;
+  if (motorcycleId && selectedMotorcycle?.id !== motorcycleId) notFound();
 
   return (
     <Page>

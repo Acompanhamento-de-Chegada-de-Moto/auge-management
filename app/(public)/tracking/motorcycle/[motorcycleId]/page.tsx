@@ -8,13 +8,13 @@ import {
   getStatusColor,
   mapRegistrationStatusLabel,
 } from "@/lib/bdc-data";
-import { formatCPF } from "@/lib/cpf";
 import {
   getContactPhone,
   getDelayMessage,
   getSetting,
   getWhatsAppMessage,
 } from "@/lib/data/settings";
+import { formatDocument } from "@/lib/document";
 import { formatDateBR, maskChassis } from "@/lib/utils";
 import { DelayAlert } from "../../_components/DelayAlert";
 import { ReloadButton } from "../../_components/ReloadButton";
@@ -118,10 +118,10 @@ export default async function MotocicletaDetalhePage({
             {client.name}
           </h2>
           <dl className="mt-3 space-y-2 text-sm">
-            {client.cpf && (
+            {client.document && (
               <div className="flex items-center gap-2 text-muted-foreground">
-                <dt className="sr-only">CPF</dt>
-                <dd>CPF: {formatCPF(client.cpf)}</dd>
+                <dt className="sr-only">CPF ou CNPJ</dt>
+                <dd>CPF ou CNPJ: {formatDocument(client.document)}</dd>
               </div>
             )}
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-muted-foreground">

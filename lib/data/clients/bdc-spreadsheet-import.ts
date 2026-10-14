@@ -1,13 +1,13 @@
 import "server-only";
 
-import { stripCPF } from "@/lib/cpf";
 import { prisma } from "@/lib/db";
+import { normalizeDocument, validateDocument } from "@/lib/document";
 
 export interface BDCSpreadsheetRow {
   chassi: string;
   cliente: string;
   consultor: string;
-  cpf: string;
+  document: string;
   modelo: string;
   cidade: string;
   faturamento: string | null;
@@ -52,7 +52,7 @@ export async function importBDCSpreadsheet(
     async (tx) => {
       const [clients, motorcycles] = await Promise.all([
         tx.client.findMany({
-          select: { id: true, cpf: true, billingDate: true },
+          select: { id: true, document: true, billingDate: true },
         }),
         tx.motorcycle.findMany({
           select: { id: true, chassi: true, model: true, clientId: true },
@@ -60,7 +60,7 @@ export async function importBDCSpreadsheet(
       ]);
 
       const clientByCpf = new Map(
-        clients.map((client) => [client.cpf, client]),
+        clients.map((client) => [client.document, client]),
       );
       const motorcycleByChassis = new Map(
         motorcycles.map((motorcycle) => [
@@ -79,29 +79,35 @@ export async function importBDCSpreadsheet(
           continue;
         }
 
-        const cpf = row.cpf?.trim() ? stripCPF(row.cpf) : `TEMP-${chassis}`;
+        if (row.document?.trim() && !validateDocument(row.document)) {
+          counts.skipped++;
+          continue;
+        }
+        const document = row.document?.trim()
+          ? normalizeDocument(row.document)
+          : `TEMP-${chassis}`;
         const billingDate = parseImportDate(row.faturamento ?? null);
-        let client = clientByCpf.get(cpf);
+        let client = clientByCpf.get(document);
 
         if (!client) {
           client = await tx.client.create({
             data: {
-              cpf,
+              document,
               name,
               sellersName: row.consultor?.trim() ?? "",
               city: row.cidade?.trim() ?? "",
               billingDate,
             },
-            select: { id: true, cpf: true, billingDate: true },
+            select: { id: true, document: true, billingDate: true },
           });
-          clientByCpf.set(cpf, client);
+          clientByCpf.set(document, client);
         } else if (billingDate && !client.billingDate) {
           client = await tx.client.update({
             where: { id: client.id },
             data: { billingDate },
-            select: { id: true, cpf: true, billingDate: true },
+            select: { id: true, document: true, billingDate: true },
           });
-          clientByCpf.set(cpf, client);
+          clientByCpf.set(document, client);
         }
 
         const existingMotorcycle = motorcycleByChassis.get(chassis);

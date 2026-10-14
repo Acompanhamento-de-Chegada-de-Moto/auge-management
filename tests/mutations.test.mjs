@@ -7,13 +7,135 @@ import ts from "typescript";
 
 const require = createRequire(import.meta.url);
 
+test("cache Prisma reutiliza cliente atual e substitui cliente antigo após regeneração", () => {
+  let creations = 0;
+  let disconnections = 0;
+  // Prisma returns a proxy; constructor identity must be tracked separately.
+  function CurrentClient() {
+    creations++;
+    return { $disconnect: async () => {} };
+  }
+  const shared = {
+    prisma: {
+      $disconnect: async () => {
+        disconnections++;
+      },
+    },
+    prismaConstructor: function OldClient() {},
+  };
+  const dependencies = {
+    "@prisma/adapter-pg": { PrismaPg: class {} },
+    "@/generated/prisma/client": { PrismaClient: CurrentClient },
+  };
+  const globals = {
+    globalThis: shared,
+    process: {
+      env: {
+        NODE_ENV: "development",
+        DATABASE_URL: "postgresql://localhost/test",
+      },
+    },
+  };
+  const first = loadServerModule("lib/db.ts", dependencies, globals).prisma;
+  assert.equal(creations, 1);
+  assert.equal(disconnections, 1);
+  assert.equal(shared.prisma, first);
+  const second = loadServerModule("lib/db.ts", dependencies, globals).prisma;
+  assert.equal(second, first);
+  assert.equal(creations, 1);
+});
+
+const documents = loadServerModule("lib/document.ts", {
+  "./cpf": loadServerModule("lib/cpf.ts", {}),
+});
+
+test("documentos validam CPF, CNPJ numérico e CNPJ alfanumérico com dígitos verificadores", () => {
+  for (const value of [
+    "529.982.247-25",
+    "52998224725",
+    "04.252.011/0001-10",
+    "04252011000110",
+    "00.000.000/E08G-12",
+    "00000000e08g12",
+  ]) {
+    assert.equal(documents.validateDocument(value), true, value);
+  }
+  for (const value of [
+    "",
+    "00000000000",
+    "11111111111111",
+    "52998224726",
+    "04252011000111",
+    "00000000E08G13",
+    "00000000E08GAA",
+    "TEMP-ABC",
+    "52998224725!",
+    "123",
+  ]) {
+    assert.equal(documents.validateDocument(value), false, value);
+  }
+});
+
+test("máscaras aceitam digitação incremental e preservam letras de CNPJ e códigos legados", () => {
+  for (const raw of ["52998224725", "04252011000110", "00000000E08G12"]) {
+    let draft = "";
+    for (const character of raw)
+      draft = documents.maskDocumentIncremental(draft + character);
+    assert.equal(documents.normalizeDocument(draft), raw);
+    assert.equal(draft, documents.formatDocument(raw));
+  }
+  assert.equal(
+    documents.formatDocument("00000000E08G12"),
+    "00.000.000/E08G-12",
+  );
+  assert.equal(
+    documents.formatDocument("TEMP-TESTAUGE000000001"),
+    "TEMP-TESTAUGE000000001",
+  );
+  assert.equal(
+    documents.maskDocumentIncremental("TEMP-TESTAUGE000000001"),
+    "TEMP-TESTAUGE000000001",
+  );
+});
+
+test("cadastro aceita CNPJ e edição preserva TEMP sem autorizar novo cadastro com código temporário", () => {
+  const schemas = loadServerModule("validators/customer-schema.ts", {
+    "@/lib/document": documents,
+  });
+  const values = {
+    chassis: "ABC",
+    document: "00.000.000/E08G-12",
+    customerName: "Cliente",
+    sellerName: "Vendedor",
+    city: "Cidade",
+    model: "Moto",
+    arrivalStatus: "Sem Informação",
+    registrationStatus: "Sem Emplacamento",
+  };
+  assert.equal(schemas.customerSchema.parse(values).document, "00000000E08G12");
+  const legacy = { ...values, document: "TEMP-TESTAUGE000000001" };
+  assert.equal(schemas.customerSchema.safeParse(legacy).success, false);
+  assert.equal(
+    schemas.editCustomerSchema.parse(legacy).document,
+    legacy.document,
+  );
+  const alias = documents.withDocumentAlias({
+    ...values,
+    document: undefined,
+    cpf: "529.982.247-25",
+  });
+  assert.equal(schemas.customerSchema.parse(alias).document, "52998224725");
+});
+
 test("busca BDC encontra CPF com pontuação e preserva consultas por nome e chassi", async () => {
   let filter;
-  const cpf = loadServerModule("lib/cpf.ts", {});
+  const document = loadServerModule("lib/document.ts", {
+    "./cpf": loadServerModule("lib/cpf.ts", {}),
+  });
   const queries = loadServerModule("lib/data/clients/client-queries.ts", {
     "next/cache": {},
     "@/lib/arrival": {},
-    "@/lib/cpf": cpf,
+    "@/lib/document": document,
     "@/lib/data/arrival-status": {},
     "@/lib/data/listing-cache-tags": {},
     "@/lib/db": {
@@ -30,14 +152,102 @@ test("busca BDC encontra CPF com pontuação e preserva consultas por nome e cha
   });
   for (const search of ["624.468.573-37", "62446857337", " 624.468.573-37 "]) {
     await queries.getClientsPaginated({ page: 1, pageSize: 20, search });
-    assert.equal(filter.OR[1].cpf.contains, "62446857337");
+    assert.equal(filter.OR[1].document.contains, "62446857337");
+  }
+  for (const search of ["00.000.000/E08G-12", "00000000e08g12"]) {
+    await queries.getClientsPaginated({ page: 1, pageSize: 20, search });
+    assert.equal(filter.OR[1].document.contains, "00000000E08G12");
+    await queries.searchClients(search);
+    assert.equal(filter.document.contains, "00000000E08G12");
   }
   for (const search of ["Maria", "9C2KC2500TR102752"]) {
     await queries.getClientsPaginated({ page: 1, pageSize: 20, search });
     assert.equal(filter.OR[0].name.contains, search);
-    assert.equal(filter.OR[1].cpf.contains, search);
+    assert.equal(filter.OR[1].document.contains, search.toUpperCase());
     assert.equal(filter.OR[2].motorcycles.some.chassi.contains, search);
   }
+});
+
+test("importação preserva CNPJ alfanumérico, CPF e TEMP existentes; documento inválido é ignorado", async () => {
+  const clients = [
+    { id: "cpf", document: "52998224725", billingDate: null },
+    { id: "legacy", document: "TEMP-LEGACY", billingDate: null },
+  ];
+  const motorcycles = [
+    { id: "legacy-moto", chassi: "LEGACY", model: "Moto", clientId: "legacy" },
+  ];
+  const createdClients = [];
+  const tx = {
+    client: {
+      findMany: async () => clients,
+      create: async ({ data }) => {
+        const client = { id: `new-${createdClients.length}`, ...data };
+        createdClients.push(client);
+        return client;
+      },
+    },
+    motorcycle: {
+      findMany: async () => motorcycles,
+      create: async ({ data }) => ({ id: "new-moto", ...data }),
+    },
+  };
+  const dal = loadServerModule("lib/data/clients/bdc-spreadsheet-import.ts", {
+    "@/lib/document": documents,
+    "@/lib/db": { prisma: { $transaction: (callback) => callback(tx) } },
+  });
+  const row = {
+    cliente: "Cliente",
+    consultor: "Vendedor",
+    modelo: "Moto",
+    cidade: "Cidade",
+    faturamento: null,
+  };
+  const result = await dal.importBDCSpreadsheet([
+    { ...row, chassi: "CNPJ", document: "00.000.000/e08g-12" },
+    { ...row, chassi: "CPF", document: "529.982.247-25" },
+    { ...row, chassi: "LEGACY", document: "" },
+    { ...row, chassi: "INVALID", document: "04252011000111" },
+  ]);
+  assert.equal(createdClients.length, 1);
+  assert.equal(createdClients[0].document, "00000000E08G12");
+  assert.equal(clients[0].document, "52998224725");
+  assert.equal(clients[1].document, "TEMP-LEGACY");
+  assert.equal(result.created, 2);
+  assert.equal(result.skipped, 2); // Invalid document and unchanged legacy row.
+});
+
+test("edição impede TEMP diferente e documento duplicado sem alterar cliente ou moto", async () => {
+  let writes = 0;
+  let duplicate = false;
+  const tx = {
+    client: {
+      findUnique: async () => ({
+        id: "client",
+        document: "TEMP-ORIGINAL",
+        motorcycles: [],
+      }),
+      findFirst: async () => (duplicate ? { id: "other" } : null),
+      update: async () => {
+        writes++;
+      },
+    },
+  };
+  const dal = loadServerModule("lib/data/clients/bdc-mutations.ts", {
+    "@/lib/document": documents,
+    "@/lib/db": { prisma: { $transaction: (callback) => callback(tx) } },
+    "@/lib/data/record-staff-arrival": {},
+  });
+  assert.ok(
+    await dal.updateBDCClient({ clientId: "client", document: "TEMP-OTHER" }),
+  );
+  duplicate = true;
+  assert.ok(
+    await dal.updateBDCClient({
+      clientId: "client",
+      document: "00000000E08G12",
+    }),
+  );
+  assert.equal(writes, 0);
 });
 
 test("BDC salva status e data na moto selecionada e em moto existente no cadastro", async () => {
@@ -58,6 +268,9 @@ test("BDC salva status e data na moto selecionada e em moto existente no cadastr
     },
   };
   const dal = loadServerModule("lib/data/clients/bdc-mutations.ts", {
+    "@/lib/document": loadServerModule("lib/document.ts", {
+      "./cpf": loadServerModule("lib/cpf.ts", {}),
+    }),
     "@/lib/db": { prisma: { $transaction: (callback) => callback(tx) } },
     "@/lib/data/record-staff-arrival": { recordStaffArrival: async () => {} },
   });
@@ -65,7 +278,7 @@ test("BDC salva status e data na moto selecionada e em moto existente no cadastr
   const input = {
     clientId: "client",
     motorcycleId: "moto",
-    cpf: "52998224725",
+    document: "52998224725",
     name: "Cliente",
     sellerName: "Vendedor",
     city: "Cidade",
@@ -98,13 +311,22 @@ test("BDC salva status e data na moto selecionada e em moto existente no cadastr
 });
 
 test("BDC exige data de emplacamento e normaliza a data REST antes de salvar", async () => {
-  const cpf = loadServerModule("lib/cpf.ts", {});
-  const { customerSchema } = loadServerModule("validators/customer-schema.ts", {
-    "@/lib/cpf": cpf,
+  const document = loadServerModule("lib/document.ts", {
+    "./cpf": loadServerModule("lib/cpf.ts", {}),
   });
+  const { editCustomerSchema } = loadServerModule(
+    "validators/customer-schema.ts",
+    {
+      "@/lib/document": document,
+    },
+  );
   const status = loadServerModule("lib/bdc-status.ts", {});
   let saved;
   const service = loadServerModule("lib/services/bdc/client.ts", {
+    "@/lib/services/revalidate-motorcycle-pages": {
+      revalidateMotorcyclePages() {},
+    },
+    "@/lib/document": document,
     "next/cache": { revalidatePath() {} },
     "@/lib/api/revalidate-listing-cache": { revalidateListingCache() {} },
     "@/lib/bdc-status": status,
@@ -122,13 +344,13 @@ test("BDC exige data de emplacamento e normaliza a data REST antes de salvar", a
       "lib/server/normalize-date-fields.ts",
       {},
     ),
-    "@/validators/customer-schema": { customerSchema },
+    "@/validators/customer-schema": { editCustomerSchema },
   });
   const id = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
   const actor = { user: { id: "user", name: "Admin" }, transport: "route" };
   const values = {
     chassis: "ABC",
-    cpf: "52998224725",
+    document: "52998224725",
     customerName: "Cliente",
     sellerName: "Vendedor",
     city: "Cidade",
@@ -171,9 +393,57 @@ test("BDC exige data de emplacamento e normaliza a data REST antes de salvar", a
   assert.equal(saved.motorcycle.registrationDate, undefined);
 });
 
+test("excluir cliente removido em outra sessão retorna 404 e atualiza as listagens", async () => {
+  let count = 1;
+  let invalidations = 0;
+  const dal = loadServerModule("lib/data/clients/client-mutations.ts", {
+    "@/lib/document": documents,
+    "@/lib/db": { prisma: { client: { deleteMany: async () => ({ count }) } } },
+  });
+  const service = loadServerModule("lib/services/bdc/client.ts", {
+    "@/lib/services/revalidate-motorcycle-pages": {
+      revalidateMotorcyclePages() {
+        invalidations++;
+      },
+    },
+    "@/lib/bdc-status": {},
+    "@/lib/data/client": dal,
+    "@/lib/document": documents,
+    "@/lib/server/mutation-result": loadServerModule(
+      "lib/server/mutation-result.ts",
+      {},
+    ),
+    "@/lib/server/normalize-date-fields": {},
+    "@/validators/customer-schema": {},
+  });
+  const id = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+  const actor = { user: { id: "user" }, transport: "action" };
+  assert.equal(
+    (await service.removeClient(undefined, actor, id)).statusCode,
+    200,
+  );
+  count = 0;
+  const missing = await service.removeClient(undefined, actor, id);
+  assert.equal(missing.statusCode, 404);
+  assert.ok(missing.message.includes("outra sessão"));
+  assert.equal(invalidations, 2);
+});
+
+test("Server Action mantém código 404 para a interface exibir recurso não encontrado", async () => {
+  const harness = actionHarness();
+  const result = await harness.run({
+    execute: async () => ({
+      statusCode: 404,
+      message: "Registro não encontrado.",
+    }),
+  });
+  assert.equal(result.status, "error");
+  assert.equal(result.statusCode, 404);
+});
+
 // Exercise the actual server modules with injected dependencies, without Next's
 // request runtime or a database. No mutation is executed against real data.
-function loadServerModule(path, dependencies) {
+function loadServerModule(path, dependencies, globals = {}) {
   const { outputText } = ts.transpileModule(
     readFileSync(new URL(`../${path}`, import.meta.url), "utf8"),
     {
@@ -194,6 +464,7 @@ function loadServerModule(path, dependencies) {
     Response,
     Request,
     console: { error() {} },
+    ...globals,
   });
   return module.exports;
 }

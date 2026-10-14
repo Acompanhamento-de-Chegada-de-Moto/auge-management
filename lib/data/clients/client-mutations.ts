@@ -1,10 +1,10 @@
 import "server-only";
 
-import { stripCPF } from "@/lib/cpf";
 import { prisma } from "@/lib/db";
+import { normalizeDocument } from "@/lib/document";
 
 export async function createClient(data: {
-  cpf: string;
+  document: string;
   name: string;
   sellerName: string;
   city: string;
@@ -19,7 +19,7 @@ export async function createClient(data: {
 }) {
   return prisma.client.create({
     data: {
-      cpf: stripCPF(data.cpf),
+      document: normalizeDocument(data.document),
       name: data.name,
       sellersName: data.sellerName,
       city: data.city,
@@ -35,7 +35,7 @@ export async function createClient(data: {
 export async function updateClient(
   id: string,
   data: {
-    cpf?: string;
+    document?: string;
     name?: string;
     sellerName?: string;
     city?: string;
@@ -45,7 +45,7 @@ export async function updateClient(
   return prisma.client.update({
     where: { id },
     data: {
-      cpf: data.cpf ? stripCPF(data.cpf) : undefined,
+      document: data.document ? normalizeDocument(data.document) : undefined,
       name: data.name,
       sellersName: data.sellerName,
       city: data.city,
@@ -58,7 +58,7 @@ export async function updateClient(
 }
 
 export async function deleteClient(id: string) {
-  return prisma.client.delete({
+  return prisma.client.deleteMany({
     where: { id },
   });
 }

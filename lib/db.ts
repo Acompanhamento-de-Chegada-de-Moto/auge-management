@@ -3,6 +3,7 @@ import { PrismaClient } from "@/generated/prisma/client";
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
+  prismaConstructor: typeof PrismaClient | undefined;
 };
 
 const databaseUrl = process.env.DATABASE_URL;
@@ -26,15 +27,23 @@ const connectionString = (() => {
   return url.toString();
 })();
 
+// HMR can reload the generated client while retaining the previous global
+// instance. Reuse it only when it belongs to the current generated class.
+const cachedPrisma = isProduction ? undefined : globalForPrisma.prisma;
 export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient({
-    adapter: new PrismaPg({
-      connectionString,
-      ...(isProduction ? { ssl: { rejectUnauthorized: true } } : {}),
-    }),
-  });
+  cachedPrisma && globalForPrisma.prismaConstructor === PrismaClient
+    ? cachedPrisma
+    : new PrismaClient({
+        adapter: new PrismaPg({
+          connectionString,
+          ...(isProduction ? { ssl: { rejectUnauthorized: true } } : {}),
+        }),
+      });
 
 if (process.env.NODE_ENV !== "production") {
+  if (cachedPrisma && cachedPrisma !== prisma) {
+    void cachedPrisma.$disconnect().catch(() => {});
+  }
   globalForPrisma.prisma = prisma;
+  globalForPrisma.prismaConstructor = PrismaClient;
 }

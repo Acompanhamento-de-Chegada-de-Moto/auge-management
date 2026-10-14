@@ -1,7 +1,5 @@
 import "server-only";
-import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { revalidateListingCache } from "@/lib/api/revalidate-listing-cache";
 import { importMotorcycleSpreadsheet } from "@/lib/data/motorcycle";
 import {
   type MutationActor,
@@ -9,6 +7,7 @@ import {
   mutationError,
   mutationSuccess,
 } from "@/lib/server/mutation-result";
+import { revalidateMotorcyclePages } from "@/lib/services/revalidate-motorcycle-pages";
 
 const rowSchema = z.object({
   chassis: z.string().max(40),
@@ -34,16 +33,13 @@ export async function importInventory(
       );
 
     const counts = await importMotorcycleSpreadsheet(parsed.data);
-    revalidateListingCache(actor.transport);
+    revalidateMotorcyclePages(actor.transport);
     const parts = [
       counts.created ? `${counts.created} moto(s) criada(s)` : "",
       counts.updated ? `${counts.updated} moto(s) atualizada(s)` : "",
       counts.skipped ? `${counts.skipped} linha(s) ignorada(s)` : "",
     ].filter(Boolean);
 
-    revalidatePath("/inventory");
-    revalidatePath("/bdc");
-    revalidatePath("/tracking", "layout");
     return mutationSuccess({
       message: `Importação concluída. ${parts.length ? parts.join(", ") : "Nenhuma alteração."}`,
     });

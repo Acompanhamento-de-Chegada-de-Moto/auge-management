@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { CopyValueButton } from "@/components/ui/copy-value-button";
 import {
   Table,
   TableBody,
@@ -13,11 +14,10 @@ import {
   getStatusColor,
   mapRegistrationStatusLabel,
 } from "@/lib/bdc-data";
-import { formatCPF } from "@/lib/cpf";
+import { formatDocument } from "@/lib/document";
 import { formatDateBR } from "@/lib/utils";
 import type { ClientRow } from "../_lib/types";
 import { BDCRowActions } from "./bdc-row-actions";
-import { CopyValueButton } from "./CopyValueButton";
 
 export function BDCDesktopTable({ rows }: { rows: ClientRow[] }) {
   return (
@@ -58,7 +58,10 @@ export function BDCDesktopTable({ rows }: { rows: ClientRow[] }) {
                     {row.name}
                   </Link>
                   <p className="mt-1 font-mono text-xs text-muted-foreground">
-                    <CopyValueButton value={formatCPF(row.cpf)} label="CPF" />
+                    <CopyValueButton
+                      value={formatDocument(row.document)}
+                      label="CPF ou CNPJ"
+                    />
                   </p>
                   <p className="mt-1 text-[11px] text-muted-foreground">
                     Faturamento: {formatDateBR(row.billingDate) ?? "Sem data"}

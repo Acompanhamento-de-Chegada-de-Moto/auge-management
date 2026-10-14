@@ -4,8 +4,8 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { resolve } from "node:path";
 import { businessDate } from "../lib/arrival";
-import { validateCPF } from "../lib/cpf";
 import { prisma } from "../lib/db";
+import { validateDocument } from "../lib/document";
 
 // Reuse the QR engine already installed with the browser scanner.
 const browserRequire = createRequire(
@@ -28,7 +28,7 @@ const now = new Date();
 const today = businessDate(now);
 const date = (offset: number) =>
   new Date(new Date(`${today}T00:00:00Z`).getTime() + offset * 86400000);
-function cpf(n: number) {
+function document(n: number) {
   let digits = String(700000000 + n);
   for (const length of [9, 10]) {
     const sum = [...digits].reduce(
@@ -56,7 +56,7 @@ const scenarios = [
 ];
 const clients = Array.from({ length: 35 }, (_, i) => ({
   id: id(1, i + 1),
-  cpf: cpf(i + 1),
+  document: document(i + 1),
   name: `${marker} Cliente ${String(i + 1).padStart(2, "0")}`,
   sellersName: `${marker} Vendedor ${(i % 3) + 1}`,
   city: ["São Paulo", "Campinas", "Santos"][i % 3],
@@ -131,7 +131,7 @@ function qr(payload: string) {
 }
 async function main() {
   // Fail before writes if fixtures or the installed QR engine are invalid.
-  if (clients.some((client) => !validateCPF(client.cpf))) {
+  if (clients.some((client) => !validateDocument(client.document))) {
     throw new Error("CPF inválido no seed.");
   }
   qr(motorcycles[0].chassi);
@@ -150,7 +150,7 @@ async function main() {
         where: {
           OR: [
             { id: { in: clients.map((c) => c.id) } },
-            { cpf: { in: clients.map((c) => c.cpf) } },
+            { document: { in: clients.map((c) => c.document) } },
           ],
         },
       });
@@ -172,7 +172,7 @@ async function main() {
       });
       for (const c of existingClients)
         if (
-          !clients.some((f) => f.id === c.id && f.cpf === c.cpf) ||
+          !clients.some((f) => f.id === c.id && f.document === c.document) ||
           !c.name.startsWith(marker)
         )
           throw new Error(
@@ -260,7 +260,7 @@ async function main() {
       .map((m, i) => `- ${m.chassi}: ${scenarios[i]}`)
       .join(
         "\n",
-      )}\n\nAbra qr-catalog.html em outra tela ou imprima para ler com a câmera. A câmera requer localhost ou HTTPS e permissão do navegador. Confirmar a chegada exige consultar e confirmar explicitamente. Repetir preserva o primeiro horário.\n\nBDC: 35 clientes, 72 motos, clientes sem moto e com várias motos, três vendedores/cidades e todos os status de emplacamento. Cliente sem moto: ${clients[34].name}, CPF ${clients[34].cpf}. Teste filtros, paginação, edição e exclusão somente dos registros [TESTE].\n\nOperadores: use teste.excluir para testar exclusão; a moto TESTAUGE000000012 mantém o histórico. teste.revogado deve negar login. Para bloqueio, erre o PIN de um operador de teste cinco vezes; para rotação, gere novo PIN na administração e verifique o antigo.\n\nCron: previsões vencidas aparecem atrasadas mesmo antes da execução. O cron real afeta todas as motos vencidas do banco; este seed não executa o cron. Uma previsão de hoje vence à meia-noite de São Paulo.\n\nReexecutar o seed apenas cria registros ausentes: não restaura PIN nem desfaz chegadas, edições ou revogações. Datas dos registros existentes permanecem na data original.\n`,
+      )}\n\nAbra qr-catalog.html em outra tela ou imprima para ler com a câmera. A câmera requer localhost ou HTTPS e permissão do navegador. Confirmar a chegada exige consultar e confirmar explicitamente. Repetir preserva o primeiro horário.\n\nBDC: 35 clientes, 72 motos, clientes sem moto e com várias motos, três vendedores/cidades e todos os status de emplacamento. Cliente sem moto: ${clients[34].name}, CPF ${clients[34].document}. Teste filtros, paginação, edição e exclusão somente dos registros [TESTE].\n\nOperadores: use teste.excluir para testar exclusão; a moto TESTAUGE000000012 mantém o histórico. teste.revogado deve negar login. Para bloqueio, erre o PIN de um operador de teste cinco vezes; para rotação, gere novo PIN na administração e verifique o antigo.\n\nCron: previsões vencidas aparecem atrasadas mesmo antes da execução. O cron real afeta todas as motos vencidas do banco; este seed não executa o cron. Uma previsão de hoje vence à meia-noite de São Paulo.\n\nReexecutar o seed apenas cria registros ausentes: não restaura PIN nem desfaz chegadas, edições ou revogações. Datas dos registros existentes permanecem na data original.\n`,
   );
   console.log(
     JSON.stringify(

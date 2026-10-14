@@ -33,7 +33,7 @@ export async function createUser(data: {
 }
 
 export async function deleteUser(id: string) {
-  return prisma.user.delete({ where: { id } });
+  return prisma.user.deleteMany({ where: { id } });
 }
 
 export async function updateUser(

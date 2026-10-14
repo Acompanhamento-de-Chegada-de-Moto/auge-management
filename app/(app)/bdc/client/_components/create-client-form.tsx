@@ -21,7 +21,7 @@ import {
 
 const defaultValues: CustomerFormData = {
   customerName: "",
-  cpf: "",
+  document: "",
   sellerName: "",
   city: "",
   model: "",
@@ -66,7 +66,7 @@ export function CreateClientForm() {
     <FormWorkspace
       title="Cadastro de cliente"
       steps={[
-        "Confira CPF, vendedor e cidade para identificar o atendimento.",
+        "Confira CPF ou CNPJ, vendedor e cidade para identificar o atendimento.",
         "Consulte o chassi para aproveitar os dados já cadastrados no estoque.",
         "Defina as datas e o emplacamento conforme a situação da motocicleta.",
       ]}

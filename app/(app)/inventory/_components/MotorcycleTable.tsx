@@ -1,17 +1,11 @@
 ﻿"use client";
 
-import {
-  CheckIcon,
-  CopyIcon,
-  PencilIcon,
-  SearchIcon,
-  XIcon,
-} from "lucide-react";
+import { PencilIcon, SearchIcon, XIcon } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
 import { deleteMotorcycleAction } from "@/app/(app)/inventory/_actions/motorcycles";
 import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { CopyValueButton } from "@/components/ui/copy-value-button";
 import { ActiveFilters, DataWorkspace } from "@/components/ui/data-workspace";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FilterViews } from "@/components/ui/filter-views";
@@ -93,39 +87,8 @@ export default function MotorcycleTable({
   onPageChange,
   onClearFilters,
 }: MotorcycleTableViewProps) {
-  const [copiedId, setCopiedId] = useState<string | null>(null);
-
-  function copyChassis(motorcycle: MotorcycleRow) {
-    void navigator.clipboard.writeText(motorcycle.chassi).then(() => {
-      setCopiedId(motorcycle.id);
-      window.setTimeout(() => setCopiedId(null), 2000);
-    });
-  }
-
   function renderChassis(motorcycle: MotorcycleRow) {
-    const copied = copiedId === motorcycle.id;
-    return (
-      <button
-        type="button"
-        onClick={() => copyChassis(motorcycle)}
-        aria-label={
-          copied ? "Chassi copiado" : `Copiar chassi ${motorcycle.chassi}`
-        }
-        className="inline-flex min-h-11 items-center gap-2 rounded-md font-mono text-xs text-muted-foreground hover:text-foreground"
-      >
-        {copied ? (
-          <>
-            <CheckIcon className="size-3.5 text-green-600" />
-            <span aria-live="polite">Copiado</span>
-          </>
-        ) : (
-          <>
-            <CopyIcon className="size-3.5" />
-            <span>{motorcycle.chassi}</span>
-          </>
-        )}
-      </button>
-    );
+    return <CopyValueButton value={motorcycle.chassi} label="Chassi" />;
   }
 
   function renderActions(motorcycle: MotorcycleRow) {

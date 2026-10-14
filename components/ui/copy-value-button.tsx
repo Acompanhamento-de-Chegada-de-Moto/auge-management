@@ -13,7 +13,7 @@ export function CopyValueButton({
   return (
     <button
       type="button"
-      className="inline-flex max-w-full items-center gap-1.5 rounded px-1 py-1 text-left font-mono hover:bg-base-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+      className="inline-flex min-h-10 max-w-full items-center gap-1.5 rounded px-1 py-1 text-left font-mono hover:bg-base-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
       title={`Copiar ${label}`}
       aria-label={`Copiar ${label}: ${value}`}
       onClick={async () => {

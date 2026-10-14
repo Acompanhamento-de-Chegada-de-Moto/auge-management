@@ -56,7 +56,14 @@ export async function removeTeamUser(
     return mutationError("Não é possível remover a própria conta.", 400);
 
   try {
-    await deleteUser(userId);
+    const result = await deleteUser(userId);
+    if (!result.count) {
+      revalidatePath("/squad");
+      return mutationError(
+        "Usuário não encontrado. Ele pode ter sido excluído em outra sessão.",
+        404,
+      );
+    }
     revalidatePath("/squad");
     return mutationSuccess({ message: "Usuário removido com sucesso." });
   } catch (error) {

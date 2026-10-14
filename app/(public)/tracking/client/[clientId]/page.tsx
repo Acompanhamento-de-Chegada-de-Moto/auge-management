@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import { z } from "zod";
 import {
   getArrivalStatus,
   getStatusColor,
   mapRegistrationStatusLabel,
 } from "@/lib/bdc-data";
-import { formatCPF } from "@/lib/cpf";
 import { getClientById } from "@/lib/data/client";
 import {
   getContactPhone,
@@ -14,6 +14,7 @@ import {
   getSetting,
   getWhatsAppMessage,
 } from "@/lib/data/settings";
+import { formatDocument } from "@/lib/document";
 import { formatDateBR, maskChassis } from "@/lib/utils";
 import { DelayAlert } from "../../_components/DelayAlert";
 import { ReloadButton } from "../../_components/ReloadButton";
@@ -28,6 +29,7 @@ export default async function ClienteDetalhePage({
   params: Promise<{ clientId: string }>;
 }) {
   const { clientId } = await params;
+  if (!z.string().uuid().safeParse(clientId).success) notFound();
   const client = await getClientById(clientId);
 
   if (!client) {
@@ -67,9 +69,9 @@ export default async function ClienteDetalhePage({
           <h2 id="client-name" className="text-xl font-semibold tracking-tight">
             {client.name}
           </h2>
-          {client.cpf && (
+          {client.document && (
             <p className="mt-1 text-sm text-muted-foreground">
-              CPF: {formatCPF(client.cpf)}
+              CPF ou CNPJ: {formatDocument(client.document)}
             </p>
           )}
           <p className="text-sm text-muted-foreground">

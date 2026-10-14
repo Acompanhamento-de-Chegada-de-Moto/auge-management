@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { RoutePending } from "@/components/layout/RoutePending";
 import { getCheckInAccess } from "@/lib/check-in/access";
 import { CheckInConsole } from "./_components/CheckInConsole";
 
@@ -18,7 +19,7 @@ export default function CheckInPage() {
             Confira a motocicleta física e confirme sua chegada.
           </p>
         </header>
-        <Suspense fallback={<output>Carregando acesso…</output>}>
+        <Suspense fallback={<RoutePending compact />}>
           <CheckInContent />
         </Suspense>
       </div>

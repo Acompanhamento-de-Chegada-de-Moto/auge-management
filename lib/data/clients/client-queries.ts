@@ -1,10 +1,10 @@
 import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
 import { withArrivalStatus } from "@/lib/arrival";
-import { stripCPF } from "@/lib/cpf";
 import { arrivalArrivedWhere } from "@/lib/data/arrival-status";
 import { listingCacheTags } from "@/lib/data/listing-cache-tags";
 import { prisma } from "@/lib/db";
+import { normalizeDocument } from "@/lib/document";
 
 export async function getClientById(id: string) {
   const client = await prisma.client.findUnique({
@@ -120,13 +120,10 @@ export async function getClientsPaginated(params: {
 
   if (params.search) {
     const search = params.search.trim();
-    const cpfSearch =
-      /^[\d.\s-]+$/.test(search) && stripCPF(search)
-        ? stripCPF(search)
-        : search;
+    const documentSearch = normalizeDocument(search) || search;
     where.OR = [
       { name: { contains: search, mode: "insensitive" } },
-      { cpf: { contains: cpfSearch } },
+      { document: { contains: documentSearch, mode: "insensitive" } },
       {
         motorcycles: {
           some: { chassi: { contains: search, mode: "insensitive" } },
@@ -142,7 +139,7 @@ export async function getClientsPaginated(params: {
       take: params.pageSize,
       select: {
         id: true,
-        cpf: true,
+        document: true,
         name: true,
         sellersName: true,
         city: true,
@@ -179,16 +176,16 @@ export async function getClientsPaginated(params: {
 }
 
 export async function searchClients(query: string) {
-  const stripped = stripCPF(query);
+  const stripped = normalizeDocument(query);
   if (!stripped) return [];
 
   const clients = await prisma.client.findMany({
     where: {
-      cpf: { contains: stripped },
+      document: { contains: stripped, mode: "insensitive" },
     },
     select: {
       id: true,
-      cpf: true,
+      document: true,
       name: true,
       sellersName: true,
       city: true,

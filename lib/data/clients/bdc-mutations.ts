@@ -2,12 +2,13 @@ import "server-only";
 
 import { recordStaffArrival } from "@/lib/data/record-staff-arrival";
 import { prisma } from "@/lib/db";
+import { isLegacyDocument } from "@/lib/document";
 
 type BDCArrivalStatus = "NO_INFORMATION" | "ARRIVED" | "DELAYED";
 type BDCRegistrationStatus = "NO_PLATE" | "PLATING" | "PLATED";
 
 export interface CreateBDCClientInput {
-  cpf: string;
+  document: string;
   name: string;
   sellerName: string;
   city: string;
@@ -28,14 +29,14 @@ export async function createBDCClient(
 ) {
   return prisma.$transaction(async (tx) => {
     const existingClient = await tx.client.findUnique({
-      where: { cpf: input.cpf },
+      where: { document: input.document },
     });
     let clientId = existingClient?.id;
 
     if (!clientId) {
       const client = await tx.client.create({
         data: {
-          cpf: input.cpf,
+          document: input.document,
           name: input.name,
           sellersName: input.sellerName,
           city: input.city,
@@ -118,11 +119,18 @@ export async function updateBDCClient(
 
     if (!client) return "Cliente nÃ£o encontrado.";
 
+    if (
+      isLegacyDocument(input.document) &&
+      input.document !== client.document
+    ) {
+      return "Um documento temporário só pode ser mantido no cadastro original.";
+    }
     const cpfExists = await tx.client.findFirst({
-      where: { cpf: input.cpf, NOT: { id: input.clientId } },
+      where: { document: input.document, NOT: { id: input.clientId } },
       select: { id: true },
     });
-    if (cpfExists) return "Este CPF jÃ¡ estÃ¡ cadastrado para outro cliente.";
+    if (cpfExists)
+      return "Este CPF ou CNPJ já está cadastrado para outro cliente.";
 
     const currentMotorcycle = input.motorcycleId
       ? client.motorcycles.find((item) => item.id === input.motorcycleId)
@@ -164,7 +172,7 @@ export async function updateBDCClient(
     await tx.client.update({
       where: { id: input.clientId },
       data: {
-        cpf: input.cpf,
+        document: input.document,
         name: input.name,
         sellersName: input.sellerName,
         city: input.city,

@@ -7,7 +7,11 @@ import { SpreadsheetImportDialog } from "@/components/SpreadsheetImportDialog";
 const COLUMN_MAP: Record<string, string> = {
   CLIENTE: "cliente",
   FATURAMENTO: "faturamento",
-  CPF: "cpf",
+  CPF: "document",
+  CNPJ: "document",
+  "CPF/CNPJ": "document",
+  "CPF OU CNPJ": "document",
+  DOCUMENTO: "document",
   MODELO: "modelo",
   CHASSI: "chassi",
   CONSULTOR: "consultor",
@@ -45,7 +49,7 @@ function parseSpreadsheet(file: File): Promise<{
   rows: Array<{
     cliente: string;
     faturamento: string | null;
-    cpf: string;
+    document: string;
     modelo: string;
     chassi: string;
     consultor: string;
@@ -77,7 +81,9 @@ function parseSpreadsheet(file: File): Promise<{
 
         const clienteIdx = headers.indexOf("cliente");
         const faturamentoIdx = headers.indexOf("faturamento");
-        const cpfIdx = headers.indexOf("cpf");
+        const documentIndexes = headers.flatMap((header, index) =>
+          header === "document" ? [index] : [],
+        );
         const modeloIdx = headers.indexOf("modelo");
         const chassiIdx = headers.indexOf("chassi");
         const consultorIdx = headers.indexOf("consultor");
@@ -96,7 +102,10 @@ function parseSpreadsheet(file: File): Promise<{
           const chassi = String(row[chassiIdx] ?? "").trim();
           const cliente = String(row[clienteIdx] ?? "").trim();
           const consultor = String(row[consultorIdx] ?? "").trim();
-          const cpf = String(row[cpfIdx] ?? "").trim();
+          const document =
+            documentIndexes
+              .map((index) => String(row[index] ?? "").trim())
+              .find(Boolean) ?? "";
 
           if (!chassi || !cliente || !consultor) continue;
 
@@ -104,7 +113,7 @@ function parseSpreadsheet(file: File): Promise<{
             chassi,
             cliente,
             consultor,
-            cpf: cpf.replace(/\D/g, ""),
+            document,
             modelo: String(row[modeloIdx] ?? "").trim(),
             cidade: String(row[cidadeIdx] ?? "").trim(),
             faturamento: parseDateDDMMAAA(row[faturamentoIdx]),

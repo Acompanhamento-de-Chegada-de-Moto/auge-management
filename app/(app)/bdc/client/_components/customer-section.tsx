@@ -10,7 +10,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { maskCPFIncremental } from "@/lib/cpf";
+import { maskDocumentIncremental } from "@/lib/document";
 import type { CustomerFormData } from "@/validators/customer-schema";
 import { SectionHeader } from "../../_components/section-header";
 
@@ -49,11 +49,11 @@ export function CustomerSection({ form }: CustomerSectionProps) {
 
         <FormField
           control={form.control}
-          name="cpf"
+          name="document"
           render={({ field }) => (
             <FormItem>
               <FormLabel>
-                CPF
+                CPF ou CNPJ
                 <span className="ml-0.5 text-destructive" aria-hidden="true">
                   *
                 </span>
@@ -61,15 +61,23 @@ export function CustomerSection({ form }: CustomerSectionProps) {
               <FormControl>
                 <Input
                   {...field}
-                  placeholder="000.000.000-00"
-                  inputMode="numeric"
+                  placeholder="CPF ou CNPJ"
+                  inputMode="text"
+                  autoCapitalize="characters"
+                  maxLength={18}
                   autoComplete="off"
                   onChange={(event) => {
-                    field.onChange(maskCPFIncremental(event.target.value));
+                    field.onChange(maskDocumentIncremental(event.target.value));
                   }}
                 />
               </FormControl>
               <FormMessage />
+              {field.value?.startsWith("TEMP-") && (
+                <p className="text-xs text-base-content/65">
+                  Cadastro importado sem documento. Você pode manter este código
+                  ou informar um CPF ou CNPJ válido.
+                </p>
+              )}
             </FormItem>
           )}
         />

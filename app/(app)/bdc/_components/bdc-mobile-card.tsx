@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { CopyValueButton } from "@/components/ui/copy-value-button";
 import {
   Tooltip,
   TooltipContent,
@@ -9,11 +10,10 @@ import {
   getStatusColor,
   mapRegistrationStatusLabel,
 } from "@/lib/bdc-data";
-import { formatCPF } from "@/lib/cpf";
+import { formatDocument } from "@/lib/document";
 import { formatDateBR } from "@/lib/utils";
 import type { ClientRow } from "../_lib/types";
 import { BDCRowActions } from "./bdc-row-actions";
-import { CopyValueButton } from "./CopyValueButton";
 
 interface BDCMobileCardProps {
   row: ClientRow;
@@ -37,7 +37,10 @@ export function BDCMobileCard({ row }: BDCMobileCardProps) {
         <div className="min-w-0">
           <p className="break-words font-medium">{row.name}</p>
           <p className="text-sm text-muted-foreground">
-            <CopyValueButton value={formatCPF(row.cpf)} label="CPF" />
+            <CopyValueButton
+              value={formatDocument(row.document)}
+              label="CPF ou CNPJ"
+            />
           </p>
         </div>
 

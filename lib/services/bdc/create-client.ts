@@ -1,8 +1,7 @@
 import "server-only";
-import { revalidatePath } from "next/cache";
-import { revalidateListingCache } from "@/lib/api/revalidate-listing-cache";
 import { mapArrivalStatus, mapRegistrationStatus } from "@/lib/bdc-status";
 import { createBDCClient } from "@/lib/data/client";
+import { withDocumentAlias } from "@/lib/document";
 import {
   type MutationActor,
   type MutationResult,
@@ -10,13 +9,14 @@ import {
   mutationSuccess,
 } from "@/lib/server/mutation-result";
 import { normalizeDateFields } from "@/lib/server/normalize-date-fields";
+import { revalidateMotorcyclePages } from "@/lib/services/revalidate-motorcycle-pages";
 import { customerSchema } from "@/validators/customer-schema";
 export async function createClient(
   input: unknown,
   actor: MutationActor,
 ): Promise<MutationResult> {
   try {
-    const body = normalizeDateFields(input, [
+    const body = normalizeDateFields(withDocumentAlias(input), [
       "billingDate",
       "forecastDate",
       "registrationDate",
@@ -33,7 +33,7 @@ export async function createClient(
     const data = parsed.data;
     await createBDCClient(
       {
-        cpf: data.cpf,
+        document: data.document,
         name: data.customerName,
         sellerName: data.sellerName,
         city: data.city,
@@ -53,10 +53,7 @@ export async function createClient(
       `${actor.user.name} (${actor.user.id})`,
     );
 
-    revalidateListingCache(actor.transport);
-    revalidatePath("/bdc");
-    revalidatePath("/inventory");
-    revalidatePath("/tracking", "layout");
+    revalidateMotorcyclePages(actor.transport);
     return mutationSuccess(
       { message: "Cliente cadastrado com sucesso." },
       { status: 201 },

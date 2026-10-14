@@ -1,7 +1,5 @@
 import "server-only";
-import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { revalidateListingCache } from "@/lib/api/revalidate-listing-cache";
 import {
   deleteMotorcycle,
   updateMotorcycleSafely,
@@ -12,6 +10,7 @@ import {
   mutationError,
   mutationSuccess,
 } from "@/lib/server/mutation-result";
+import { revalidateMotorcyclePages } from "@/lib/services/revalidate-motorcycle-pages";
 import { createMotorcycleSchema } from "@/lib/zod-schemas/motorcycle-schema";
 
 const idSchema = z.string().uuid();
@@ -46,9 +45,7 @@ export async function updateInventoryMotorcycle(
     );
     if (error) return mutationError(error, 409);
 
-    revalidateListingCache(actor.transport);
-    revalidatePath("/inventory");
-    revalidatePath("/tracking", "layout");
+    revalidateMotorcyclePages(actor.transport);
     return mutationSuccess({ message: "Motocicleta atualizada com sucesso." });
   } catch (error) {
     console.error(
@@ -69,12 +66,12 @@ export async function removeInventoryMotorcycle(
 
   try {
     const result = await deleteMotorcycle(motorcycleId);
-    if (result.count === 0)
+    if (result.count === 0) {
+      revalidateMotorcyclePages(actor.transport);
       return mutationError("Motocicleta não encontrada.", 404);
+    }
 
-    revalidateListingCache(actor.transport);
-    revalidatePath("/inventory");
-    revalidatePath("/tracking", "layout");
+    revalidateMotorcyclePages(actor.transport);
     return mutationSuccess({
       message: "Motocicleta deletada com sucesso do estoque.",
     });

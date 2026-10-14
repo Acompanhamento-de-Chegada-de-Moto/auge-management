@@ -1,6 +1,6 @@
 export type ClientRow = {
   id: string;
-  cpf: string;
+  document: string;
   name: string;
   sellersName: string;
   city: string;

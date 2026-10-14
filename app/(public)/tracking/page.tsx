@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { ClientCard } from "./_components/ClientCard";
-import { SearchForm } from "./_components/SearchForm";
 import { searchClients } from "@/lib/data/client";
 import { getSetting } from "@/lib/data/settings";
+import { ClientCard } from "./_components/ClientCard";
+import { SearchForm } from "./_components/SearchForm";
 
 export const metadata: Metadata = {
   title: "Acompanhamento",
@@ -42,19 +42,16 @@ export default async function AcompanhamentoPage({
             Acompanhamento de Motocicletas
           </h1>
           <p className="text-muted-foreground">
-            Consulte o status da motocicleta pelo CPF do cliente.
+            Consulte o status da motocicleta pelo CPF ou CNPJ do cliente.
           </p>
         </div>
 
         <SearchForm defaultValue={query} />
 
         {query && clients.length === 0 && (
-          <p
-            role="status"
-            className="w-full rounded-xl border bg-card px-5 py-4 text-center text-sm text-muted-foreground"
-          >
+          <output className="block w-full rounded-xl border bg-card px-5 py-4 text-center text-sm text-muted-foreground">
             Nenhum cliente encontrado para &quot;{query}&quot;.
-          </p>
+          </output>
         )}
 
         {clients.length > 0 && (

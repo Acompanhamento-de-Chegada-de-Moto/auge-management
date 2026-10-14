@@ -44,6 +44,7 @@ export async function runActionMutation(options: {
     return {
       status: result.statusCode < 400 ? "success" : "error",
       message: result.message,
+      statusCode: result.statusCode,
       data: result.data,
     };
   } catch (error) {

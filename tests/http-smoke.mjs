@@ -8,7 +8,7 @@ for (const path of ["/tracking", "/sign-in"]) {
   const html = await response.text();
   assert.ok(
     html.includes(
-      path === "/tracking" ? 'id="tracking-cpf"' : 'type="password"',
+      path === "/tracking" ? 'id="tracking-document"' : 'type="password"',
     ),
     `${path}: expected form`,
   );

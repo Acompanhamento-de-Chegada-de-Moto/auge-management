@@ -169,7 +169,7 @@ export type ApiRateLimitScalarFieldEnum = (typeof ApiRateLimitScalarFieldEnum)[k
 export const ClientScalarFieldEnum = {
   id: 'id',
   name: 'name',
-  cpf: 'cpf',
+  document: 'document',
   city: 'city',
   sellersName: 'sellersName',
   billingDate: 'billingDate',

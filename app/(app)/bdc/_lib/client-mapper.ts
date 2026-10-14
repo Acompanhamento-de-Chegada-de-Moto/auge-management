@@ -12,7 +12,7 @@ interface MotorcycleRecord {
 
 interface ClientRecord {
   id: string;
-  cpf: string;
+  document: string;
   name: string;
   sellersName: string;
   city: string;
@@ -26,7 +26,7 @@ export function mapClientsToRows(clients: ClientRecord[]): ClientRow[] {
       return [
         {
           id: client.id,
-          cpf: client.cpf,
+          document: client.document,
           name: client.name,
           sellersName: client.sellersName,
           city: client.city,
@@ -39,7 +39,7 @@ export function mapClientsToRows(clients: ClientRecord[]): ClientRow[] {
 
     return client.motorcycles.map((motorcycle) => ({
       id: client.id,
-      cpf: client.cpf,
+      document: client.document,
       name: client.name,
       sellersName: client.sellersName,
       city: client.city,

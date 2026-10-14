@@ -29,12 +29,12 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { searchMotorcycleByChassis } from "@/lib/api/client";
-import { formatCPF } from "@/lib/cpf";
 import type { getClientById } from "@/lib/data/client";
+import { formatDocument } from "@/lib/document";
 import { cn } from "@/lib/utils";
 import {
   type CustomerFormData,
-  customerSchema,
+  editCustomerSchema,
 } from "@/validators/customer-schema";
 import { SectionHeader } from "../../../../_components/section-header";
 import { CustomerSection } from "../../../_components/customer-section";
@@ -61,10 +61,10 @@ export function EditClientForm({
   const [hasSearched, setHasSearched] = useState(false);
 
   const form = useForm<CustomerFormData>({
-    resolver: zodResolver(customerSchema),
+    resolver: zodResolver(editCustomerSchema),
     defaultValues: {
       customerName: client.name ?? "",
-      cpf: formatCPF(client.cpf ?? ""),
+      document: formatDocument(client.document ?? ""),
       sellerName: client.sellersName ?? "",
       city: client.city ?? "",
       model: selectedMotorcycle?.model ?? "",

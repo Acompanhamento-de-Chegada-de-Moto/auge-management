@@ -1,9 +1,6 @@
 import "server-only";
-import { revalidatePath } from "next/cache";
-import { revalidateListingCache } from "@/lib/api/revalidate-listing-cache";
+import { revalidateMotorcyclePages } from "@/lib/services/revalidate-motorcycle-pages";
 
 export function revalidateArrivals(transport: "action" | "route") {
-  revalidateListingCache(transport);
-  for (const path of ["/inventory", "/bdc", "/dashboard"]) revalidatePath(path);
-  revalidatePath("/tracking", "layout");
+  revalidateMotorcyclePages(transport);
 }

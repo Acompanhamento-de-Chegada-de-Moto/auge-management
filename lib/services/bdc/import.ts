@@ -1,20 +1,20 @@
 import "server-only";
-import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { revalidateListingCache } from "@/lib/api/revalidate-listing-cache";
 import { importBDCSpreadsheet } from "@/lib/data/client";
+import { withDocumentAlias } from "@/lib/document";
 import {
   type MutationActor,
   type MutationResult,
   mutationError,
   mutationSuccess,
 } from "@/lib/server/mutation-result";
+import { revalidateMotorcyclePages } from "@/lib/services/revalidate-motorcycle-pages";
 
 const rowSchema = z.object({
   chassi: z.string().max(40),
   cliente: z.string().max(200),
   consultor: z.string().max(200),
-  cpf: z.string().max(20),
+  document: z.string().max(20),
   modelo: z.string().max(200),
   cidade: z.string().max(200),
   faturamento: z.string().max(20).nullable(),
@@ -25,7 +25,7 @@ export async function importClients(
   actor: MutationActor,
 ): Promise<MutationResult> {
   try {
-    const body = input;
+    const body = Array.isArray(input) ? input.map(withDocumentAlias) : input;
     const parsed = z.array(rowSchema).min(1).max(10_000).safeParse(body);
     if (!parsed.success)
       return mutationError(
@@ -34,7 +34,7 @@ export async function importClients(
       );
 
     const counts = await importBDCSpreadsheet(parsed.data);
-    revalidateListingCache(actor.transport);
+    revalidateMotorcyclePages(actor.transport);
     const parts = [
       counts.created ? `${counts.created} moto(s) criada(s)` : "",
       counts.updated ? `${counts.updated} moto(s) atualizada(s)` : "",
@@ -42,9 +42,6 @@ export async function importClients(
       counts.skipped ? `${counts.skipped} linha(s) ignorada(s)` : "",
     ].filter(Boolean);
 
-    revalidatePath("/bdc");
-    revalidatePath("/inventory");
-    revalidatePath("/tracking", "layout");
     return mutationSuccess({
       message: parts.length
         ? `Importação concluída. ${parts.join(", ")}.`

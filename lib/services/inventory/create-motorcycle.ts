@@ -1,6 +1,4 @@
 import "server-only";
-import { revalidatePath } from "next/cache";
-import { revalidateListingCache } from "@/lib/api/revalidate-listing-cache";
 import { createMotorcycle } from "@/lib/data/motorcycle";
 import {
   type MutationActor,
@@ -8,6 +6,7 @@ import {
   mutationError,
   mutationSuccess,
 } from "@/lib/server/mutation-result";
+import { revalidateMotorcyclePages } from "@/lib/services/revalidate-motorcycle-pages";
 import { createMotorcycleSchema } from "@/lib/zod-schemas/motorcycle-schema";
 
 export async function createInventoryMotorcycle(
@@ -37,9 +36,7 @@ export async function createInventoryMotorcycle(
       `${actor.user.name} (${actor.user.id})`,
     );
 
-    revalidateListingCache(actor.transport);
-    revalidatePath("/inventory");
-    revalidatePath("/tracking", "layout");
+    revalidateMotorcyclePages(actor.transport);
     return mutationSuccess(
       { message: "Motocicleta cadastrada com sucesso no estoque." },
       { status: 201 },
