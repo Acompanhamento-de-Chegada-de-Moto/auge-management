@@ -166,7 +166,14 @@ export function EditClientForm({
     >
       <Form {...form}>
         <form
-          onSubmit={form.handleSubmit(handleSubmit)}
+          onSubmit={form.handleSubmit(handleSubmit, (errors) => {
+            const message = Object.values(errors).find(
+              (error) => error?.message,
+            )?.message;
+            toast.error(
+              message ?? "Confira os campos obrigatórios antes de salvar.",
+            );
+          })}
           className="space-y-5"
           aria-busy={pending}
         >

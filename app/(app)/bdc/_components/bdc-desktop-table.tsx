@@ -17,6 +17,7 @@ import { formatCPF } from "@/lib/cpf";
 import { formatDateBR } from "@/lib/utils";
 import type { ClientRow } from "../_lib/types";
 import { BDCRowActions } from "./bdc-row-actions";
+import { CopyValueButton } from "./CopyValueButton";
 
 export function BDCDesktopTable({ rows }: { rows: ClientRow[] }) {
   return (
@@ -57,7 +58,7 @@ export function BDCDesktopTable({ rows }: { rows: ClientRow[] }) {
                     {row.name}
                   </Link>
                   <p className="mt-1 font-mono text-xs text-muted-foreground">
-                    {formatCPF(row.cpf)}
+                    <CopyValueButton value={formatCPF(row.cpf)} label="CPF" />
                   </p>
                   <p className="mt-1 text-[11px] text-muted-foreground">
                     Faturamento: {formatDateBR(row.billingDate) ?? "Sem data"}
@@ -76,7 +77,14 @@ export function BDCDesktopTable({ rows }: { rows: ClientRow[] }) {
                     {motorcycle?.model ?? "Sem motocicleta"}
                   </p>
                   <p className="mt-1 break-all font-mono text-xs text-muted-foreground">
-                    {motorcycle?.chassi ?? "—"}
+                    {motorcycle?.chassi ? (
+                      <CopyValueButton
+                        value={motorcycle.chassi}
+                        label="Chassi"
+                      />
+                    ) : (
+                      "—"
+                    )}
                   </p>
                 </TableCell>
                 <TableCell>

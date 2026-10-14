@@ -181,8 +181,11 @@ export function CheckInConsole({
           <p className="text-sm font-semibold">{operator.name}</p>
           <p className="text-xs text-base-content/60">
             Acesso até{" "}
-            {new Date(operator.expiresAt).toLocaleTimeString("pt-BR", {
+            {new Date(operator.expiresAt).toLocaleString("pt-BR", {
               timeZone: "America/Sao_Paulo",
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
               hour: "2-digit",
               minute: "2-digit",
             })}

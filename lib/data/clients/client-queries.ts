@@ -119,12 +119,17 @@ export async function getClientsPaginated(params: {
   }
 
   if (params.search) {
+    const search = params.search.trim();
+    const cpfSearch =
+      /^[\d.\s-]+$/.test(search) && stripCPF(search)
+        ? stripCPF(search)
+        : search;
     where.OR = [
-      { name: { contains: params.search, mode: "insensitive" } },
-      { cpf: { contains: params.search } },
+      { name: { contains: search, mode: "insensitive" } },
+      { cpf: { contains: cpfSearch } },
       {
         motorcycles: {
-          some: { chassi: { contains: params.search, mode: "insensitive" } },
+          some: { chassi: { contains: search, mode: "insensitive" } },
         },
       },
     ];

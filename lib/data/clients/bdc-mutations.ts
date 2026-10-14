@@ -62,6 +62,7 @@ export async function createBDCClient(
         where: { id: existingMotorcycle.id },
         data: {
           clientId,
+          registrationStatus: input.motorcycle.registrationStatus,
           registrationDate: input.motorcycle.registrationDate ?? null,
         },
       });

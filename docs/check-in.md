@@ -11,7 +11,10 @@ continuam aceitas. Nomes ambíguos não autorizam acesso: use nomes completos di
 O nome normalizado ocupa a identificação única existente, sem migration.
 O PIN é exibido uma vez, armazenado com scrypt + sal e nunca incluído no QR.
 
-Sessões duram 8 horas; cookies são HttpOnly, SameSite=Strict e Secure em produção,
+Sessões de operador duram 30 dias a partir do login; o PIN continua válido até
+renovação ou revogação. Sessões já abertas mantêm o vencimento anterior: entre
+novamente para obter os 30 dias. Contas da plataforma mantêm a duração do Better Auth.
+Cookies são HttpOnly, SameSite=Strict e Secure em produção,
 restritos a `/check-in`. Tokens aleatórios de 256 bits são armazenados como SHA-256.
 Após 5 falhas o operador fica bloqueado por 15 minutos. Há também limites persistentes
 por identificação e IP. O proxy da hospedagem deve sobrescrever `x-forwarded-for`.
@@ -34,7 +37,8 @@ A câmera exige permissão do navegador e HTTPS (localhost é exceção).
 O leitor tenta cada imagem com as cores originais e invertidas para aceitar
 etiquetas com QR branco sobre fundo preto. As duas fotos de etiqueta fornecidas
 em 14/10/2026 foram decodificadas como `9C2KC2500TR102752` com espaços finais,
-removidos pela validação. A prévia mostra o quadro completo da câmera, sem corte.
+removidos pela validação. A prévia preenche um quadrado com recorte central;
+o leitor analisa esse mesmo recorte, incluindo a tentativa com cores invertidas.
 A câmera abre automaticamente após autenticação. As abas “Ler QR code” e
 “Digitar chassi” alternam a entrada e desligam a câmera na digitação. A câmera
 para ao consultar uma etiqueta e reabre ao receber a próxima moto no modo QR.

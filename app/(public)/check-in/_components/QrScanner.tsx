@@ -18,10 +18,30 @@ export function QrScanner({
       try {
         const { BrowserQRCodeReader } = await import("@zxing/browser");
         if (cancelled || !video.current) return;
+        const squareCanvas = document.createElement("canvas");
         // Supplier labels use white QR modules on a black background.
         // Try each frame normally first, then with its colors inverted.
         class LabelQrReader extends BrowserQRCodeReader {
           override decodeFromCanvas(canvas: HTMLCanvasElement) {
+            const side = Math.min(canvas.width, canvas.height);
+            const squareContext = squareCanvas.getContext("2d");
+            if (!squareContext) throw new Error("Canvas indisponível.");
+            if (squareCanvas.width !== side || squareCanvas.height !== side) {
+              squareCanvas.width = side;
+              squareCanvas.height = side;
+            }
+            squareContext.drawImage(
+              canvas,
+              (canvas.width - side) / 2,
+              (canvas.height - side) / 2,
+              side,
+              side,
+              0,
+              0,
+              side,
+              side,
+            );
+            canvas = squareCanvas;
             try {
               return super.decodeFromCanvas(canvas);
             } catch (error) {
@@ -85,14 +105,16 @@ export function QrScanner({
         Aponte a câmera para o QR code da motocicleta. Mantenha toda a etiqueta
         visível, aguarde o foco e evite reflexos.
       </p>
-      <video
-        ref={video}
-        muted
-        playsInline
-        className="aspect-square w-full rounded-lg bg-neutral object-contain"
-      >
-        <track kind="captions" />
-      </video>
+      <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-neutral">
+        <video
+          ref={video}
+          muted
+          playsInline
+          className="absolute inset-0 h-full w-full object-cover"
+        >
+          <track kind="captions" />
+        </video>
+      </div>
       {error && (
         <p role="alert" className="text-sm text-error">
           {error}

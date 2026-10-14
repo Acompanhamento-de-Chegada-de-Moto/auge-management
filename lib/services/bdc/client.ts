@@ -72,7 +72,10 @@ export async function updateClient(
           forecastDate: data.forecastDate,
           arrivalStatus: mapArrivalStatus(data.arrivalStatus),
           registrationStatus: mapRegistrationStatus(data.registrationStatus),
-          registrationDate: data.registrationDate,
+          registrationDate:
+            data.registrationStatus === "Sem Emplacamento"
+              ? undefined
+              : data.registrationDate,
         },
         additionalMotorcycle: additionalChassis
           ? {

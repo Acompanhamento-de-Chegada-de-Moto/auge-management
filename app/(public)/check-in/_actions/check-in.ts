@@ -89,7 +89,7 @@ export async function loginCheckInAction(input: unknown): Promise<Result> {
     return invalid;
   }
   const token = generateToken();
-  const expiresAt = new Date(Date.now() + 8 * 60 * 60 * 1000);
+  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
   if (
     !(await openCheckInSession(
       operator.id,
@@ -109,7 +109,7 @@ export async function loginCheckInAction(input: unknown): Promise<Result> {
     path: "/check-in",
     expires: expiresAt,
   });
-  return { ok: true, message: "Acesso liberado para este turno." };
+  return { ok: true, message: "Acesso liberado por 30 dias." };
 }
 
 export async function logoutCheckInAction() {

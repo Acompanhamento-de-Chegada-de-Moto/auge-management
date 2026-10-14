@@ -37,6 +37,54 @@ const schemas = load("lib/check-in/schemas.ts");
 const credentials = load("lib/check-in/credentials.ts");
 const where = load("lib/data/arrival-status.ts", { "@/lib/arrival": arrival });
 
+test("login com PIN persiste sessão e cookie por 30 dias", async () => {
+  let storedExpiry;
+  let cookieExpiry;
+  const before = Date.now();
+  const api = load("app/(public)/check-in/_actions/check-in.ts", {
+    "next/headers": {
+      headers: async () => new Headers(),
+      cookies: async () => ({
+        get: () => undefined,
+        set: (_name, _value, options) => {
+          cookieExpiry = options.expires;
+        },
+      }),
+    },
+    "@/lib/api/auth": { checkMutationRateLimit: async () => null },
+    "@/lib/arrival": arrival,
+    "@/lib/check-in/access": {},
+    "@/lib/check-in/credentials": {
+      verifyPin: async () => true,
+      generateToken: () => "token",
+      tokenHash: () => "hash",
+    },
+    "@/lib/check-in/revalidate": {},
+    "@/lib/check-in/schemas": schemas,
+    "@/lib/check-in/session": { CHECK_IN_COOKIE: "auge-check-in" },
+    "@/lib/services/check-in/receive": {},
+    "@/lib/data/check-in": {
+      findCheckInOperator: async () => ({
+        id: "operator",
+        active: true,
+        pinHash: "hash",
+      }),
+      openCheckInSession: async (_id, _pin, _token, expiresAt) => {
+        storedExpiry = expiresAt;
+        return true;
+      },
+    },
+  });
+  assert.equal(
+    (await api.loginCheckInAction({ identifier: "Maria", pin: "12345678" })).ok,
+    true,
+  );
+  const duration = 30 * 24 * 60 * 60 * 1000;
+  assert.ok(storedExpiry.getTime() >= before + duration);
+  assert.ok(storedExpiry.getTime() <= Date.now() + duration);
+  assert.equal(cookieExpiry.getTime(), storedExpiry.getTime());
+});
+
 test("check-in aceita conta existente, rejeita usuário banido e prioriza o PIN ativo", async () => {
   let operator = null;
   let staff = null;
