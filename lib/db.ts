@@ -13,6 +13,7 @@ if (!databaseUrl) {
 }
 
 const isProduction = process.env.NODE_ENV === "production";
+const databaseCa = process.env.DATABASE_SSL_CA?.replace(/\\n/g, "\n");
 
 // pg's connection-string parser can replace the ssl object when SSL query
 // parameters are present. Keep the credentials/host, but apply TLS explicitly
@@ -36,7 +37,14 @@ export const prisma =
     : new PrismaClient({
         adapter: new PrismaPg({
           connectionString,
-          ...(isProduction ? { ssl: { rejectUnauthorized: true } } : {}),
+          ...(isProduction
+            ? {
+                ssl: {
+                  rejectUnauthorized: true,
+                  ...(databaseCa ? { ca: databaseCa } : {}),
+                },
+              }
+            : {}),
         }),
       });
 

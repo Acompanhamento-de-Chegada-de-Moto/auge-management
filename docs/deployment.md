@@ -17,6 +17,12 @@ já aplicadas não são revertidas automaticamente se a compilação posterior f
 
 - `DATABASE_URL`: conexão usada pela aplicação.
 - `DIRECT_URL`: opcional; quando definida, é usada pelo Prisma CLI nas migrations.
+- `DATABASE_SSL_CA`: certificado CA em formato PEM para bancos cuja cadeia não é
+  reconhecida pelo Node.js. No Supabase, baixe o **Server root certificate** em
+  Database Settings e configure o conteúdo completo na Vercel, no ambiente
+  correspondente. Aceita quebras de linha reais ou `\n`. Faça um novo deploy.
+  A aplicação mantém a validação TLS ativa; `sslmode` na URL não substitui essa
+  configuração. Esta variável configura o runtime, não o Prisma CLI.
 - As demais variáveis de autenticação e serviços continuam necessárias.
 
 Production e Preview precisam apontar para bancos independentes. Essa separação
