@@ -107,16 +107,28 @@ Abra [http://localhost:3000](http://localhost:3000).
 
 | Script | Descrição |
 |--------|-----------|
-| `pnpm dev` | Dev server (`next dev`) |
-| `pnpm build` | `prisma generate` + `next build` |
-| `pnpm build:ci` | Alternativa no Windows/WSL que contorna erro EPERM |
+| `pnpm dev` | Gera Prisma Client e inicia o dev server |
+| `pnpm build` | Deploy: aplica migrations pendentes, gera Prisma Client e compila Next.js |
+| `pnpm build:ci` | Gera Prisma Client e compila Next.js, sem aplicar migrations |
+| `pnpm build:preview` | Mesmo fluxo de deploy, usando o banco de Preview |
 | `pnpm start` | Server de produção (`next start`) |
 | `pnpm lint` | Verificação com Biome (`biome check`) |
-| `pnpm typecheck` | Checagem de tipos (`tsc --noEmit`) |
+| `pnpm typecheck` | Gera Prisma Client e verifica tipos (`tsc --noEmit`) |
 | `pnpm format` | Formatação com Biome (`biome format --write`) |
 | `pnpm db:seed` | Seed do banco (instala o primeiro ADMIN) |
+| `pnpm db:generate` | Gera Prisma Client a partir do schema |
+| `pnpm db:migrate:status` | Confere o histórico de migrations do banco configurado |
+| `pnpm db:migrate:deploy` | Aplica migrations versionadas pendentes |
 
-O `pnpm install` já roda `prisma generate` automaticamente (`postinstall`).
+O `pnpm install` já gera o Prisma Client automaticamente (`postinstall`).
+`generated/prisma/` é ignorado pelo Git; versione o schema e as migrations.
+Para validar uma compilação local sem alterar o banco, use `pnpm build:ci`.
+
+O `vercel.json` define o **Build Command** como `pnpm build`. Em outras
+hospedagens, configure esse mesmo comando. As variáveis
+`DATABASE_URL` e, quando usada, `DIRECT_URL` devem apontar para o banco daquele
+ambiente. Preview deve usar seu próprio banco de homologação. Não há `db push`
+no fluxo de build. Consulte [o fluxo de deploy](docs/deployment.md).
 
 ## Notas para Windows/WSL
 

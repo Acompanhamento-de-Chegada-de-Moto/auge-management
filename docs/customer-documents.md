@@ -7,8 +7,10 @@ Não há `documentType`: o formato identifica CPF ou CNPJ.
 
 Uma comparação entre o schema anterior e o atual com `prisma migrate diff`
 retornou uma migração vazia. Para publicar, gere o Prisma Client e publique a
-aplicação juntos (`pnpm build`); não é necessário criar ou executar uma migration
-SQL para esta mudança. Nunca remova a coluna `cpf` para criar `document`.
+aplicação juntos; não é necessário criar uma migration SQL para esta mudança.
+`pnpm build` aplica outras migrations pendentes antes de gerar o cliente e
+compilar. Para somente validar a compilação, use `pnpm build:ci`.
+Nunca remova a coluna `cpf` para criar `document`.
 
 Cadastro e edição mostram “CPF ou CNPJ”. Os documentos são validados por dígitos
 verificadores, armazenados sem máscara e com letras maiúsculas. CNPJ numérico e

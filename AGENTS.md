@@ -497,9 +497,9 @@ pnpm exec prisma generate
 # Dev server
 pnpm dev          # localhost:3000
 
-# Build (CI = skipa prisma generate + migrate deploy)
+# Build de deploy (migrations pendentes + generate + Next.js)
 pnpm build
-pnpm build:ci     # alternativa que contorna EPERM no Windows/WSL
+pnpm build:ci     # generate + Next.js; valida sem aplicar migrations
 
 # Lint
 pnpm lint         # biome check
@@ -537,7 +537,7 @@ O seed (`prisma/seed.ts`) reusa `createUser` de `lib/data/user.ts` (via `auth.ap
 5. **Modo edição**: nunca adicione stepper. O formulário deve ser direto.
 6. **Sidebar**: em modo edição, sempre visível. Em criação, aparece apenas no Step 2.
 7. **Não commite** sem pedir confirmação do usuário (exceto se ele pedir explicitamente).
-8. **Teste o build** (`pnpm build`) após alterações significativas.
+8. **Teste o build** (`pnpm build:ci`) após alterações significativas. `pnpm build` é o fluxo de deploy e aplica migrations no banco configurado; não o execute apenas para validar alterações locais.
 9. **Formate com Biome** antes de commits.
 10. **Chassi editável**: no Estoque, o chassi pode ser alterado na edição. Sempre verificar duplicata no banco.
 11. **Importação de planilha**: usar `xlsx` (SheetJS) para parse no client-side. Colunas obrigatórias: CLIENTE, CHASSI, VENDEDOR. Campo "MOTO CHEGOU" = "SIM" → `forecastDate = hoje`.
