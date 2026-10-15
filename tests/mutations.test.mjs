@@ -129,6 +129,7 @@ test("cadastro aceita CNPJ e edição preserva TEMP sem autorizar novo cadastro 
 
 test("busca BDC encontra CPF com pontuação e preserva consultas por nome e chassi", async () => {
   let filter;
+  let queryCalls = 0;
   const document = loadServerModule("lib/document.ts", {
     "./cpf": loadServerModule("lib/cpf.ts", {}),
   });
@@ -142,6 +143,7 @@ test("busca BDC encontra CPF com pontuação e preserva consultas por nome e cha
       prisma: {
         client: {
           findMany: async ({ where }) => {
+            queryCalls++;
             filter = where;
             return [];
           },
@@ -158,7 +160,7 @@ test("busca BDC encontra CPF com pontuação e preserva consultas por nome e cha
     await queries.getClientsPaginated({ page: 1, pageSize: 20, search });
     assert.equal(filter.OR[1].document.contains, "00000000E08G12");
     await queries.searchClients(search);
-    assert.equal(filter.document.contains, "00000000E08G12");
+    assert.equal(filter.document.equals, "00000000E08G12");
   }
   for (const search of ["Maria", "9C2KC2500TR102752"]) {
     await queries.getClientsPaginated({ page: 1, pageSize: 20, search });
@@ -166,6 +168,11 @@ test("busca BDC encontra CPF com pontuação e preserva consultas por nome e cha
     assert.equal(filter.OR[1].document.contains, search.toUpperCase());
     assert.equal(filter.OR[2].motorcycles.some.chassi.contains, search);
   }
+  const before = queryCalls;
+  for (const invalid of ["", "529982", "TEMP-ABC", "52998224726"]) {
+    assert.equal((await queries.searchClients(invalid)).length, 0);
+  }
+  assert.equal(queryCalls, before);
 });
 
 test("importação preserva CNPJ alfanumérico, CPF e TEMP existentes; documento inválido é ignorado", async () => {

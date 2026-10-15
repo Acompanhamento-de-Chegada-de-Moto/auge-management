@@ -4,7 +4,7 @@ import { withArrivalStatus } from "@/lib/arrival";
 import { arrivalArrivedWhere } from "@/lib/data/arrival-status";
 import { listingCacheTags } from "@/lib/data/listing-cache-tags";
 import { prisma } from "@/lib/db";
-import { normalizeDocument } from "@/lib/document";
+import { normalizeDocument, validateDocument } from "@/lib/document";
 
 export async function getClientById(id: string) {
   const client = await prisma.client.findUnique({
@@ -177,11 +177,11 @@ export async function getClientsPaginated(params: {
 
 export async function searchClients(query: string) {
   const stripped = normalizeDocument(query);
-  if (!stripped) return [];
+  if (!validateDocument(query)) return [];
 
   const clients = await prisma.client.findMany({
     where: {
-      document: { contains: stripped, mode: "insensitive" },
+      document: { equals: stripped, mode: "insensitive" },
     },
     select: {
       id: true,
@@ -199,13 +199,14 @@ export async function searchClients(query: string) {
           forecastArrivalStatus: true,
           arrivedAt: true,
           registrationStatus: true,
+          registrationDate: true,
         },
       },
     },
     orderBy: {
       updatedAt: "desc",
     },
-    take: 500,
+    take: 1,
   });
   return clients.map((client) => ({
     ...client,

@@ -1,76 +1,77 @@
+import { SearchCheck } from "lucide-react";
 import type { Metadata } from "next";
-import Image from "next/image";
-import Link from "next/link";
 import { searchClients } from "@/lib/data/client";
 import { getSetting } from "@/lib/data/settings";
+import { documentSearchSchema } from "@/validators/document-search-schema";
 import { ClientCard } from "./_components/ClientCard";
 import { SearchForm } from "./_components/SearchForm";
+import { TrackingShell } from "./_components/TrackingShell";
 
-export const metadata: Metadata = {
-  title: "Acompanhamento",
-};
-
-export default async function AcompanhamentoPage({
+export const metadata: Metadata = { title: "Acompanhamento" };
+export default async function TrackingPage({
   searchParams,
 }: {
   searchParams: Promise<{ q?: string }>;
 }) {
   const params = await searchParams;
-  const query = params.q;
-  const clients = query ? await searchClients(query) : [];
-
-  const logoUrl = await getSetting("logo_url");
-
+  const query = typeof params.q === "string" ? params.q.trim() : "";
+  const parsed = query
+    ? documentSearchSchema.safeParse({ document: query })
+    : null;
+  const [logoUrl, clients] = await Promise.all([
+    getSetting("logo_url"),
+    parsed?.success ? searchClients(parsed.data.document) : Promise.resolve([]),
+  ]);
+  const invalid =
+    parsed && !parsed.success
+      ? "Informe um CPF ou CNPJ válido para consultar."
+      : undefined;
   return (
-    <main className="relative flex min-h-full flex-col items-center overflow-hidden bg-gradient-to-b from-primary/[0.04] via-background to-background px-4 py-10 sm:px-6 sm:py-16 lg:px-8">
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -top-40 left-1/2 size-[28rem] -translate-x-1/2 rounded-full bg-primary/[0.06] blur-3xl"
-      />
-      <div className="relative flex w-full max-w-2xl flex-col items-center gap-8">
-        <div className="flex flex-col items-center gap-3 text-center">
-          <div className="flex size-20 items-center justify-center rounded-3xl border bg-card shadow-sm">
-            <Image
-              src={logoUrl || "/logo-auge.png"}
-              alt="Auge"
-              width={60}
-              height={60}
-              className="size-14 object-contain"
-            />
-          </div>
-          <h1 className="text-balance text-2xl font-bold tracking-tight sm:text-3xl">
-            Acompanhamento de Motocicletas
+    <TrackingShell logoUrl={logoUrl}>
+      <section className="grid items-center gap-8 lg:grid-cols-2 lg:gap-16">
+        <div className="max-w-lg space-y-4">
+          <p className="text-xs font-semibold uppercase tracking-widest text-primary">
+            Consulta para vendedores
+          </p>
+          <h1 className="text-balance text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
+            Consulte a motocicleta do cliente
           </h1>
-          <p className="text-muted-foreground">
-            Consulte o status da motocicleta pelo CPF ou CNPJ do cliente.
+          <p className="text-base leading-7 text-base-content/65">
+            Consulte a previsão de chegada, o recebimento e o emplacamento em um
+            só lugar.
           </p>
         </div>
-
-        <SearchForm defaultValue={query} />
-
-        {query && clients.length === 0 && (
-          <output className="block w-full rounded-xl border bg-card px-5 py-4 text-center text-sm text-muted-foreground">
-            Nenhum cliente encontrado para &quot;{query}&quot;.
-          </output>
-        )}
-
-        {clients.length > 0 && (
-          <div className="flex w-full flex-col gap-4">
-            {clients.map((client) => (
-              <ClientCard key={client.id} client={client} />
-            ))}
-          </div>
-        )}
-      </div>
-
-      <div className="relative mt-auto pt-12">
-        <Link
-          href="/bdc"
-          className="text-xs text-muted-foreground/60 transition-colors hover:text-muted-foreground"
+        <div className="rounded-2xl border border-base-300 bg-base-100 p-5 sm:p-7">
+          <h2 className="mb-2 text-lg font-semibold">Consultar atendimento</h2>
+          <p className="mb-6 text-sm leading-6 text-base-content/65">
+            Informe o CPF ou CNPJ do cliente.
+          </p>
+          <SearchForm key={query} defaultValue={query} initialError={invalid} />
+        </div>
+      </section>
+      {parsed?.success && clients.length === 0 && (
+        <section
+          className="rounded-2xl border border-base-300 bg-base-100 p-8 text-center"
+          aria-label="Resultado da consulta"
         >
-          Área administrativa →
-        </Link>
-      </div>
-    </main>
+          <SearchCheck
+            className="mx-auto mb-4 size-8 text-base-content/40"
+            aria-hidden="true"
+          />
+          <h2 className="font-semibold">Nenhum atendimento encontrado</h2>
+          <p className="mt-2 text-sm text-base-content/65">
+            Confira o CPF ou CNPJ informado e tente novamente.
+          </p>
+        </section>
+      )}
+      {clients.length > 0 && (
+        <section className="space-y-5" aria-label="Resultado da consulta">
+          <h2 className="text-lg font-semibold">Atendimento do cliente</h2>
+          {clients.map((client) => (
+            <ClientCard key={client.id} client={client} />
+          ))}
+        </section>
+      )}
+    </TrackingShell>
   );
 }

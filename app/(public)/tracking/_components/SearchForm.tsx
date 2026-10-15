@@ -1,60 +1,95 @@
 "use client";
-
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Search } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { useTransition } from "react";
+import { Controller, useForm } from "react-hook-form";
+import type { z } from "zod";
 import { maskDocumentIncremental } from "@/lib/document";
+import { documentSearchSchema } from "@/validators/document-search-schema";
 
-interface SearchFormProps {
+export function SearchForm({
+  defaultValue = "",
+  initialError,
+}: {
   defaultValue?: string;
-}
-
-export function SearchForm({ defaultValue = "" }: SearchFormProps) {
-  const [query, setQuery] = useState(defaultValue);
+  initialError?: string;
+}) {
   const router = useRouter();
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setQuery(maskDocumentIncremental(e.target.value));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const trimmed = query.trim();
-    if (trimmed) {
-      router.push(`/tracking?q=${encodeURIComponent(trimmed)}`);
-    }
-  };
-
+  const [pending, startTransition] = useTransition();
+  const form = useForm<z.infer<typeof documentSearchSchema>>({
+    resolver: zodResolver(documentSearchSchema),
+    defaultValues: { document: maskDocumentIncremental(defaultValue) },
+  });
+  const error =
+    form.formState.errors.document?.message ??
+    (!form.formState.isDirty ? initialError : undefined);
   return (
     <form
-      onSubmit={handleSubmit}
-      className="flex w-full max-w-lg flex-col gap-2 rounded-2xl border bg-card p-3 shadow-lg shadow-black/[0.03] sm:flex-row"
+      onSubmit={form.handleSubmit(({ document }) =>
+        startTransition(() =>
+          router.push(`/tracking?q=${encodeURIComponent(document)}`),
+        ),
+      )}
+      className="space-y-4"
+      aria-busy={pending}
     >
-      <Input
-        id="tracking-document"
-        name="document"
-        type="text"
-        inputMode="text"
-        autoCapitalize="characters"
-        maxLength={18}
-        autoComplete="off"
-        aria-label="CPF ou CNPJ do cliente"
-        aria-describedby="tracking-document-help"
-        placeholder="Digite o CPF ou CNPJ do cliente..."
-        value={query}
-        onChange={handleChange}
-        className="min-h-12 flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0 sm:pl-3"
-      />
-      <span id="tracking-document-help" className="sr-only">
-        Informe o CPF ou CNPJ do cliente, com ou sem pontuação.
-      </span>
-      <Button type="submit" className="min-h-12 w-full sm:w-auto sm:px-6">
-        <Search className="mr-2 size-4" />
-        Buscar
-      </Button>
+      <div className="space-y-2">
+        <label htmlFor="tracking-document" className="text-sm font-medium">
+          CPF ou CNPJ
+        </label>
+        <Controller
+          control={form.control}
+          name="document"
+          render={({ field }) => (
+            <input
+              {...field}
+              id="tracking-document"
+              type="text"
+              inputMode="text"
+              autoCapitalize="characters"
+              autoComplete="off"
+              maxLength={18}
+              placeholder="Digite o CPF ou CNPJ"
+              className="input h-12 w-full font-mono"
+              readOnly={pending}
+              aria-invalid={!!error}
+              aria-describedby={
+                error ? "tracking-document-error" : "tracking-document-help"
+              }
+              onChange={(event) =>
+                field.onChange(
+                  maskDocumentIncremental(event.currentTarget.value),
+                )
+              }
+            />
+          )}
+        />
+        {error ? (
+          <p
+            id="tracking-document-error"
+            role="alert"
+            className="text-xs text-error"
+          >
+            {error}
+          </p>
+        ) : (
+          <p
+            id="tracking-document-help"
+            className="text-xs text-base-content/55"
+          >
+            Use o documento completo informado no cadastro.
+          </p>
+        )}
+      </div>
+      <button
+        type="submit"
+        className="btn btn-primary min-h-12 w-full gap-2"
+        disabled={pending}
+      >
+        <Search className="size-4" aria-hidden="true" />
+        {pending ? "Consultando…" : "Consultar motocicleta"}
+      </button>
     </form>
   );
 }

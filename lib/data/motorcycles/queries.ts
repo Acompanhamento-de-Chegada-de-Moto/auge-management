@@ -143,6 +143,7 @@ export async function getPublicMotorcycleById(id: string) {
       arrivedAt: true,
       model: true,
       registrationStatus: true,
+      registrationDate: true,
       client: true,
       createdAt: true,
     },
