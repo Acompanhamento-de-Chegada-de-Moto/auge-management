@@ -73,6 +73,7 @@ export function BDCTable({
           onFilterChange={(key, value) => onParamsChange({ [key]: value })}
           onSearch={(value) => onParamsChange({ search: value })}
           onClear={onClearFilters}
+          onDateRangeChange={(range) => onParamsChange(range)}
         />
 
         {rows.length === 0 ? (

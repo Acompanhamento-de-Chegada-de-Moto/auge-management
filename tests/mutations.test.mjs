@@ -48,6 +48,42 @@ test("cache Prisma reutiliza cliente atual e substitui cliente antigo após rege
 const documents = loadServerModule("lib/document.ts", {
   "./cpf": loadServerModule("lib/cpf.ts", {}),
 });
+const forecastDates = loadServerModule("lib/forecast-date-range.ts", {});
+
+test("período de previsão valida datas e inclui os dois dias sem deslocamento de fuso", () => {
+  const bounds = forecastDates.forecastDateBounds({
+    forecastFrom: "2026-10-15",
+    forecastTo: "2026-10-15",
+  });
+  assert.equal(bounds.gte.toISOString(), "2026-10-15T00:00:00.000Z");
+  assert.equal(bounds.lt.toISOString(), "2026-10-16T00:00:00.000Z");
+  assert.equal(
+    forecastDates
+      .forecastDateBounds({ forecastTo: "2024-02-29" })
+      .lt.toISOString(),
+    "2024-03-01T00:00:00.000Z",
+  );
+  assert.equal(
+    forecastDates
+      .forecastDateBounds({ forecastFrom: "2026-12-31" })
+      .gte.toISOString(),
+    "2026-12-31T00:00:00.000Z",
+  );
+  for (const params of [
+    {},
+    { forecastFrom: "2026-02-30" },
+    { forecastTo: "not-a-date" },
+    { forecastFrom: "2026-10-16", forecastTo: "2026-10-15" },
+  ])
+    assert.equal(forecastDates.forecastDateBounds(params), undefined);
+  assert.equal(
+    forecastDates.forecastDateRangeSchema.safeParse({
+      forecastFrom: "2026-10-16",
+      forecastTo: "2026-10-15",
+    }).success,
+    false,
+  );
+});
 
 test("documentos validam CPF, CNPJ numérico e CNPJ alfanumérico com dígitos verificadores", () => {
   for (const value of [
@@ -134,6 +170,7 @@ test("busca BDC encontra CPF com pontuação e preserva consultas por nome e cha
     "./cpf": loadServerModule("lib/cpf.ts", {}),
   });
   const queries = loadServerModule("lib/data/clients/client-queries.ts", {
+    "@/lib/forecast-date-range": forecastDates,
     "next/cache": {},
     "@/lib/arrival": {},
     "@/lib/document": document,
@@ -252,7 +289,12 @@ test("filtros BDC mantêm motos e contadores coerentes em clientes com chegadas 
       if (condition === null || typeof condition !== "object")
         return value === condition;
       if ("not" in condition) return value !== condition.not;
-      if ("lt" in condition) return value !== null && value < condition.lt;
+      if ("lt" in condition || "gte" in condition)
+        return (
+          value !== null &&
+          (!condition.lt || value < condition.lt) &&
+          (!condition.gte || value >= condition.gte)
+        );
       const actual = String(value).toLowerCase();
       if ("equals" in condition)
         return actual === condition.equals.toLowerCase();
@@ -262,6 +304,7 @@ test("filtros BDC mantêm motos e contadores coerentes em clientes com chegadas 
     });
   }
   const queries = loadServerModule("lib/data/clients/client-queries.ts", {
+    "@/lib/forecast-date-range": forecastDates,
     "next/cache": { cacheLife() {}, cacheTag() {} },
     "@/lib/arrival": arrival,
     "@/lib/document": documents,
@@ -323,6 +366,63 @@ test("filtros BDC mantêm motos e contadores coerentes em clientes com chegadas 
   assert.equal(counts.arrived, 1);
   assert.equal(counts.waiting, 1);
   assert.equal(counts.delayed, 0);
+  const period = { forecastFrom: "2020-01-01", forecastTo: "2020-01-01" };
+  assert.deepEqual(chassis(await list(period)), ["RECEIVED", "LATE"]);
+  assert.deepEqual(chassis(await list({ ...period, arrived: "false" })), [
+    "LATE",
+  ]);
+  assert.deepEqual(chassis(await list({ ...period, model: "CG" })), [
+    "RECEIVED",
+  ]);
+  assert.equal((await queries.getBDCStatusCounts(period)).waiting, 1);
+  const motorcycles = clients.flatMap((client) => client.motorcycles);
+  const inventory = loadServerModule("lib/data/motorcycles/queries.ts", {
+    "next/cache": { cacheLife() {}, cacheTag() {} },
+    "@/lib/forecast-date-range": forecastDates,
+    "@/lib/arrival": arrival,
+    "@/lib/data/arrival-status": arrivalWhere,
+    "@/lib/data/listing-cache-tags": { listingCacheTags: {} },
+    "@/lib/db": {
+      prisma: {
+        motorcycle: {
+          count: async ({ where }) =>
+            motorcycles.filter((moto) => matches(moto, where)).length,
+          findMany: async ({ where, skip, take }) =>
+            motorcycles
+              .filter((moto) => matches(moto, where))
+              .slice(skip, skip + take),
+        },
+      },
+    },
+  });
+  const inventoryList = (filters) =>
+    inventory.getMotorcyclesPaginated({ page: 1, pageSize: 20, ...filters });
+  const stock = await inventoryList(period);
+  assert.deepEqual(
+    Array.from(stock.motorcycles, (moto) => moto.chassi),
+    ["RECEIVED", "LATE"],
+  );
+  assert.equal(stock.total, 2);
+  assert.equal(
+    (await inventoryList({ ...period, status: "delayed" })).total,
+    1,
+  );
+  assert.equal(
+    (await inventoryList({ ...period, model: "CG", status: "delayed" })).total,
+    0,
+  );
+  assert.equal(
+    (await inventoryList({ ...period, chassisSearch: "FUTURE" })).total,
+    0,
+  );
+  const inventoryCounts = await inventory.getMotorcycleStatusCounts({
+    ...period,
+    status: "delayed",
+  });
+  assert.equal(inventoryCounts.total, 2);
+  assert.equal(inventoryCounts.arrived, 1);
+  assert.equal(inventoryCounts.delayed, 1);
+  assert.equal(inventoryCounts.inTransit, 0);
   assert.equal(
     (await list({ sellerName: "Ana", arrived: "false", page: 2, pageSize: 1 }))
       .clients.length,

@@ -4,6 +4,7 @@ import { SearchIcon, XIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ActiveFilters } from "@/components/ui/data-workspace";
+import { ForecastDateFilter } from "@/components/ui/forecast-date-filter";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -12,6 +13,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  type ForecastDateRange,
+  formatForecastDateRange,
+} from "@/lib/forecast-date-range";
 
 interface BDCFiltersProps {
   filterOptions: {
@@ -20,6 +25,8 @@ interface BDCFiltersProps {
     models: string[];
   };
   activeFilters: {
+    forecastFrom: string;
+    forecastTo: string;
     sellerName: string;
     city: string;
     model: string;
@@ -30,6 +37,7 @@ interface BDCFiltersProps {
   onFilterChange: (key: "sellerName" | "city" | "model", value: string) => void;
   onSearch: (value: string) => void;
   onClear: () => void;
+  onDateRangeChange: (range: ForecastDateRange) => void;
 }
 
 export function BDCFilters({
@@ -39,6 +47,7 @@ export function BDCFilters({
   onFilterChange,
   onSearch,
   onClear,
+  onDateRangeChange,
 }: BDCFiltersProps) {
   const [searchInput, setSearchInput] = useState(activeFilters.search);
 
@@ -51,7 +60,9 @@ export function BDCFilters({
       activeFilters.city ||
       activeFilters.model ||
       activeFilters.search ||
-      activeFilters.arrived,
+      activeFilters.arrived ||
+      activeFilters.forecastFrom ||
+      activeFilters.forecastTo,
   );
 
   return (
@@ -172,9 +183,20 @@ export function BDCFilters({
           </Button>
         )}
       </div>
+      <ForecastDateFilter
+        forecastFrom={activeFilters.forecastFrom}
+        forecastTo={activeFilters.forecastTo}
+        disabled={isPending}
+        onApply={onDateRangeChange}
+      />
       <ActiveFilters
         disabled={isPending}
         filters={[
+          {
+            key: "forecastPeriod",
+            label: "Previsão",
+            value: formatForecastDateRange(activeFilters),
+          },
           { key: "search", label: "Busca", value: activeFilters.search },
           {
             key: "sellerName",
@@ -185,9 +207,11 @@ export function BDCFilters({
           { key: "model", label: "Modelo", value: activeFilters.model },
         ]}
         onRemove={(key) =>
-          key === "search"
-            ? onSearch("")
-            : onFilterChange(key as "sellerName" | "city" | "model", "all")
+          key === "forecastPeriod"
+            ? onDateRangeChange({ forecastFrom: "", forecastTo: "" })
+            : key === "search"
+              ? onSearch("")
+              : onFilterChange(key as "sellerName" | "city" | "model", "all")
         }
       />
     </div>

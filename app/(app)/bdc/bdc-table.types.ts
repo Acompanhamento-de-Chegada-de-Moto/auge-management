@@ -7,6 +7,8 @@ export interface BDCFilterOptions {
 }
 
 export interface BDCActiveFilters {
+  forecastFrom: string;
+  forecastTo: string;
   sellerName: string;
   city: string;
   model: string;

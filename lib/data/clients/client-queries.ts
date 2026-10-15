@@ -9,6 +9,7 @@ import {
 import { listingCacheTags } from "@/lib/data/listing-cache-tags";
 import { prisma } from "@/lib/db";
 import { normalizeDocument, validateDocument } from "@/lib/document";
+import { forecastDateBounds } from "@/lib/forecast-date-range";
 
 export async function getClientById(id: string) {
   const client = await prisma.client.findUnique({
@@ -57,6 +58,8 @@ async function getCachedBDCFilterOptions() {
 }
 
 interface BDCFilters {
+  forecastFrom?: string;
+  forecastTo?: string;
   sellerName?: string;
   city?: string;
   model?: string;
@@ -67,6 +70,8 @@ interface BDCFilters {
 function buildBDCFilters(params: BDCFilters) {
   const where: Prisma.ClientWhereInput = {};
   const motorcycleConditions: Prisma.MotorcycleWhereInput[] = [];
+  const forecastArrival = forecastDateBounds(params);
+  if (forecastArrival) motorcycleConditions.push({ forecastArrival });
 
   if (params.sellerName)
     where.sellersName = { equals: params.sellerName, mode: "insensitive" };
@@ -150,6 +155,8 @@ export function getBDCFilterOptions() {
 
 export function getBDCStatusCounts(params: BDCFilters = {}) {
   return params.sellerName ||
+    params.forecastFrom ||
+    params.forecastTo ||
     params.city ||
     params.model ||
     params.search?.trim()
