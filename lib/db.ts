@@ -1,3 +1,4 @@
+import { rootCertificates } from "node:tls";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@/generated/prisma/client";
 
@@ -41,7 +42,9 @@ export const prisma =
             ? {
                 ssl: {
                   rejectUnauthorized: true,
-                  ...(databaseCa ? { ca: databaseCa } : {}),
+                  ...(databaseCa
+                    ? { ca: [...rootCertificates, databaseCa] }
+                    : {}),
                 },
               }
             : {}),
