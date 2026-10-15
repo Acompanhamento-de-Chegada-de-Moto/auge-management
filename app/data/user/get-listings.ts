@@ -31,7 +31,7 @@ export async function getInventoryListing(
   const [paginated, filterOptions, statusCounts] = await Promise.all([
     getMotorcyclesPaginated(params),
     getEstoqueFilterOptions(),
-    getMotorcycleStatusCounts(),
+    getMotorcycleStatusCounts(params),
   ]);
   return { paginated, filterOptions, statusCounts };
 }

@@ -7,6 +7,7 @@ import { getInventoryListing } from "@/app/data/user/get-listings";
 import { Page, PageHeader } from "@/components/layout/Page";
 import { Button } from "@/components/ui/button";
 import { ListWorkspaceSkeleton } from "@/components/ui/list-workspace-skeleton";
+import { normalizeForecastDateRange } from "@/lib/forecast-date-range";
 import { InventoryPageClient } from "./_components/InventoryPageClient";
 
 export const metadata: Metadata = {
@@ -50,6 +51,7 @@ async function RenderMotorcycles({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const params = await searchParams;
+  const dateRange = normalizeForecastDateRange(params);
 
   const page = Math.max(1, Math.floor(Number(params.page) || 1));
   const arrivalFilters = ["in-transit", "arrived", "delayed"] as const;
@@ -60,6 +62,7 @@ async function RenderMotorcycles({
   const { paginated, filterOptions, statusCounts } = await getInventoryListing({
     page,
     pageSize: 10,
+    ...dateRange,
     model: typeof params.model === "string" ? params.model.trim() : undefined,
     status,
     chassisSearch:
@@ -75,6 +78,7 @@ async function RenderMotorcycles({
       statusCounts={statusCounts}
       filterOptions={filterOptions}
       activeFilters={{
+        ...dateRange,
         model: typeof params.model === "string" ? params.model : "",
         status: typeof params.status === "string" ? params.status : "",
         chassis: typeof params.chassis === "string" ? params.chassis : "",
@@ -82,6 +86,6 @@ async function RenderMotorcycles({
     />
   );
 }
-export function EstoquePageSkeletonLayout() {
+function EstoquePageSkeletonLayout() {
   return <ListWorkspaceSkeleton views={4} />;
 }

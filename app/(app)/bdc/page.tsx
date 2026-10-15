@@ -6,6 +6,7 @@ import { SpreadsheetUploadDialog } from "@/app/(app)/bdc/_components/Spreadsheet
 import { getBdcListing } from "@/app/data/user/get-listings";
 import { Page, PageHeader } from "@/components/layout/Page";
 import { Button } from "@/components/ui/button";
+import { normalizeForecastDateRange } from "@/lib/forecast-date-range";
 import { BdcPageClient } from "./_components/BdcPageClient";
 import { BDCPageSkeleton } from "./_components/bdc-page-skeleton";
 import { mapClientsToRows } from "./_lib/client-mapper";
@@ -22,6 +23,8 @@ interface BDCPageProps {
     model?: string;
     search?: string;
     arrived?: string;
+    forecastFrom?: string;
+    forecastTo?: string;
   }>;
 }
 
@@ -54,10 +57,12 @@ export default function BDCPage({ searchParams }: BDCPageProps) {
 
 async function RenderClients({ searchParams }: BDCPageProps) {
   const params = await searchParams;
+  const dateRange = normalizeForecastDateRange(params);
   const page = Math.max(1, Math.floor(Number(params.page) || 1));
   const { paginated, filterOptions, statusCounts } = await getBdcListing({
     page,
     pageSize: 10,
+    ...dateRange,
     sellerName: params.sellerName,
     city: params.city,
     model: params.model,
@@ -86,6 +91,7 @@ async function RenderClients({ searchParams }: BDCPageProps) {
       statusCounts={statusCounts}
       filterOptions={filters}
       activeFilters={{
+        ...dateRange,
         sellerName: params.sellerName ?? "",
         city: params.city ?? "",
         model: params.model ?? "",

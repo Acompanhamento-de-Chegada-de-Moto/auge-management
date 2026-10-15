@@ -9,6 +9,7 @@ import { CopyValueButton } from "@/components/ui/copy-value-button";
 import { ActiveFilters, DataWorkspace } from "@/components/ui/data-workspace";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FilterViews } from "@/components/ui/filter-views";
+import { ForecastDateFilter } from "@/components/ui/forecast-date-filter";
 import { Input } from "@/components/ui/input";
 import { ListPagination } from "@/components/ui/list-pagination";
 import {
@@ -27,6 +28,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getArrivalStatus } from "@/lib/bdc-data";
+import { formatForecastDateRange } from "@/lib/forecast-date-range";
 import { formatDateBR } from "@/lib/utils";
 
 interface MotorcycleRow {
@@ -50,6 +52,8 @@ export interface MotorcycleTableProps {
   };
   filterOptions: { models: string[] };
   activeFilters: {
+    forecastFrom: string;
+    forecastTo: string;
     model: string;
     status: string;
     chassis: string;
@@ -196,6 +200,8 @@ export default function MotorcycleTable({
             </Button>
             {(activeFilters.model ||
               activeFilters.status ||
+              activeFilters.forecastFrom ||
+              activeFilters.forecastTo ||
               activeFilters.chassis) && (
               <Button
                 variant="ghost"
@@ -207,13 +213,28 @@ export default function MotorcycleTable({
             )}
           </div>
 
+          <ForecastDateFilter
+            forecastFrom={activeFilters.forecastFrom}
+            forecastTo={activeFilters.forecastTo}
+            disabled={isPending}
+            onApply={(range) => onParamsChange(range)}
+          />
           <ActiveFilters
             disabled={isPending}
             filters={[
+              {
+                key: "forecastPeriod",
+                label: "Previsão",
+                value: formatForecastDateRange(activeFilters),
+              },
               { key: "model", label: "Modelo", value: activeFilters.model },
               { key: "chassis", label: "Chassi", value: activeFilters.chassis },
             ]}
             onRemove={(key) => {
+              if (key === "forecastPeriod") {
+                onParamsChange({ forecastFrom: null, forecastTo: null });
+                return;
+              }
               if (key === "chassis") onChassisInputChange("");
               onParamsChange({ [key]: null });
             }}
@@ -227,6 +248,8 @@ export default function MotorcycleTable({
             action={
               activeFilters.model ||
               activeFilters.status ||
+              activeFilters.forecastFrom ||
+              activeFilters.forecastTo ||
               activeFilters.chassis ? (
                 <Button variant="outline" onClick={onClearFilters}>
                   Limpar filtros

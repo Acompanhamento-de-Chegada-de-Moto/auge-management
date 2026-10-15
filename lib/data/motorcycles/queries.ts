@@ -9,6 +9,7 @@ import {
 } from "@/lib/data/arrival-status";
 import { listingCacheTags } from "@/lib/data/listing-cache-tags";
 import { prisma } from "@/lib/db";
+import { forecastDateBounds } from "@/lib/forecast-date-range";
 
 async function getCachedEstoqueFilterOptions() {
   "use cache";
@@ -44,18 +45,42 @@ export function getEstoqueFilterOptions() {
   return getCachedEstoqueFilterOptions();
 }
 
-export function getMotorcycleStatusCounts() {
+export async function getMotorcycleStatusCounts(params: InventoryFilters = {}) {
+  if (
+    params.model ||
+    params.chassisSearch ||
+    params.forecastFrom ||
+    params.forecastTo
+  ) {
+    const count = (status?: InventoryFilters["status"]) =>
+      prisma.motorcycle.count({
+        where: buildInventoryWhere({ ...params, status, arrived: undefined }),
+      });
+    const [total, inTransit, arrived, delayed] = await Promise.all([
+      count(),
+      count("in-transit"),
+      count("arrived"),
+      count("delayed"),
+    ]);
+    return { total, inTransit, arrived, delayed };
+  }
   return getCachedMotorcycleStatusCounts(businessDate());
 }
-export async function getMotorcyclesPaginated(params: {
-  page: number;
-  pageSize: number;
+interface InventoryFilters {
+  forecastFrom?: string;
+  forecastTo?: string;
   model?: string;
   status?: "in-transit" | "arrived" | "delayed";
   chassisSearch?: string;
   arrived?: "true" | "false";
-}) {
+}
+
+function buildInventoryWhere(
+  params: InventoryFilters,
+): Prisma.MotorcycleWhereInput {
   const where: Prisma.MotorcycleWhereInput = {};
+  const forecastArrival = forecastDateBounds(params);
+  if (forecastArrival) where.forecastArrival = forecastArrival;
 
   if (params.model) {
     where.model = params.model;
@@ -93,6 +118,16 @@ export async function getMotorcyclesPaginated(params: {
     where.chassi = { contains: params.chassisSearch, mode: "insensitive" };
   }
 
+  return where;
+}
+
+export async function getMotorcyclesPaginated(
+  params: InventoryFilters & {
+    page: number;
+    pageSize: number;
+  },
+) {
+  const where = buildInventoryWhere(params);
   const [data, total] = await Promise.all([
     prisma.motorcycle.findMany({
       where,
