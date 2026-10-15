@@ -1,6 +1,6 @@
 "use client";
 
-import { Cookie, X } from "lucide-react";
+import { Cookie } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { getCookieConsent, setCookieConsent } from "@/lib/cookies";
@@ -29,16 +29,16 @@ export function CookieConsentBanner() {
 
   return (
     <div
-      role="dialog"
+      role="region"
       aria-label="Aviso de cookies"
-      className="fixed inset-x-0 bottom-0 z-50 p-3 sm:p-4"
+      className="fixed inset-x-0 bottom-0 z-50 p-3 sm:p-5"
     >
-      <div className="mx-auto flex max-w-2xl flex-col gap-3 rounded-xl border border-border/60 bg-card p-4 shadow-lg sm:flex-row sm:items-center sm:gap-4 sm:py-3">
-        <div className="hidden shrink-0 sm:flex sm:size-9 sm:items-center sm:justify-center sm:rounded-lg sm:bg-primary/10">
-          <Cookie className="size-4 text-primary" />
+      <div className="mx-auto flex max-w-3xl flex-col gap-4 rounded-2xl border border-border/60 bg-background/90 p-4 shadow-2xl shadow-black/10 backdrop-blur-2xl sm:flex-row sm:items-center sm:gap-6 sm:px-5">
+        <div className="hidden shrink-0 sm:flex sm:size-10 sm:items-center sm:justify-center sm:rounded-full sm:bg-muted">
+          <Cookie className="size-4 text-muted-foreground" />
         </div>
 
-        <p className="flex-1 text-sm leading-snug text-foreground">
+        <p className="flex-1 text-sm leading-relaxed text-foreground">
           Usamos cookies essenciais para autenticação e segurança da plataforma.{" "}
           <span className="text-muted-foreground">
             Você pode recusar os opcionais quando quiser.
@@ -50,14 +50,14 @@ export function CookieConsentBanner() {
             variant="outline"
             onClick={handleReject}
             size="sm"
-            className="flex-1 sm:flex-none"
+            className="min-h-10 flex-1 rounded-full px-5 sm:flex-none"
           >
             Recusar
           </Button>
           <Button
             onClick={handleAccept}
             size="sm"
-            className="flex-1 sm:flex-none"
+            className="min-h-10 flex-1 rounded-full px-5 sm:flex-none"
           >
             Aceitar
           </Button>

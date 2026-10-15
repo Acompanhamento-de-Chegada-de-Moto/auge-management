@@ -75,10 +75,29 @@ model Verification {
   @@map("verification")
 }
 
+model RateLimit {
+  id          String @id
+  key         String @unique
+  count       Int
+  lastRequest BigInt
+
+  @@map("rateLimit")
+}
+
+model ApiRateLimit {
+  key         String   @id
+  windowStart DateTime
+  count       Int
+  expiresAt   DateTime
+
+  @@index([expiresAt])
+  @@map("api_rate_limits")
+}
+
 model Client {
   id          String       @id @default(uuid()) @db.Uuid
   name        String
-  cpf         String       @unique
+  document    String       @unique(map: "clients_cpf_key") @map("cpf")
   city        String
   sellersName String
   billingDate DateTime?
@@ -98,6 +117,8 @@ model Motorcycle {
   forecastArrivalStatus ArrivalStatus       @default(NO_INFORMATION)
   registrationStatus    RegistrationStatus?
   registrationDate      DateTime?
+  arrivedAt             DateTime?
+  receipt               MotorcycleReceipt?
 
   clientId String? @db.Uuid
   client   Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
@@ -105,8 +126,49 @@ model Motorcycle {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([forecastArrivalStatus])
+  @@index([arrivedAt, forecastArrival])
   @@index([updatedAt])
   @@map("motorcycles")
+}
+
+model CheckInOperator {
+  id        String @id @default(uuid()) @db.Uuid
+  name      String
+  identifier String @unique
+  pinHash   String
+  active    Boolean @default(true)
+  failedAttempts Int @default(0)
+  lockedUntil DateTime?
+  createdAt DateTime @default(now())
+  sessions CheckInSession[]
+  receipts MotorcycleReceipt[]
+  @@map("check_in_operators")
+}
+
+model CheckInSession {
+  id String @id @default(uuid()) @db.Uuid
+  tokenHash String @unique
+  operatorId String @db.Uuid
+  operator CheckInOperator @relation(fields: [operatorId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  @@index([operatorId])
+  @@index([expiresAt])
+  @@map("check_in_sessions")
+}
+
+model MotorcycleReceipt {
+  id String @id @default(uuid()) @db.Uuid
+  motorcycleId String @unique @db.Uuid
+  motorcycle Motorcycle @relation(fields: [motorcycleId], references: [id], onDelete: Cascade)
+  operatorId String? @db.Uuid
+  operator CheckInOperator? @relation(fields: [operatorId], references: [id], onDelete: SetNull)
+  actorLabel String
+  source String
+  arrivedAt DateTime
+  @@index([operatorId])
+  @@map("motorcycle_receipts")
 }
 
 enum RegistrationStatus {

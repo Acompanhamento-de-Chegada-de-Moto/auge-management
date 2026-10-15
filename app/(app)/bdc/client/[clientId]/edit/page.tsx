@@ -2,8 +2,10 @@ import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { z } from "zod";
+import { requireAuth } from "@/app/data/user/require-auth";
+import { Page, PageHeader } from "@/components/layout/Page";
 import { buttonVariants } from "@/components/ui/button";
-import { userGetMotorcycle } from "@/app/data/user/user-get-motorcycle";
 import { getClientById } from "@/lib/data/client";
 import { EditClientForm } from "./_components/EditClientForm";
 
@@ -18,10 +20,11 @@ export default async function EditarClientePage({
   params: Promise<{ clientId: string }>;
   searchParams: Promise<{ motorcycleId?: string }>;
 }) {
+  await requireAuth();
   const { clientId } = await params;
   const { motorcycleId } = await searchParams;
 
-  if (!clientId) {
+  if (!z.string().uuid().safeParse(clientId).success) {
     notFound();
   }
 
@@ -34,27 +37,32 @@ export default async function EditarClientePage({
   const selectedMotorcycle =
     (motorcycleId
       ? client.motorcycles.find((m) => m.id === motorcycleId)
-      : undefined) ?? client.motorcycles[0] ?? null;
+      : undefined) ??
+    client.motorcycles[0] ??
+    null;
+  if (motorcycleId && selectedMotorcycle?.id !== motorcycleId) notFound();
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-        <h1 className="text-2xl font-bold">Editar Cliente</h1>
-        <Link
-          title="voltar"
-          href="/bdc"
-          className={buttonVariants({
-            variant: "secondary",
-          })}
-        >
-          <ArrowLeft className="size-4 mr-2" /> Voltar
-        </Link>
+    <Page>
+      <div className="mx-auto w-full max-w-[1600px] space-y-6">
+        <PageHeader
+          title="Editar cliente"
+          description={`Atualize os dados de ${client.name} e o acompanhamento da motocicleta.`}
+          actions={
+            <Link
+              href="/bdc"
+              className={buttonVariants({ variant: "outline" })}
+            >
+              <ArrowLeft className="mr-2 size-4" />
+              Voltar para clientes
+            </Link>
+          }
+        />
+        <EditClientForm
+          client={client}
+          selectedMotorcycle={selectedMotorcycle}
+        />
       </div>
-      <EditClientForm
-        client={client}
-        selectedMotorcycle={selectedMotorcycle}
-        searchChassisAction={userGetMotorcycle}
-      />
-    </div>
+    </Page>
   );
 }

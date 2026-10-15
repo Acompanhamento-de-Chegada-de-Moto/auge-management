@@ -1,26 +1,24 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { format } from "date-fns";
-import dayjs from "dayjs";
 import {
+  ArrowLeft,
   Bike,
-  CalendarIcon,
   CheckCircle2,
+  Info,
   Loader2,
   Plus,
+  Save,
   SearchIcon,
-  ShieldCheck,
-  User,
 } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { SidebarSummary } from "@/app/(app)/bdc/_components/SidebarSummary";
-import { EditClientAction } from "@/app/(app)/bdc/actions";
-import { SectionHeader } from "../../../../_components/SectionHeader";
+import { updateClientAction } from "@/app/(app)/bdc/_actions/clients";
+import { FormWorkspace } from "@/components/layout/FormWorkspace";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import {
   Form,
   FormControl,
@@ -30,39 +28,31 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { formatCPF, maskCPFIncremental } from "@/lib/cpf";
+import { searchMotorcycleByChassis } from "@/lib/api/client";
 import type { getClientById } from "@/lib/data/client";
+import { formatDocument } from "@/lib/document";
 import { cn } from "@/lib/utils";
 import {
   type CustomerFormData,
-  customerSchema,
+  editCustomerSchema,
 } from "@/validators/customer-schema";
+import { SectionHeader } from "../../../../_components/section-header";
+import { CustomerSection } from "../../../_components/customer-section";
+import { DatePickerField } from "../../../_components/date-picker-field";
+import { RegistrationSection } from "../../../_components/registration-section";
 
 type Client = NonNullable<Awaited<ReturnType<typeof getClientById>>>;
 
 interface EditClientFormProps {
   client: Client;
   selectedMotorcycle: Client["motorcycles"][number] | null;
-  searchChassisAction: (chassis: string) => Promise<any>;
 }
 
 export function EditClientForm({
   client,
   selectedMotorcycle,
-  searchChassisAction,
 }: EditClientFormProps) {
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [showNewMotorcycle, setShowNewMotorcycle] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
@@ -71,10 +61,10 @@ export function EditClientForm({
   const [hasSearched, setHasSearched] = useState(false);
 
   const form = useForm<CustomerFormData>({
-    resolver: zodResolver(customerSchema),
+    resolver: zodResolver(editCustomerSchema),
     defaultValues: {
       customerName: client.name ?? "",
-      cpf: formatCPF(client.cpf ?? ""),
+      document: formatDocument(client.document ?? ""),
       sellerName: client.sellersName ?? "",
       city: client.city ?? "",
       model: selectedMotorcycle?.model ?? "",
@@ -111,12 +101,15 @@ export function EditClientForm({
     setSearchError(null);
 
     try {
-      const motorcycle = await searchChassisAction(chassisValue);
+      const motorcycle = await searchMotorcycleByChassis<{
+        model: string;
+        forecastArrival: string | null;
+        forecastArrivalStatus: string | null;
+      }>(chassisValue);
       setHasSearched(true);
 
       if (motorcycle) {
         form.setValue("model", motorcycle.model);
-        form.setValue("city", motorcycle.city || "");
         form.setValue(
           "forecastDate",
           motorcycle.forecastArrival
@@ -147,27 +140,47 @@ export function EditClientForm({
 
   const handleSubmit = async (formData: CustomerFormData) => {
     startTransition(async () => {
-      const result = await EditClientAction(
-        client.id,
-        selectedMotorcycle?.id ?? null,
-        formData,
-      );
+      const result = await updateClientAction(client.id, {
+        motorcycleId: selectedMotorcycle?.id ?? null,
+        values: formData,
+      });
 
       if (result.status === "error") {
         toast.error(result.message);
+        return;
       }
+
+      toast.success(result.message);
+      router.push("/bdc");
     });
   };
 
   return (
-    <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
-      <div className="flex-1">
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-6"
-          >
-            <section className="rounded-xl border bg-card p-6 shadow-sm">
+    <FormWorkspace
+      title="Revisão do atendimento"
+      steps={[
+        "Confira os dados do cliente e do responsável pelo atendimento.",
+        "Atualize as datas e o emplacamento da motocicleta selecionada.",
+        "Uma nova motocicleta pode ser adicionada sem substituir o vínculo existente.",
+      ]}
+    >
+      <Form {...form}>
+        <form
+          onSubmit={form.handleSubmit(handleSubmit, (errors) => {
+            const message = Object.values(errors).find(
+              (error) => error?.message,
+            )?.message;
+            toast.error(
+              message ?? "Confira os campos obrigatórios antes de salvar.",
+            );
+          })}
+          className="space-y-5"
+          aria-busy={pending}
+        >
+          <div className="space-y-6">
+            <CustomerSection form={form} />
+
+            <section className="min-w-0 border-b border-base-300/80 pb-6">
               <SectionHeader
                 icon={Bike}
                 title="Motocicleta"
@@ -245,7 +258,7 @@ export function EditClientForm({
 
               {hasSearched && motorcycleFound && (
                 <div
-                  role="status"
+                  aria-live="polite"
                   className="mt-3 flex items-start gap-2 rounded-lg border border-green-200/60 bg-green-50 p-3 text-sm text-green-800 dark:border-green-900/40 dark:bg-green-950/30 dark:text-green-400"
                 >
                   <CheckCircle2 className="mt-0.5 size-4 shrink-0" />
@@ -261,12 +274,13 @@ export function EditClientForm({
                 !motorcycleFound &&
                 !hasExistingMotorcycle && (
                   <div
-                    role="status"
+                    aria-live="polite"
                     className="mt-3 flex items-start gap-2 rounded-lg border border-blue-200/60 bg-blue-50 p-3 text-sm text-blue-800 dark:border-blue-900/40 dark:bg-blue-950/40 dark:text-blue-400"
                   >
-                    <span aria-hidden className="mt-0.5">
-                      ℹ️
-                    </span>
+                    <Info
+                      className="mt-0.5 size-4 shrink-0"
+                      aria-hidden="true"
+                    />
                     <span>
                       Esta moto não está no estoque. O modelo e a previsão
                       informados abaixo criarão um registro de previsão
@@ -298,39 +312,39 @@ export function EditClientForm({
                 />
               </div>
             </section>
+          </div>
 
-            <section className="rounded-xl border bg-card p-6 shadow-sm">
-              <SectionHeader icon={User} title="Dados do Cliente" />
+          <RegistrationSection form={form} motorcycleFound={motorcycleFound} />
 
-              <div className="grid gap-4 sm:grid-cols-2">
+          <section className="min-w-0 border-b border-base-300/80 pb-6">
+            <SectionHeader
+              icon={Bike}
+              title="Outra motocicleta"
+              description="Opcional: adicione outra motocicleta ao cadastro deste cliente."
+            />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowNewMotorcycle(!showNewMotorcycle)}
+              className="w-full"
+            >
+              <Plus className="size-4 mr-2" />
+              {showNewMotorcycle ? "Cancelar" : "Adicionar Outra Motocicleta"}
+            </Button>
+
+            {showNewMotorcycle && (
+              <div className="mt-4 grid gap-4 sm:grid-cols-2 animated-in fade-in slide-in-from-top-2 duration-200">
                 <FormField
                   control={form.control}
-                  name="customerName"
-                  render={({ field }) => (
-                    <FormItem className="sm:col-span-2">
-                      <FormLabel>Cliente</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Nome do cliente" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="cpf"
+                  name="newChassis"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>CPF</FormLabel>
+                      <FormLabel>Chassi (nova moto)</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="000.000.000-00"
-                          inputMode="numeric"
+                          placeholder="Número do chassi"
+                          className="font-mono uppercase"
                           {...field}
-                          onChange={(e) => {
-                            field.onChange(maskCPFIncremental(e.target.value));
-                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -340,359 +354,54 @@ export function EditClientForm({
 
                 <FormField
                   control={form.control}
-                  name="sellerName"
+                  name="newModel"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Vendedor (a)</FormLabel>
+                      <FormLabel>Modelo (nova moto)</FormLabel>
                       <FormControl>
-                        <Input placeholder="Nome do vendedor" {...field} />
+                        <Input placeholder="Modelo da motocicleta" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
-                <FormField
+                <DatePickerField
                   control={form.control}
-                  name="city"
-                  render={({ field }) => (
-                    <FormItem className="sm:col-span-2">
-                      <FormLabel>Cidade</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Cidade" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  name="newForecastDate"
+                  label="Previsão de Chegada"
+                  optional
                 />
               </div>
-            </section>
+            )}
+          </section>
 
-            <section className="rounded-xl border bg-card p-6 shadow-sm">
-              <SectionHeader
-                icon={ShieldCheck}
-                title="Faturamento e Emplacamento"
-              />
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="billingDate"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Data de Faturamento</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant="outline"
-                              className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground",
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "dd/MM/yyyy")
-                              ) : (
-                                <span>Selecionar data</span>
-                              )}
-                              <CalendarIcon className="ml-auto size-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            autoFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="forecastDate"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Previsão de Chegada</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant="outline"
-                              disabled={motorcycleFound}
-                              className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground",
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "dd/MM/yyyy")
-                              ) : (
-                                <span>Selecionar data</span>
-                              )}
-                              <CalendarIcon className="ml-auto size-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            autoFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="arrivalStatus"
-                  render={({ field }) => (
-                    <FormItem className="sm:col-span-2">
-                      <FormLabel>Status de Chegada</FormLabel>
-                      <Select
-                        onValueChange={(value) => field.onChange(value)}
-                        value={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione o status" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="Sem Informação">
-                            Sem Informação
-                          </SelectItem>
-                          <SelectItem value="Chegou">Chegou</SelectItem>
-                          <SelectItem value="Atrasada">Atrasada</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {watchedValues.forecastDate &&
-                  dayjs(watchedValues.forecastDate)
-                    .startOf("day")
-                    .isBefore(dayjs().startOf("day")) &&
-                  watchedValues.arrivalStatus === "Sem Informação" && (
-                    <div
-                      role="alert"
-                      className="sm:col-span-2 flex items-start gap-2 rounded-lg border border-amber-200/60 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-400"
-                    >
-                      <span aria-hidden className="mt-0.5">
-                        ⚠️
-                      </span>
-                      <span>
-                        A data prevista para chegada já passou. Confirme se a
-                        moto chegou ou está atrasada.
-                      </span>
-                    </div>
-                  )}
-
-                <FormField
-                  control={form.control}
-                  name="registrationStatus"
-                  render={({ field }) => (
-                    <FormItem
-                      className={cn(
-                        watchedValues.registrationStatus ===
-                          "Sem Emplacamento" && "sm:col-span-2",
-                      )}
-                    >
-                      <FormLabel>Status de Emplacamento</FormLabel>
-                      <Select
-                        onValueChange={(value) => field.onChange(value)}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione o status" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="Sem Emplacamento">
-                            Sem Emplacamento
-                          </SelectItem>
-                          <SelectItem value="Emplacando">Emplacando</SelectItem>
-                          <SelectItem value="Emplacado">Emplacado</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {watchedValues.registrationStatus !== "Sem Emplacamento" && (
-                  <FormField
-                    control={form.control}
-                    name="registrationDate"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>Data de Emplacamento</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant="outline"
-                                className={cn(
-                                  "w-full pl-3 text-left font-normal",
-                                  !field.value && "text-muted-foreground",
-                                )}
-                              >
-                                {field.value ? (
-                                  format(field.value, "dd/MM/yyyy")
-                                ) : (
-                                  <span>Selecionar data</span>
-                                )}
-                                <CalendarIcon className="ml-auto size-4 opacity-50" />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={field.value}
-                              onSelect={field.onChange}
-                              autoFocus
-                            />
-                          </PopoverContent>
-                        </Popover>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
-              </div>
-            </section>
-
-            <section className="rounded-xl border bg-card p-6 shadow-sm">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowNewMotorcycle(!showNewMotorcycle)}
-                className="w-full"
-              >
-                <Plus className="size-4 mr-2" />
-                {showNewMotorcycle ? "Cancelar" : "Adicionar Outra Motocicleta"}
+          <div className="flex flex-col-reverse gap-3 border-t border-base-300/80 pt-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-xs text-base-content/60">
+              Os campos marcados com * são obrigatórios.
+            </p>
+            <div className="flex flex-col-reverse gap-2 sm:flex-row">
+              <Button variant="outline" asChild disabled={pending}>
+                <Link href="/bdc">
+                  <ArrowLeft className="mr-2 size-4" aria-hidden="true" />
+                  Cancelar
+                </Link>
               </Button>
-
-              {showNewMotorcycle && (
-                <div className="mt-4 grid gap-4 sm:grid-cols-2 animated-in fade-in slide-in-from-top-2 duration-200">
-                  <FormField
-                    control={form.control}
-                    name="newChassis"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Chassi (nova moto)</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Número do chassi"
-                            className="font-mono uppercase"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+              <Button type="submit" disabled={pending}>
+                {pending ? (
+                  <Loader2
+                    className="mr-2 size-4 animate-spin"
+                    aria-hidden="true"
                   />
-
-                  <FormField
-                    control={form.control}
-                    name="newModel"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Modelo (nova moto)</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Modelo da motocicleta"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="newForecastDate"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>Previsão de Chegada</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant="outline"
-                                className={cn(
-                                  "w-full pl-3 text-left font-normal",
-                                  !field.value && "text-muted-foreground",
-                                )}
-                              >
-                                {field.value ? (
-                                  format(field.value, "dd/MM/yyyy")
-                                ) : (
-                                  <span>Selecionar data</span>
-                                )}
-                                <CalendarIcon className="ml-auto size-4 opacity-50" />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={field.value}
-                              onSelect={field.onChange}
-                              autoFocus
-                            />
-                          </PopoverContent>
-                        </Popover>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              )}
-            </section>
-
-            <div className="sticky bottom-0 -mx-1 bg-gradient-to-t from-background via-background to-transparent px-1 pt-4 pb-1">
-              <Button
-                type="submit"
-                disabled={pending}
-                size="lg"
-                className="w-full sm:w-auto sm:min-w-[200px]"
-              >
-                {pending && <Loader2 className="size-4 mr-2 animate-spin" />}
-                {pending ? "Salvando..." : "Salvar Alterações"}
+                ) : (
+                  <Save className="mr-2 size-4" aria-hidden="true" />
+                )}
+                {pending ? "Salvando…" : "Salvar alterações"}
               </Button>
             </div>
-          </form>
-        </Form>
-      </div>
-
-      <SidebarSummary
-        chassis={watchedValues.chassis}
-        found={hasExistingMotorcycle || motorcycleFound}
-        model={watchedValues.model}
-        city={watchedValues.city}
-        customerName={watchedValues.customerName}
-        sellerName={watchedValues.sellerName}
-        registrationStatus={watchedValues.registrationStatus}
-        forecastDate={watchedValues.forecastDate}
-        arrivalStatus={watchedValues.arrivalStatus}
-      />
-    </div>
+          </div>
+        </form>
+      </Form>
+    </FormWorkspace>
   );
 }

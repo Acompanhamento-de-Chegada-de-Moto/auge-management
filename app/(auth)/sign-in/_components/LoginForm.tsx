@@ -18,9 +18,12 @@ import { Label } from "@/components/ui/label";
 import { authClient } from "@/lib/auth-client";
 import { type LoginInputType, loginSchema } from "@/validators/login-schema";
 
-export default function LoginForm() {
-  const [_emailAndPasswordPending, startEmailAndPasswordTransition] =
-    useTransition();
+export default function LoginForm({
+  callbackURL = "/bdc",
+}: {
+  callbackURL?: "/bdc" | "/check-in";
+}) {
+  const [isPending, startEmailAndPasswordTransition] = useTransition();
 
   const {
     register,
@@ -35,7 +38,7 @@ export default function LoginForm() {
       const result = await authClient.signIn.email({
         email: data.email,
         password: data.password,
-        callbackURL: `${process.env.NEXT_PUBLIC_BETTER_AUTH_URL}/bdc`,
+        callbackURL,
       });
 
       if (result.error) {
@@ -47,13 +50,13 @@ export default function LoginForm() {
   };
 
   return (
-    <Card className="w-full max-w-md border shadow-lg shadow-black/5">
+    <Card className="w-full max-w-md border-base-300 bg-base-100 shadow-none">
       <CardHeader className="pb-4">
-        <CardTitle className="text-center text-xl font-bold">
+        <CardTitle className="text-xl font-semibold tracking-tight">
           Acesse sua conta
         </CardTitle>
-        <CardDescription className="text-center">
-          Entre com suas credenciais para continuar
+        <CardDescription>
+          Entre para acessar sua área de trabalho.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -66,12 +69,19 @@ export default function LoginForm() {
                 {...register("email")}
                 id="email"
                 type="email"
+                autoComplete="email"
                 placeholder="seu@email.com"
-                className="h-12 rounded-xl pl-10"
+                className="h-11 rounded-lg pl-10"
+                aria-invalid={Boolean(errors.email)}
+                aria-describedby={errors.email ? "email-error" : undefined}
               />
             </div>
             {errors.email && (
-              <p className="text-xs text-destructive">
+              <p
+                id="email-error"
+                role="alert"
+                className="text-sm text-destructive"
+              >
                 {errors.email.message}
               </p>
             )}
@@ -79,9 +89,6 @@ export default function LoginForm() {
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="password">Senha</Label>
-              <span className="cursor-default text-xs font-medium text-primary">
-                Esqueceu a senha?
-              </span>
             </div>
             <div className="relative">
               <Lock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -91,20 +98,29 @@ export default function LoginForm() {
                 type="password"
                 placeholder="Sua senha"
                 autoComplete="current-password"
-                className="h-12 rounded-xl pl-10"
+                className="h-11 rounded-lg pl-10"
+                aria-invalid={Boolean(errors.password)}
+                aria-describedby={
+                  errors.password ? "password-error" : undefined
+                }
               />
             </div>
             {errors.password && (
-              <p className="text-xs text-destructive">
+              <p
+                id="password-error"
+                role="alert"
+                className="text-sm text-destructive"
+              >
                 {errors.password.message}
               </p>
             )}
           </div>
           <Button
             type="submit"
-            className="h-12 w-full rounded-xl text-base font-semibold shadow-lg shadow-primary/30"
+            disabled={isPending}
+            className="h-11 w-full text-sm font-medium"
           >
-            Entrar na Plataforma
+            {isPending ? "Entrando…" : "Entrar na plataforma"}
             <ArrowRight className="size-4" />
           </Button>
         </form>

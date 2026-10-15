@@ -1,17 +1,22 @@
 import * as z from "zod";
-import { stripCPF, validateCPF } from "@/lib/cpf";
+import {
+  isLegacyDocument,
+  normalizeDocument,
+  validateDocument,
+} from "@/lib/document";
 
 export const customerSchema = z
   .object({
     chassis: z.string().min(1, "Chassi é obrigatório"),
-    cpf: z
+    document: z
       .string()
-      .min(11, "CPF deve ter no mínimo 11 dígitos")
-      .max(14, "CPF inválido")
-      .refine((val) => validateCPF(val), {
-        message: "CPF inválido",
+      .trim()
+      .min(1, "CPF ou CNPJ é obrigatório")
+      .max(18, "CPF ou CNPJ inválido")
+      .refine((val) => validateDocument(val), {
+        message: "Informe um CPF ou CNPJ válido",
       })
-      .transform((val) => stripCPF(val)),
+      .transform((val) => normalizeDocument(val)),
     customerName: z.string().min(1, "Cliente é obrigatório"),
     sellerName: z.string().min(1, "Vendedor é obrigatório"),
     city: z.string().min(1, "Cidade é obrigatória"),
@@ -53,3 +58,17 @@ export const customerSchema = z
   );
 
 export type CustomerFormData = z.infer<typeof customerSchema>;
+
+export const editCustomerSchema = customerSchema.safeExtend({
+  document: z
+    .string()
+    .trim()
+    .max(45)
+    .refine(
+      (value) => validateDocument(value) || isLegacyDocument(value),
+      "Informe um CPF ou CNPJ válido",
+    )
+    .transform((value) =>
+      isLegacyDocument(value) ? value : normalizeDocument(value),
+    ),
+});

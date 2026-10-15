@@ -6,6 +6,13 @@
 
 ## Visão Geral
 
+**Check-in público:** `/check-in` usa identificação + PIN individual, com sessão
+limitada ao recebimento (independente de Better Auth). ADMINs gerenciam operadores
+em `/squad/check-in`. Consulte `docs/check-in.md` para a arquitetura e instalação.
+`arrivedAt` é o recebimento real; `forecastArrival` continua sendo a previsão.
+Não desfaça uma chegada ao editar/importar uma previsão. Atrasos são calculados
+no servidor pelo dia em `America/Sao_Paulo`; cron externo persiste o resultado.
+
 Sistema de gerenciamento de concessionária de motocicletas. Módulos atuais:
 
 - **BDC** (Business Development Center) — cadastro e acompanhamento de clientes e status de emplacamento de veículos.
@@ -22,7 +29,7 @@ Sistema de gerenciamento de concessionária de motocicletas. Módulos atuais:
 | React | 19.2.4 com React Compiler |
 | Lang | TypeScript 5 (strict) |
 | Styling | Tailwind CSS v4 (`@import "tailwindcss"`) |
-| UI | shadcn/ui — estilo **radix-nova** |
+| UI | daisyUI 5 + Tailwind CSS v4; HTML nativo e APIs do navegador para interações |
 | Forms | react-hook-form + zod + @hookform/resolvers |
 | Auth | better-auth + Prisma adapter |
 | DB | PostgreSQL (local via Docker) |
@@ -41,31 +48,31 @@ Sistema de gerenciamento de concessionária de motocicletas. Módulos atuais:
 app/
   (app)/                    # Rotas autenticadas (protegidas por requireAuth)
     bdc/
-      _components/          # BdcTable, SidebarSummary, SpreadsheetUploadDialog, SectionHeader, CopyText
-      page.tsx              # Server Component shell + <BdcPageClient />
-      actions.ts            # Server Actions: getClients, getBDCFilterOptions, searchChassis, deleteClient, importSpreadsheet
+      _components/          # Tabelas, formulários e diálogos do BDC
+      page.tsx              # Server Component consulta a DAL para renderização inicial
+      _actions/              # Server Actions de mutações; serviços compartilhados com REST
       client/
-        new/                # page.tsx + actions.ts (createClient)
-        [clientId]/edit/    # page.tsx + _components/EditClientForm.tsx + actions.ts (updateClient)
-        [clientId]/delete/  # page.tsx + actions.ts (deleteClient)
+        new/                # page.tsx + formulário; POST /api/v1/bdc/clients
+        [clientId]/edit/    # page.tsx + _components/EditClientForm.tsx
+        [clientId]/delete/  # page.tsx + confirmação
     dashboard/
       _components/          # dashboard-client, dashboard-skeleton
       page.tsx
     inventory/
       _components/          # MotorcycleTable, MotorcycleSpreadsheetUploadDialog
-      page.tsx              # + actions.ts, import-actions.ts
+      page.tsx              # Server Component consulta a DAL
       motorcycle/
-        new/                # page.tsx + _components/CreateMotorcycleForm.tsx + actions.ts
-        [motorcycleId]/edit/    # page.tsx + _components/EditMotorcycleForm.tsx + actions.ts
-        [motorcycleId]/delete/  # page.tsx + actions.ts
+        new/                # page.tsx + _components/CreateMotorcycleForm.tsx
+        [motorcycleId]/edit/    # page.tsx + _components/EditMotorcycleForm.tsx
+        [motorcycleId]/delete/  # page.tsx + confirmação
     settings/
       _components/          # UsersTable, CreateUserForm, SidebarNav, ContactSettingsForm
       cosmetics/_components/    # LogoUploadForm
       system/
-      layout.tsx / page.tsx / actions.ts
+      layout.tsx / page.tsx
     support/
       _components/          # ticket-list, ticket-form, ticket-dialog, ticket-skeleton, tickets-config
-      page.tsx / actions.ts
+      page.tsx
     layout.tsx              # @/(app)/layout — requireAuth, Header/Navbar do shell
   (auth)/                   # Rotas públicas (sem proteção)
     sign-in/                # + _components/LoginForm.tsx
@@ -78,11 +85,12 @@ app/
       unavailable/
   api/
     auth/[...all]/          # Better Auth API routes
-    upload/avatar/
+    upload/avatar/          # Upload administrativo
+    v1/                     # Route Handlers REST internos, com sessão e validação por endpoint
   data/                     # Guards + DAL de rotas
     admin/                  # require-admin, require-manager, admin-get-users, admin-get-tickets
     public/                 # public-get-client-by-cpf, public-get-motorcycle
-    user/                   # require-auth, user-get-motorcycle
+    user/                   # require-auth
   data/require-user.ts      # Guards (ver app/data/*)
   layout.tsx / page.tsx
 
@@ -90,8 +98,8 @@ app/
 # importados por caminho relativo. Só fica em components/ o que é realmente compartilhado.
 
 components/                 # APENAS compartilhados/globais
-  ui/                       # shadcn/ui components (NEVER edit directly)
-  layout/                   # header.tsx, navbar.tsx (shell do app — usados por app/(app)/layout)
+  ui/                       # wrappers compartilhados: classes daisyUI + HTML nativo
+  layout/                   # app-sidebar, app-topbar e composição compartilhada de páginas
   providers/                # query-provider.tsx
   ThemeProvider.tsx         # ThemeColorSync, ModeToggle, CookieConsentBanner (layout raiz / globais)
 
@@ -125,11 +133,11 @@ prisma.config.ts            # Config do Prisma 7 (datasource + migrations.seed)
 
 ## Convenções de Código
 
-### shadcn/ui
-- **Estilo**: `radix-nova` (definido em `components.json`)
-- **Nunca edite** componentes em `components/ui/` diretamente. Se precisar customizar, use `cn()` com overrides ou crie um wrapper.
-- Para adicionar novos componentes: `npx shadcn add <componente>`
-- Componentes existentes: Badge, Breadcrumb, Button, Calendar, Card, Dialog, DropdownMenu, Form, Input, Label, Popover, Select, Switch, Table
+### daisyUI e HTML acessível
+- **Estilo visual**: daisyUI 5 com Tailwind CSS v4 e temas claro/escuro próprios.
+- Componentes compartilhados em `components/ui/` usam classes daisyUI, elementos HTML nativos e APIs do navegador como `<dialog>`.
+- Não instale shadcn nem Radix. Para novos componentes, use classes daisyUI e controles nativos acessíveis.
+- Prefira superfícies discretas, foco visível, contraste suficiente e alvos de toque confortáveis.
 
 ### Tailwind CSS v4
 - Usa sintaxe nova: `@import "tailwindcss"` (não `@tailwind` directives)
@@ -150,25 +158,30 @@ prisma.config.ts            # Config do Prisma 7 (datasource + migrations.seed)
 
 ---
 
-## Arquitetura — Server Actions + DAL
+## Arquitetura — Server Actions + serviços + DAL
 
-O projeto segue a arquitetura recomendada pelo Next.js: **Server Actions** na camada de UI + **DAL** (Data Access Layer) isolada. **Não usa TanStack React Query** — toda troca de dados é via Server Actions + `router.refresh()` / `router.push()`.
+As mutações da interface usam Server Actions co-localizadas em `app/(app)/<módulo>/_actions/`. O pedido de refatoração de 2026-10-10 substitui a arquitetura anterior que exigia REST para todas as interações. Os endpoints REST continuam disponíveis como adaptadores dos mesmos serviços. Consultas iniciadas no cliente (busca de chassi), Better Auth e upload de arquivos usam Route Handlers.
 
 ```
-Página (Server Component shell)
-  ↓ renderiza
-Client Component (app/**/_components/*-page-client.tsx)
-  → lê searchParams (useSearchParams)
-  → chama Server Action via useEffect
-Server Action (app/**/actions.ts)
-  → valida auth (requireAuth/requireUser)
-  → valida input (Zod)
-  ↓ chama
-DAL (lib/data/*.ts)
-  → executa queries Prisma
+Client Component → Server Action → runActionMutation → serviço → DAL → Prisma
+Cliente REST → Route Handler → runApiMutation → mesmo serviço → DAL → Prisma
+Server Component → app/data (guard + consultas) → DAL
 ```
 
-**Regra**: `lib/data/*.ts` nunca faz auth. As Server Actions fazem auth + validação + chamam o DAL.
+- `lib/server/`: adaptadores de autenticação, autorização, rate limit e resultado serializável.
+- `lib/services/`: validação Zod, orquestração das mutações e invalidação de cache. Nunca importar esses módulos no cliente.
+- `lib/data/`: consultas e transações Prisma protegidas com `server-only`; não resolve sessão.
+- Cada Action e Route Handler exige sessão e papel por operação. Respostas a tickets também validam o dono. O proxy e o layout não substituem essas verificações.
+- Server Actions usam a proteção de origem do Next.js. REST mantém validação explícita de mesma origem.
+- Rate limits de Actions e REST compartilham os mesmos buckets PostgreSQL por usuário, método e escopo. Importações mantêm o limite de 3 em 10 minutos.
+- Payloads comuns: 64 KiB; importações: 5 MiB e até 10.000 linhas. O limite global de Actions é 5 MiB, com limites menores por operação.
+- `cacheComponents: true`: filtros e contadores usam `use cache`, `cacheLife` e `cacheTag`. Sessões e registros pessoais não usam cache compartilhado.
+- Actions invalidam tags com `updateTag`; REST usa `revalidateTag(tag, { expire: 0 })`. Serviços também revalidam os caminhos afetados.
+- `headers()`, `cookies()`, parâmetros de URL e consultas sem cache ficam abaixo de `Suspense`. Guards ficam fora de funções persistentes de cache.
+- UI: `Page`/`PageHeader` por composição; `FilterViews` e `ListPagination` compartilhados; containers de listagem controlam URL/transição, tabelas recebem dados e callbacks.
+- Não usa TanStack React Query.
+
+Consulte `docs/architecture.md` para a análise, decisões e limites da refatoração.
 
 ---
 
@@ -257,7 +270,7 @@ model Setting { ... }      // chave-valor para configs do sistema
    - **Não encontrada**: avança Step 2 com chassi preenchido, resto manual.
 2. **Step 2 — Dados do Cliente**: Campos disponíveis:
    - Cliente, Vendedor, Cidade, Modelo, Chassi (readonly)
-   - **Data de Faturamento** (DatePicker shadcn)
+- **Data de Faturamento** (DatePicker compartilhado com estilo daisyUI)
    - **Previsão de Chegada**: DatePicker (opcional)
    - **Status de Emplacamento**: Select (Pendente / Em Emplacamento / Emplacado)
      - Se diferente de "Pendente": aparece DatePicker para data do emplacamento
@@ -282,7 +295,7 @@ Colunas: Cliente | CPF | Vendedor | Cidade | Modelo | Chassi | Data Faturamento 
 
 ### Importação de Planilha (`/bdc` — botão "Importar Planilha")
 - **Componente**: `components/bdc/spreadsheet-upload-dialog.tsx`
-- **Server Action**: `importSpreadsheetAction(formData: FormData)` em `app/(app)/bdc/actions.ts`
+- **API Route Handler**: `POST /api/v1/bdc/import` recebe as linhas já parseadas no client-side
 - **Formatos aceitos**: `.xlsx`, `.xls`, `.ods`, `.csv`
 - **Colunas da planilha**:
   | Coluna | Mapeamento |
@@ -407,7 +420,7 @@ arrivalDate: Date (optional)
 
 ### `MotorcycleForm` / `MotorcycleEditForm`
 - Formulários de cadastro/edição de motocicleta
-- Campos: Chassi, Modelo, Previsão de Chegada (DatePicker shadcn)
+- Campos: Chassi, Modelo, Previsão de Chegada (DatePicker compartilhado com estilo daisyUI)
 - Edit form permite alterar o chassi (com validação de duplicata)
 
 ---
@@ -484,9 +497,9 @@ pnpm exec prisma generate
 # Dev server
 pnpm dev          # localhost:3000
 
-# Build (CI = skipa prisma generate + migrate deploy)
+# Build de deploy (migrations pendentes + generate + Next.js)
 pnpm build
-pnpm build:ci     # alternativa que contorna EPERM no Windows/WSL
+pnpm build:ci     # generate + Next.js; valida sem aplicar migrations
 
 # Lint
 pnpm lint         # biome check
@@ -517,19 +530,19 @@ O seed (`prisma/seed.ts`) reusa `createUser` de `lib/data/user.ts` (via `auth.ap
 
 ## Notas para Agentes
 
-1. **Sempre use shadcn/ui** para novos componentes de UI. Não crie do zero.
+1. **Use daisyUI** para os estilos de novos componentes de UI e prefira elementos HTML nativos para interações acessíveis.
 2. **Sempre valide formulários com Zod** + react-hook-form. Não use estado local descontrolado.
 3. **Datas**: use `date-fns` para formatação e `dayjs` para cálculos/comparações.
-4. **DAL**: nunca coloque lógica de auth em `lib/data/*.ts`. Auth fica nas Server Actions.
+4. **DAL**: nunca coloque lógica de auth em `lib/data/*.ts`. Auth e autorização ficam nas Actions, nos Route Handlers e nas fachadas de consulta de `app/data/`; as páginas autenticadas também passam pelos guards server-side.
 5. **Modo edição**: nunca adicione stepper. O formulário deve ser direto.
 6. **Sidebar**: em modo edição, sempre visível. Em criação, aparece apenas no Step 2.
 7. **Não commite** sem pedir confirmação do usuário (exceto se ele pedir explicitamente).
-8. **Teste o build** (`pnpm build`) após alterações significativas.
+8. **Teste o build** (`pnpm build:ci`) após alterações significativas. `pnpm build` é o fluxo de deploy e aplica migrations no banco configurado; não o execute apenas para validar alterações locais.
 9. **Formate com Biome** antes de commits.
 10. **Chassi editável**: no Estoque, o chassi pode ser alterado na edição. Sempre verificar duplicata no banco.
 11. **Importação de planilha**: usar `xlsx` (SheetJS) para parse no client-side. Colunas obrigatórias: CLIENTE, CHASSI, VENDEDOR. Campo "MOTO CHEGOU" = "SIM" → `forecastDate = hoje`.
-12. **TanStack React Query não é usado** — nunca importe `@tanstack/react-query`. Toda troca de dados é via Server Actions + `router.refresh()` / `router.push()`.
-13. **Páginas de listagem (BDC/Estoque)**: Server Component shell (para metadata) renderiza Client Component em `_components/`. O Client Component lê `useSearchParams`, faz fetch via Server Action em `useEffect`, e gerencia navegação com `useTransition` + `router.push()` com URL params. Filtros e página são controlados por URL, não por estado local.
+12. **TanStack React Query não é usado** — nunca importe `@tanstack/react-query`. Mutações da interface usam Server Actions; consultas interativas e uploads usam Route Handlers. Preserve validação, permissões e rate limits em cada entrada.
+13. **Páginas de listagem (BDC/Estoque)**: Server Components leem os parâmetros de URL e consultam a DAL diretamente. Filtros e página são controlados por URL, não por estado local.
 14. **Tabelas (BDCTable/MotorcycleTable)**: puramente apresentação. Props: dados, opções de filtro, filtros ativos, totalRows, page, totalPages, e callbacks (`onFilterChange`, `onPageChange`, etc.). Sem fetch, sem `useMemo` para filtro, sem estado de paginação.
 15. **Client indexes**: `Client` tem `@@index([sellerName])`, `@@index([city])`, `@@index([createdAt])` para performance dos filtros server-side.
 16. **EM CIMA DO ARQUIVO ATUAL 2025**: o schema Prisma tem `deliveryForecast` em `Client` e `forecastDate` em `Motorcycle`. Ambos são usados. `forecastDate` é a "previsão de chegada" da moto. `deliveryForecast` no Client é um campo legado não utilizado pelo frontend.
@@ -539,7 +552,7 @@ O seed (`prisma/seed.ts`) reusa `createUser` de `lib/data/user.ts` (via `auth.ap
 
 ## Roadmap / Tarefas Pendentes (conhecidas)
 
-- [x] Conectar formulário BDC ao backend (Prisma model + Server Actions)
+- [x] Conectar formulário BDC ao backend (Prisma model + Route Handlers)
 - [x] Adicionar tabela/modelo de Estoque
 - [x] Implementar busca real de chassi no banco
 - [x] Importação de planilha Excel no BDC
@@ -547,6 +560,8 @@ O seed (`prisma/seed.ts`) reusa `createUser` de `lib/data/user.ts` (via `auth.ap
 - [x] Substituir TanStack React Query por Server Components + router.refresh()
 - [x] Server-side pagination com URL params (BDC 20/página, Estoque 50/página)
 - [x] Filtros server-side com índices no banco
+- [x] Migrar operações interativas para Route Handlers `/api/v1` com autenticação por endpoint
+- [x] Rate limiting compartilhado em PostgreSQL para Better Auth e Route Handlers
 - [ ] Upload de documentos no formulário
 - [ ] Toast/notificação após salvar (em vez de redirect silencioso)
 - [ ] Responsividade mobile da sidebar (drawer)
@@ -554,4 +569,4 @@ O seed (`prisma/seed.ts`) reusa `createUser` de `lib/data/user.ts` (via `auth.ap
 
 ---
 
-*Última atualização: 2026-06-12 — implementado server-side pagination com URL params (useSearchParams + useTransition), BDCTable/MotorcycleTable viram presentation-only, removido TanStack Query e hooks de paginação client-side, adicionados índices no Client.*
+*Última atualização: 2026-10-10 — Server Actions, serviços compartilhados, Cache Components e UI por composição. Histórico: 2026-10-09 — operações interativas migradas para Route Handlers `/api/v1`; proxy atua como redirecionamento antecipado, layouts e endpoints verificam sessão; configurados cabeçalhos básicos de segurança e rate limits em PostgreSQL.*

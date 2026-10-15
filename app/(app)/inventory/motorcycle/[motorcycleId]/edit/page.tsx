@@ -2,6 +2,9 @@ import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { z } from "zod";
+import { requireAuth } from "@/app/data/user/require-auth";
+import { Page, PageHeader } from "@/components/layout/Page";
 import { buttonVariants } from "@/components/ui/button";
 import { getMotorcycleByIdWithClient } from "@/lib/data/motorcycle";
 import { EditMotorcycleForm } from "./_components/EditMotorcycleForm";
@@ -15,9 +18,10 @@ export default async function EditarMotocicletaPage({
 }: {
   params: Promise<{ motorcycleId: string }>;
 }) {
+  await requireAuth();
   const { motorcycleId } = await params;
 
-  if (!motorcycleId) {
+  if (!z.string().uuid().safeParse(motorcycleId).success) {
     notFound();
   }
 
@@ -28,21 +32,24 @@ export default async function EditarMotocicletaPage({
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-        <h1 className="text-2xl font-bold">Editar Motocicleta</h1>
-        <Link
-          title="voltar"
-          href="/inventory"
-          className={buttonVariants({
-            variant: "secondary",
-          })}
-        >
-          <ArrowLeft className="size-4 mr-2" /> Voltar
-        </Link>
-      </div>
+    <Page>
+      <PageHeader
+        title="Editar motocicleta"
+        description={`${motorcycle.model} · ${motorcycle.chassi}`}
+        actions={
+          <Link
+            href="/inventory"
+            className={buttonVariants({ variant: "outline" })}
+          >
+            <ArrowLeft className="mr-2 size-4" />
+            Voltar ao estoque
+          </Link>
+        }
+      />
 
-      <EditMotorcycleForm motorcycle={motorcycle} />
-    </div>
+      <div className="mx-auto w-full max-w-4xl">
+        <EditMotorcycleForm motorcycle={motorcycle} />
+      </div>
+    </Page>
   );
 }

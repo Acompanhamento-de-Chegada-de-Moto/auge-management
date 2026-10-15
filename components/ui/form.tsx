@@ -1,6 +1,5 @@
 "use client";
 
-import { type Label as LabelPrimitive, Slot } from "radix-ui";
 import * as React from "react";
 import {
   Controller,
@@ -12,6 +11,7 @@ import {
 } from "react-hook-form";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { Slot } from "@/components/ui/slot";
 
 const Form = FormProvider;
 
@@ -85,8 +85,8 @@ const FormItem = React.forwardRef<
 FormItem.displayName = "FormItem";
 
 const FormLabel = React.forwardRef<
-  React.ElementRef<typeof LabelPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root>
+  HTMLLabelElement,
+  React.ComponentPropsWithoutRef<"label">
 >(({ className, ...props }, ref) => {
   const { error, formItemId } = useFormField();
 
@@ -101,16 +101,15 @@ const FormLabel = React.forwardRef<
 });
 FormLabel.displayName = "FormLabel";
 
-const FormControl = React.forwardRef<
-  React.ElementRef<typeof Slot.Root>,
-  React.ComponentPropsWithoutRef<typeof Slot.Root>
->(({ ...props }, ref) => {
+function FormControl({
+  children,
+  ...props
+}: React.ComponentProps<typeof Slot.Root>) {
   const { error, formItemId, formDescriptionId, formMessageId } =
     useFormField();
 
   return (
     <Slot.Root
-      ref={ref}
       id={formItemId}
       aria-describedby={
         !error
@@ -119,10 +118,11 @@ const FormControl = React.forwardRef<
       }
       aria-invalid={!!error}
       {...props}
-    />
+    >
+      {children}
+    </Slot.Root>
   );
-});
-FormControl.displayName = "FormControl";
+}
 
 const FormDescription = React.forwardRef<
   HTMLParagraphElement,

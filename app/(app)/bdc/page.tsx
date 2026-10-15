@@ -2,21 +2,13 @@ import { PlusIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
-
-import { BDCTable } from "@/app/(app)/bdc/_components/BdcTable";
 import { SpreadsheetUploadDialog } from "@/app/(app)/bdc/_components/SpreadsheetUploadDialog";
-import { getClientsPaginatedAction } from "@/app/(app)/bdc/actions";
-
+import { getBdcListing } from "@/app/data/user/get-listings";
+import { Page, PageHeader } from "@/components/layout/Page";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { BdcPageClient } from "./_components/BdcPageClient";
+import { BDCPageSkeleton } from "./_components/bdc-page-skeleton";
+import { mapClientsToRows } from "./_lib/client-mapper";
 
 export const metadata: Metadata = {
   title: "BDC",
@@ -33,60 +25,64 @@ interface BDCPageProps {
   }>;
 }
 
-export default async function BDCPage({ searchParams }: BDCPageProps) {
-  const params = await searchParams;
-
+export default function BDCPage({ searchParams }: BDCPageProps) {
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-        <p className="text-muted-foreground block md:hidden">Acompanhamento de Clientes.</p>
+    <Page>
+      <PageHeader
+        title="Clientes · BDC"
+        eyebrow="Operação"
+        description="Gerencie atendimentos, acompanhe chegadas e atualize o emplacamento."
+        actions={
+          <>
+            <SpreadsheetUploadDialog />
+            <Button asChild>
+              <Link href="/bdc/client/new">
+                <PlusIcon className="mr-2 size-4" />
+                Adicionar cliente
+              </Link>
+            </Button>
+          </>
+        }
+      />
 
-        <div className="flex items-center gap-2 flex-wrap">
-          <SpreadsheetUploadDialog />
-
-          <Button asChild>
-            <Link href="/bdc/client/new">
-              <PlusIcon className="mr-2 size-4" />
-              Adicionar Cliente
-            </Link>
-          </Button>
-        </div>
-      </div>
-
-      <Suspense fallback={<BDCPageSkeletonLayout />}>
-        <RenderClients params={params} />
+      <Suspense fallback={<BDCPageSkeleton />}>
+        <RenderClients searchParams={searchParams} />
       </Suspense>
-    </div>
+    </Page>
   );
 }
 
-async function RenderClients({
-  params,
-}: {
-  params: {
-    page?: string;
-    sellerName?: string;
-    city?: string;
-    model?: string;
-    search?: string;
-    arrived?: string;
-  };
-}) {
-  const result = await getClientsPaginatedAction({
-    page: Number(params.page) || 1,
+async function RenderClients({ searchParams }: BDCPageProps) {
+  const params = await searchParams;
+  const page = Math.max(1, Math.floor(Number(params.page) || 1));
+  const { paginated, filterOptions, statusCounts } = await getBdcListing({
+    page,
+    pageSize: 10,
     sellerName: params.sellerName,
     city: params.city,
     model: params.model,
     search: params.search,
-    arrived: typeof params.arrived === "string" ? (params.arrived as "true" | "false") : undefined,
+    arrived:
+      params.arrived === "true" || params.arrived === "false"
+        ? params.arrived
+        : undefined,
   });
 
+  const rows = mapClientsToRows(paginated.clients);
+  const filters = {
+    sellers: filterOptions.sellers,
+    cities: filterOptions.cities,
+    models: filterOptions.models,
+  };
+
   return (
-    <BDCTable
-      rows={result.rows}
-      totalPages={result.totalPages}
-      page={result.page}
-      filterOptions={result.filterOptions}
+    <BdcPageClient
+      rows={rows}
+      totalClients={paginated.total}
+      totalPages={paginated.totalPages}
+      page={page}
+      statusCounts={statusCounts}
+      filterOptions={filters}
       activeFilters={{
         sellerName: params.sellerName ?? "",
         city: params.city ?? "",
@@ -95,82 +91,5 @@ async function RenderClients({
         arrived: params.arrived ?? "",
       }}
     />
-  );
-}
-
-function BDCPageSkeletonLayout() {
-  return (
-    <div className="w-full">
-      {/* Filtros */}
-      <div className="mb-4 flex flex-wrap items-center gap-2">
-        <Skeleton className="h-10 w-full sm:w-[180px]" />
-        <Skeleton className="h-10 w-full sm:w-[180px]" />
-        <Skeleton className="h-10 w-full sm:w-[180px]" />
-        <Skeleton className="h-10 w-[120px]" />
-      </div>
-
-      {/* Tabela */}
-      <div className="rounded-sm border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Cliente</TableHead>
-              <TableHead>CPF</TableHead>
-              <TableHead>Vendedor</TableHead>
-              <TableHead className="hidden md:table-cell">Cidade</TableHead>
-              <TableHead>Modelo</TableHead>
-              <TableHead>Chassi</TableHead>
-              <TableHead className="hidden md:table-cell">
-                Data Faturamento
-              </TableHead>
-              <TableHead>Previsão Chegada</TableHead>
-              <TableHead>Situação</TableHead>
-            </TableRow>
-          </TableHeader>
-
-          <TableBody>
-            {Array.from({ length: 10 }).map((_, index) => (
-              <TableRow key={index}>
-                <TableCell>
-                  <Skeleton className="h-4 w-44" />
-                </TableCell>
-
-                <TableCell>
-                  <Skeleton className="h-4 w-32" />
-                </TableCell>
-
-                <TableCell>
-                  <Skeleton className="h-4 w-36" />
-                </TableCell>
-
-                <TableCell className="hidden md:table-cell">
-                  <Skeleton className="h-4 w-24" />
-                </TableCell>
-
-                <TableCell>
-                  <Skeleton className="h-4 w-28" />
-                </TableCell>
-
-                <TableCell>
-                  <Skeleton className="h-4 w-40" />
-                </TableCell>
-
-                <TableCell className="hidden md:table-cell">
-                  <Skeleton className="h-4 w-24" />
-                </TableCell>
-
-                <TableCell>
-                  <Skeleton className="h-4 w-24" />
-                </TableCell>
-
-                <TableCell>
-                  <Skeleton className="h-6 w-24 rounded-full" />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-    </div>
   );
 }

@@ -5,10 +5,10 @@ import {
   ChartArea,
   ChartNoAxesColumnIncreasing,
   ClipboardList,
-  Users,
   type LucideIcon,
+  Users,
 } from "lucide-react";
-import type { DashboardSummary } from "@/lib/data/dashboard";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -25,6 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import type { DashboardSummary } from "@/lib/data/dashboard";
 
 interface KpiCardProps {
   title: string;
@@ -34,15 +35,19 @@ interface KpiCardProps {
 
 function KpiCard({ title, value, icon: Icon }: KpiCardProps) {
   return (
-    <Card>
+    <Card className="overflow-hidden border-border/60 shadow-none transition-colors hover:bg-muted/20">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">
           {title}
         </CardTitle>
-        <Icon className="size-4 text-muted-foreground" />
+        <span className="flex size-9 items-center justify-center rounded-lg bg-base-200 text-muted-foreground">
+          <Icon className="size-4" aria-hidden="true" />
+        </span>
       </CardHeader>
       <CardContent>
-        <p className="text-2xl font-bold">{value}</p>
+        <p className="text-3xl font-semibold tracking-tight tabular-nums">
+          {value.toLocaleString("pt-BR")}
+        </p>
       </CardContent>
     </Card>
   );
@@ -57,7 +62,7 @@ interface RankTableProps {
 
 function RankTable({ title, description, rows, emptyMessage }: RankTableProps) {
   return (
-    <Card>
+    <Card className="border-border/60 shadow-none">
       <CardHeader>
         <CardTitle className="text-base">{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
@@ -108,12 +113,41 @@ export function DashboardClient({ data }: DashboardClientProps) {
 
   return (
     <div className="space-y-6">
+      <section
+        aria-label="Próximas ações"
+        className="grid gap-3 sm:grid-cols-2"
+      >
+        <Link
+          href="/inventory?status=delayed"
+          className="group flex items-center justify-between gap-4 rounded-xl border border-base-300 bg-base-100 p-5 hover:border-primary/40"
+        >
+          <div>
+            <h2 className="text-sm font-semibold">Revisar atrasos</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Confira as unidades com atraso confirmado.
+            </p>
+          </div>
+          <span className="badge badge-error badge-soft shrink-0 tabular-nums">
+            {data.arrivalStatus.atrasada.toLocaleString("pt-BR")}
+          </span>
+        </Link>
+        <Link
+          href="/bdc?arrived=true"
+          className="group flex items-center justify-between gap-4 rounded-xl border border-base-300 bg-base-100 p-5 hover:border-primary/40"
+        >
+          <div>
+            <h2 className="text-sm font-semibold">Acompanhar entregas</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Abra os clientes com chegada confirmada.
+            </p>
+          </div>
+          <span className="text-xs font-medium text-primary">
+            Ver clientes →
+          </span>
+        </Link>
+      </section>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiCard
-          title="Clientes"
-          value={data.totalClients}
-          icon={Users}
-        />
+        <KpiCard title="Clientes" value={data.totalClients} icon={Users} />
         <KpiCard
           title="Motocicletas"
           value={data.totalMotorcycles}
@@ -234,37 +268,23 @@ export function DashboardClient({ data }: DashboardClientProps) {
           <CardHeader className="flex-row items-center justify-between gap-4 space-y-0">
             <div>
               <CardTitle className="text-base">Resumo Geral</CardTitle>
-              <CardDescription>
-                Panorama consolidado do sistema
-              </CardDescription>
+              <CardDescription>Panorama consolidado do sistema</CardDescription>
             </div>
             <ChartNoAxesColumnIncreasing className="size-5 text-muted-foreground" />
           </CardHeader>
           <CardContent className="space-y-3">
-            <SummaryRow
-              label="Total de Clientes"
-              value={data.totalClients}
-            />
+            <SummaryRow label="Total de Clientes" value={data.totalClients} />
             <SummaryRow
               label="Total de Motocicletas"
               value={data.totalMotorcycles}
             />
-            <SummaryRow
-              label="Chegadas"
-              value={data.arrivalStatus.chegou}
-            />
+            <SummaryRow label="Chegadas" value={data.arrivalStatus.chegou} />
             <SummaryRow
               label="Em Trânsito"
               value={data.arrivalStatus.emTransito}
             />
-            <SummaryRow
-              label="Atrasadas"
-              value={data.arrivalStatus.atrasada}
-            />
-            <SummaryRow
-              label="Clientes (30 dias)"
-              value={data.recentClients}
-            />
+            <SummaryRow label="Atrasadas" value={data.arrivalStatus.atrasada} />
+            <SummaryRow label="Clientes (30 dias)" value={data.recentClients} />
             <SummaryRow
               label="Motos cadastradas (30 dias)"
               value={data.recentMotorcycles}
@@ -301,19 +321,19 @@ function StatusBar({
         <div
           className={`h-full rounded-full transition-all ${color}`}
           style={{ width: `${percentage}%` }}
+          role="progressbar"
+          aria-label={label}
+          aria-valuemin={0}
+          aria-valuemax={total}
+          aria-valuenow={value}
+          aria-valuetext={`${value} de ${total} (${percentage}%)`}
         />
       </div>
     </div>
   );
 }
 
-function SummaryRow({
-  label,
-  value,
-}: {
-  label: string;
-  value: number;
-}) {
+function SummaryRow({ label, value }: { label: string; value: number }) {
   return (
     <div className="flex items-center justify-between">
       <span className="text-sm text-muted-foreground">{label}</span>

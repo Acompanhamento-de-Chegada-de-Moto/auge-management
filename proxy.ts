@@ -4,9 +4,12 @@ import { type NextRequest, NextResponse } from "next/server";
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // The proxy only provides an early navigation redirect. API handlers must
+  // always resolve the Better Auth session and authorize the operation.
   if (
     pathname === "/" ||
     pathname === "/sign-in" ||
+    pathname === "/check-in" ||
     pathname.startsWith("/api/") ||
     pathname.startsWith("/tracking")
   ) {

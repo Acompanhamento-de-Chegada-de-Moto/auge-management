@@ -1,31 +1,9 @@
-"use server";
 import "server-only";
 
-import { prisma } from "@/lib/db";
+import { getPublicMotorcycleById } from "@/lib/data/motorcycle";
 
 export async function publicGetMotorcycleById(id: string) {
-  const data = await prisma.motorcycle.findFirst({
-    where: {
-      id,
-    },
-    select: {
-      id: true,
-      chassi: true,
-      clientId: true,
-      forecastArrival: true,
-      forecastArrivalStatus: true,
-      model: true,
-      registrationStatus: true,
-      client: true,
-      createdAt: true,
-    },
-
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
-
-  return data;
+  return getPublicMotorcycleById(id);
 }
 
 export type PublicGetMotorcycleByIdType = Awaited<

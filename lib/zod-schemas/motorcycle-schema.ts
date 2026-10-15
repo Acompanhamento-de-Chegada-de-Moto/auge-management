@@ -4,13 +4,13 @@ export const ArrivalStatusEnum = z.nativeEnum({
   DELAYED: "DELAYED",
   ARRIVED: "ARRIVED",
   NO_INFORMATION: "NO_INFORMATION",
-});
+} as const);
 
 export const RegistrationStatusEnum = z.nativeEnum({
   NO_PLATE: "NO_PLATE",
   PLATING: "PLATING",
   PLATED: "PLATED",
-});
+} as const);
 
 export const createMotorcycleSchema = z.object({
   chassi: z

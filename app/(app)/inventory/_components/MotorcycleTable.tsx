@@ -1,20 +1,16 @@
-"use client";
+﻿"use client";
 
-import {
-  CheckIcon,
-  ChevronLeft,
-  ChevronRight,
-  CopyIcon,
-  PencilIcon,
-  SearchIcon,
-  Trash2Icon,
-  XIcon,
-} from "lucide-react";
+import { PencilIcon, SearchIcon, XIcon } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useState, useTransition } from "react";
+import { deleteMotorcycleAction } from "@/app/(app)/inventory/_actions/motorcycles";
+import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { CopyValueButton } from "@/components/ui/copy-value-button";
+import { ActiveFilters, DataWorkspace } from "@/components/ui/data-workspace";
+import { EmptyState } from "@/components/ui/empty-state";
+import { FilterViews } from "@/components/ui/filter-views";
 import { Input } from "@/components/ui/input";
+import { ListPagination } from "@/components/ui/list-pagination";
 import {
   Select,
   SelectContent,
@@ -41,418 +37,310 @@ interface MotorcycleRow {
   forecastArrivalStatus: string | null;
 }
 
-interface MotorcycleTableProps {
+export interface MotorcycleTableProps {
   motorcycles: MotorcycleRow[];
+  total: number;
   totalPages: number;
   page: number;
-  filterOptions: {
-    models: string[];
+  statusCounts: {
+    total: number;
+    inTransit: number;
+    arrived: number;
+    delayed: number;
   };
+  filterOptions: { models: string[] };
   activeFilters: {
     model: string;
     status: string;
     chassis: string;
-    arrived: string;
   };
+}
+
+const statusViews = [
+  { label: "Todas", value: "all", countKey: "total" },
+  { label: "Em trânsito", value: "in-transit", countKey: "inTransit" },
+  { label: "Chegou", value: "arrived", countKey: "arrived" },
+  { label: "Atrasadas", value: "delayed", countKey: "delayed" },
+] as const;
+
+interface MotorcycleTableViewProps extends MotorcycleTableProps {
+  isPending: boolean;
+  chassisInput: string;
+  onChassisInputChange: (value: string) => void;
+  onParamsChange: (updates: Record<string, string | null>) => void;
+  onPageChange: (page: number) => void;
+  onClearFilters: () => void;
 }
 
 export default function MotorcycleTable({
   motorcycles,
+  total,
   totalPages,
   page,
+  statusCounts,
   filterOptions,
   activeFilters,
-}: MotorcycleTableProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
+  isPending,
+  chassisInput,
+  onChassisInputChange,
+  onParamsChange,
+  onPageChange,
+  onClearFilters,
+}: MotorcycleTableViewProps) {
+  function renderChassis(motorcycle: MotorcycleRow) {
+    return <CopyValueButton value={motorcycle.chassi} label="Chassi" />;
+  }
 
-  const [isPending, startTransition] = useTransition();
-  const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [chassisInput, setChassisInput] = useState(activeFilters.chassis);
-
-  const handleCopy = (text: string, id: string) => {
-    navigator.clipboard.writeText(text).then(() => {
-      setCopiedId(id);
-      setTimeout(() => setCopiedId(null), 2000);
-    });
-  };
-
-  const updateFilter = (key: "model" | "status" | "arrived", value: string) => {
-    const params = new URLSearchParams(searchParams);
-
-    if (!value || value === "all") {
-      params.delete(key);
-    } else {
-      params.set(key, value);
-    }
-    params.delete("page");
-
-    startTransition(() => {
-      router.replace(`${pathname}?${params.toString()}`);
-    });
-  };
-
-  const updateChassisSearch = (value: string) => {
-    const params = new URLSearchParams(searchParams);
-
-    if (!value) {
-      params.delete("chassis");
-    } else {
-      params.set("chassis", value);
-    }
-    params.delete("page");
-
-    startTransition(() => {
-      router.replace(`${pathname}?${params.toString()}`);
-    });
-  };
-
-  const clearFilters = () => {
-    setChassisInput("");
-    startTransition(() => {
-      router.replace(pathname);
-    });
-  };
-
-  const handlePageChange = (newPage: number) => {
-    const params = new URLSearchParams(searchParams);
-    params.set("page", String(newPage));
-    startTransition(() => {
-      router.replace(`${pathname}?${params.toString()}`);
-    });
-  };
+  function renderActions(motorcycle: MotorcycleRow) {
+    return (
+      <div className="flex items-center justify-end gap-1">
+        <Link
+          href={`/inventory/motorcycle/${motorcycle.id}/edit`}
+          aria-label={`Editar ${motorcycle.model}`}
+          className={buttonVariants({
+            variant: "outline",
+            size: "sm",
+            className: "min-h-10",
+          })}
+        >
+          <PencilIcon className="mr-2 size-4" />
+          <span className="hidden lg:inline">Editar</span>
+        </Link>
+        <ConfirmDeleteDialog
+          action={() => deleteMotorcycleAction(motorcycle.id)}
+          itemType="Motocicleta"
+          itemName={`${motorcycle.model} · ${motorcycle.chassi}`}
+          description="A exclusão é permanente e remove esta unidade do estoque."
+          triggerLabel={`Excluir ${motorcycle.model}, chassi ${motorcycle.chassi}`}
+        />
+      </div>
+    );
+  }
 
   return (
-    <div className="w-full">
-      <div className="mb-4 flex flex-wrap items-center gap-2">
-        <Select
-          value={activeFilters.model || "all"}
-          onValueChange={(value) => updateFilter("model", value)}
-        >
-          <SelectTrigger className="w-full sm:w-[180px]">
-            <SelectValue placeholder="Modelo" />
-          </SelectTrigger>
+    <section aria-label="Motocicletas e filtros" className="w-full space-y-4">
+      <FilterViews
+        label="Visualizações do estoque"
+        value={activeFilters.status || "all"}
+        isPending={isPending}
+        onChange={(value) => onParamsChange({ status: value, arrived: null })}
+        views={statusViews.map((view) => ({
+          ...view,
+          count: statusCounts[view.countKey],
+        }))}
+      />
 
-          <SelectContent>
-            <SelectItem value="all">Todos os modelos</SelectItem>
-
-            {filterOptions.models.map((model) => (
-              <SelectItem key={model} value={model}>
-                {model}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select
-          value={activeFilters.status || "all"}
-          onValueChange={(value) => updateFilter("status", value)}
-        >
-          <SelectTrigger className="w-full sm:w-[180px]">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-
-          <SelectContent>
-            <SelectItem value="all">Todos os status</SelectItem>
-            <SelectItem value="Em Trânsito">Em Trânsito</SelectItem>
-            <SelectItem value="Chegou">Chegou</SelectItem>
-            <SelectItem value="Atrasada">Atrasada</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Select
-          value={activeFilters.arrived || "all"}
-          onValueChange={(value) => updateFilter("arrived", value)}
-        >
-          <SelectTrigger className="w-full sm:w-[180px]">
-            <SelectValue placeholder="Chegada" />
-          </SelectTrigger>
-
-          <SelectContent>
-            <SelectItem value="all">Todas</SelectItem>
-            <SelectItem value="true">Chegou</SelectItem>
-            <SelectItem value="false">Não Chegou</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <div className="relative w-full sm:w-[200px]">
-          <button
-            type="button"
-            onClick={() => updateChassisSearch(chassisInput)}
-            className="absolute left-2 top-1/2 -translate-y-1/2"
-          >
-            <SearchIcon className="size-4 text-muted-foreground hover:text-foreground" />
-          </button>
-          <Input
-            placeholder="Buscar chassi"
-            value={chassisInput}
-            onChange={(e) => setChassisInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                updateChassisSearch(chassisInput);
-              }
-            }}
-            className="pl-8 pr-8"
-            disabled={isPending}
-          />
-          {chassisInput && (
-            <button
-              type="button"
-              onClick={() => {
-                setChassisInput("");
-                updateChassisSearch("");
-              }}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+      <DataWorkspace
+        title="Unidades no estoque"
+        description="Localize a motocicleta pelo chassi ou filtre pelo modelo."
+        total={total}
+        unit="motocicletas"
+        busy={isPending}
+      >
+        <div className="space-y-3 border-b border-base-300 p-4 sm:px-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="relative w-full sm:max-w-sm">
+              <SearchIcon className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                aria-label="Buscar motocicleta pelo chassi"
+                placeholder="Buscar pelo chassi"
+                value={chassisInput}
+                onChange={(event) => onChassisInputChange(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter")
+                    onParamsChange({ chassis: chassisInput.trim() });
+                }}
+                className="pl-9 pr-9"
+                disabled={isPending}
+              />
+              {chassisInput && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onChassisInputChange("");
+                    onParamsChange({ chassis: null });
+                  }}
+                  aria-label="Limpar busca"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <XIcon className="size-4" />
+                </button>
+              )}
+            </div>
+            <Select
+              value={activeFilters.model || "all"}
+              onValueChange={(value) => onParamsChange({ model: value })}
+              disabled={isPending}
             >
-              <XIcon className="size-4" />
-            </button>
-          )}
+              <SelectTrigger
+                aria-label="Filtrar por modelo"
+                className="min-h-11 w-full sm:w-56"
+              >
+                <SelectValue placeholder="Todos os modelos" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os modelos</SelectItem>
+                {filterOptions.models.map((model) => (
+                  <SelectItem key={model} value={model}>
+                    {model}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              variant="outline"
+              onClick={() => onParamsChange({ chassis: chassisInput.trim() })}
+              disabled={isPending}
+            >
+              Buscar
+            </Button>
+            {(activeFilters.model ||
+              activeFilters.status ||
+              activeFilters.chassis) && (
+              <Button
+                variant="ghost"
+                onClick={onClearFilters}
+                disabled={isPending}
+              >
+                Limpar filtros
+              </Button>
+            )}
+          </div>
+
+          <ActiveFilters
+            disabled={isPending}
+            filters={[
+              { key: "model", label: "Modelo", value: activeFilters.model },
+              { key: "chassis", label: "Chassi", value: activeFilters.chassis },
+            ]}
+            onRemove={(key) => {
+              if (key === "chassis") onChassisInputChange("");
+              onParamsChange({ [key]: null });
+            }}
+          />
         </div>
 
-        <Button variant="outline" onClick={clearFilters} disabled={isPending}>
-          Limpar filtros
-        </Button>
-      </div>
-
-      {motorcycles.length === 0 ? (
-        <div className="rounded-sm border py-8 text-center text-muted-foreground">
-          Nenhuma motocicleta encontrada.
-        </div>
-      ) : (
-        <div
-          className={
-            isPending ? "pointer-events-none opacity-60 transition-opacity" : ""
-          }
-        >
-          {/* MOBILE: cards (abaixo de md) */}
-          <div className="space-y-3 md:hidden">
-            {motorcycles.map((motorcycle) => {
-              const status = getArrivalStatus(
-                motorcycle.forecastArrival,
-                motorcycle.forecastArrivalStatus,
-              );
-              return (
-                <div key={motorcycle.id} className="rounded-lg border p-4">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <p className="font-medium">{motorcycle.model}</p>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleCopy(motorcycle.chassi, motorcycle.id)
-                        }
-                        aria-label={`Copiar chassi ${motorcycle.chassi}`}
-                        className="group mt-1 inline-flex items-center gap-1.5 font-mono text-xs text-muted-foreground"
+        {motorcycles.length === 0 ? (
+          <EmptyState
+            title="Nenhuma motocicleta nesta visualização"
+            description="Revise os filtros para localizar uma unidade. Se o estoque estiver vazio, cadastre a primeira motocicleta."
+            action={
+              activeFilters.model ||
+              activeFilters.status ||
+              activeFilters.chassis ? (
+                <Button variant="outline" onClick={onClearFilters}>
+                  Limpar filtros
+                </Button>
+              ) : (
+                <Button asChild>
+                  <Link href="/inventory/motorcycle/new">
+                    Adicionar motocicleta
+                  </Link>
+                </Button>
+              )
+            }
+          />
+        ) : (
+          <div
+            aria-busy={isPending}
+            className={
+              isPending
+                ? "pointer-events-none opacity-80 transition-opacity"
+                : ""
+            }
+          >
+            <div className="space-y-3 p-3 md:hidden">
+              {motorcycles.map((motorcycle) => {
+                const status = getArrivalStatus(
+                  motorcycle.forecastArrival,
+                  motorcycle.forecastArrivalStatus,
+                );
+                return (
+                  <article
+                    key={motorcycle.id}
+                    className="rounded-lg border border-base-300/80 bg-base-100 p-4"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h3 className="truncate font-medium">
+                          {motorcycle.model}
+                        </h3>
+                        {renderChassis(motorcycle)}
+                      </div>
+                      {renderActions(motorcycle)}
+                    </div>
+                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t pt-3">
+                      <span className="text-sm text-muted-foreground">
+                        Previsão:{" "}
+                        {formatDateBR(motorcycle.forecastArrival) ?? "Sem data"}
+                      </span>
+                      <span
+                        className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${status.color}`}
                       >
-                        {copiedId === motorcycle.id ? (
+                        {status.label}
+                      </span>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+
+            <div className="hidden md:block">
+              <Table>
+                <caption className="sr-only">
+                  Estoque de motocicletas com chassi, previsão de chegada e
+                  status.
+                </caption>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Motocicleta</TableHead>
+                    <TableHead>Chassi</TableHead>
+                    <TableHead>Previsão de chegada</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {motorcycles.map((motorcycle) => {
+                    const status = getArrivalStatus(
+                      motorcycle.forecastArrival,
+                      motorcycle.forecastArrivalStatus,
+                    );
+                    return (
+                      <TableRow key={motorcycle.id}>
+                        <TableCell className="font-medium">
+                          {motorcycle.model}
+                        </TableCell>
+                        <TableCell>{renderChassis(motorcycle)}</TableCell>
+                        <TableCell>
+                          {formatDateBR(motorcycle.forecastArrival) ??
+                            "Sem data"}
+                        </TableCell>
+                        <TableCell>
                           <span
-                            role="status"
-                            className="flex items-center gap-1 text-green-600 dark:text-green-400"
+                            className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${status.color}`}
                           >
-                            <CheckIcon className="size-3.5" />
-                            Copiado!
+                            {status.label}
                           </span>
-                        ) : (
-                          <>
-                            <CopyIcon className="size-3.5" />
-                            <span className="underline">
-                              {motorcycle.chassi}
-                            </span>
-                          </>
-                        )}
-                      </button>
-                    </div>
+                        </TableCell>
+                        <TableCell>{renderActions(motorcycle)}</TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
 
-                    <div className="flex gap-1">
-                      <Link
-                        href={`/inventory/motorcycle/${motorcycle.id}/edit`}
-                        aria-label={`Editar motocicleta ${motorcycle.model}`}
-                        className={buttonVariants({
-                          variant: "ghost",
-                          size: "icon",
-                          className: "rounded-full min-h-[44px] min-w-[44px]",
-                        })}
-                      >
-                        <PencilIcon className="size-4" />
-                      </Link>
-                      <Link
-                        href={`/inventory/motorcycle/${motorcycle.id}/delete`}
-                        aria-label={`Excluir motocicleta ${motorcycle.model}`}
-                        className={buttonVariants({
-                          variant: "ghost",
-                          size: "icon",
-                          className: "rounded-full min-h-[44px] min-w-[44px]",
-                        })}
-                      >
-                        <Trash2Icon className="size-4 text-red-500" />
-                      </Link>
-                    </div>
-                  </div>
-
-                  <div className="mt-3 flex items-center justify-between border-t pt-2">
-                    <span className="text-xs text-muted-foreground">
-                      Previsão:{" "}
-                      {formatDateBR(motorcycle.forecastArrival) ?? "—"}
-                    </span>
-                    <span
-                      className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${status.color}`}
-                    >
-                      {status.label}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 pt-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page <= 1 || isPending}
-                  onClick={() => handlePageChange(page - 1)}
-                >
-                  <ChevronLeft className="size-4" />
-                </Button>
-                <span className="text-sm text-muted-foreground">
-                  Página {page} de {totalPages}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page >= totalPages || isPending}
-                  onClick={() => handlePageChange(page + 1)}
-                >
-                  <ChevronRight className="size-4" />
-                </Button>
-              </div>
-            )}
+            <ListPagination
+              page={page}
+              totalPages={totalPages}
+              isPending={isPending}
+              onPageChange={onPageChange}
+              label="Paginação do estoque"
+            />
           </div>
-
-          {/* DESKTOP: tabela (md e acima) */}
-          <div className="hidden rounded-sm border shadow-sm md:block">
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead>Modelo</TableHead>
-                  <TableHead>Chassi</TableHead>
-                  <TableHead>Previsão de Chegada</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="w-0 pr-4 text-end">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {motorcycles.map((motorcycle) => {
-                  const status = getArrivalStatus(
-                    motorcycle.forecastArrival,
-                    motorcycle.forecastArrivalStatus,
-                  );
-                  return (
-                    <TableRow key={motorcycle.id}>
-                      <TableCell className="font-medium">
-                        {motorcycle.model}
-                      </TableCell>
-                      <TableCell>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            handleCopy(motorcycle.chassi, motorcycle.id)
-                          }
-                          className="group inline-flex items-center gap-1.5 font-mono text-xs transition-colors min-h-[44px]"
-                          title="Clique para copiar o chassi"
-                        >
-                          {copiedId === motorcycle.id ? (
-                            <>
-                              <CheckIcon className="size-3.5 text-green-600 dark:text-green-400" />
-                              <span
-                                role="status"
-                                className="text-green-600 dark:text-green-400"
-                              >
-                                Copiado!
-                              </span>
-                            </>
-                          ) : (
-                            <>
-                              <CopyIcon className="size-3.5 opacity-0 transition-opacity group-hover:opacity-100" />
-                              <span className="hover:underline">
-                                {motorcycle.chassi}
-                              </span>
-                            </>
-                          )}
-                        </button>
-                      </TableCell>
-                      <TableCell>
-                        {formatDateBR(motorcycle.forecastArrival) ?? "—"}
-                      </TableCell>
-                      <TableCell>
-                        <span
-                          className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${status.color}`}
-                        >
-                          {status.label}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex h-full items-center gap-1 justify-end">
-                          <Link
-                            href={`/inventory/motorcycle/${motorcycle.id}/edit`}
-                            aria-label={`editar-${motorcycle.id}`}
-                            className={buttonVariants({
-                              variant: "ghost",
-                              size: "icon",
-                              className:
-                                "rounded-full min-h-[44px] min-w-[44px]",
-                            })}
-                          >
-                            <PencilIcon className="size-4" />
-                          </Link>
-                          <Link
-                            href={`/inventory/motorcycle/${motorcycle.id}/delete`}
-                            aria-label={`deletar-${motorcycle.id}`}
-                            className={buttonVariants({
-                              variant: "ghost",
-                              size: "icon",
-                              className:
-                                "rounded-full min-h-[44px] min-w-[44px]",
-                            })}
-                          >
-                            <Trash2Icon className="size-4 text-red-500" />
-                          </Link>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-
-            {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-4 px-4 py-3 border-t">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page <= 1 || isPending}
-                  onClick={() => handlePageChange(page - 1)}
-                >
-                  <ChevronLeft className="mr-1 size-4" />
-                  Anterior
-                </Button>
-                <span className="text-sm text-muted-foreground">
-                  Página {page} de {totalPages}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page >= totalPages || isPending}
-                  onClick={() => handlePageChange(page + 1)}
-                >
-                  Próximo
-                  <ChevronRight className="ml-1 size-4" />
-                </Button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
+        )}
+      </DataWorkspace>
+    </section>
   );
 }

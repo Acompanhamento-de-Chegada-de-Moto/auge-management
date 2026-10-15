@@ -1,41 +1,69 @@
 "use client";
 
-import * as React from "react";
-import { Avatar as AvatarPrimitive } from "radix-ui";
-
+import {
+  createContext,
+  useContext,
+  useState,
+  type ComponentProps,
+  type ReactNode,
+} from "react";
 import { cn } from "@/lib/utils";
+
+type AvatarContextValue = {
+  size: "default" | "sm" | "lg";
+  imageLoaded: boolean;
+  setImageLoaded: (loaded: boolean) => void;
+};
+const AvatarContext = createContext<AvatarContextValue | null>(null);
 
 function Avatar({
   className,
   size = "default",
+  children,
   ...props
-}: React.ComponentProps<typeof AvatarPrimitive.Root> & {
-  size?: "default" | "sm" | "lg";
-}) {
+}: ComponentProps<"span"> & { size?: "default" | "sm" | "lg" }) {
+  const [imageLoaded, setImageLoaded] = useState(false);
   return (
-    <AvatarPrimitive.Root
-      data-slot="avatar"
-      data-size={size}
-      className={cn(
-        "group/avatar relative flex size-8 shrink-0 rounded-full select-none after:absolute after:inset-0 after:rounded-full after:border after:border-border after:mix-blend-darken data-[size=lg]:size-10 data-[size=sm]:size-6 dark:after:mix-blend-lighten",
-        className,
-      )}
-      {...props}
-    />
+    <AvatarContext.Provider value={{ size, imageLoaded, setImageLoaded }}>
+      <span
+        data-slot="avatar"
+        data-size={size}
+        className={cn(
+          "avatar group/avatar relative inline-flex size-8 shrink-0 overflow-hidden rounded-full bg-base-200 align-middle text-base-content after:absolute after:inset-0 after:rounded-full after:border after:border-base-300",
+          size === "lg" && "size-10",
+          size === "sm" && "size-6",
+          className,
+        )}
+        {...props}
+      >
+        {children}
+      </span>
+    </AvatarContext.Provider>
   );
 }
 
 function AvatarImage({
   className,
+  onLoad,
+  onError,
   ...props
-}: React.ComponentProps<typeof AvatarPrimitive.Image>) {
+}: ComponentProps<"img">) {
+  const context = useContext(AvatarContext);
   return (
-    <AvatarPrimitive.Image
+    <img
       data-slot="avatar-image"
       className={cn(
-        "aspect-square size-full rounded-full object-cover",
+        "absolute inset-0 z-10 aspect-square size-full rounded-full object-cover",
         className,
       )}
+      onLoad={(event) => {
+        onLoad?.(event);
+        context?.setImageLoaded(true);
+      }}
+      onError={(event) => {
+        onError?.(event);
+        context?.setImageLoaded(false);
+      }}
       {...props}
     />
   );
@@ -43,29 +71,31 @@ function AvatarImage({
 
 function AvatarFallback({
   className,
+  children,
   ...props
-}: React.ComponentProps<typeof AvatarPrimitive.Fallback>) {
+}: ComponentProps<"span">) {
+  const context = useContext(AvatarContext);
+  if (context?.imageLoaded) return null;
   return (
-    <AvatarPrimitive.Fallback
+    <span
       data-slot="avatar-fallback"
       className={cn(
-        "flex size-full items-center justify-center rounded-full bg-muted text-sm text-muted-foreground group-data-[size=sm]/avatar:text-xs",
+        "flex size-full items-center justify-center rounded-full bg-base-200 text-sm font-medium text-base-content group-data-[size=sm]/avatar:text-xs",
         className,
       )}
       {...props}
-    />
+    >
+      {children}
+    </span>
   );
 }
 
-function AvatarBadge({ className, ...props }: React.ComponentProps<"span">) {
+function AvatarBadge({ className, ...props }: ComponentProps<"span">) {
   return (
     <span
       data-slot="avatar-badge"
       className={cn(
-        "absolute right-0 bottom-0 z-10 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground bg-blend-color ring-2 ring-background select-none",
-        "group-data-[size=sm]/avatar:size-2 group-data-[size=sm]/avatar:[&>svg]:hidden",
-        "group-data-[size=default]/avatar:size-2.5 group-data-[size=default]/avatar:[&>svg]:size-2",
-        "group-data-[size=lg]/avatar:size-3 group-data-[size=lg]/avatar:[&>svg]:size-2",
+        "absolute bottom-0 right-0 z-20 inline-flex size-2.5 items-center justify-center rounded-full bg-primary text-primary-content ring-2 ring-base-100",
         className,
       )}
       {...props}
@@ -73,12 +103,12 @@ function AvatarBadge({ className, ...props }: React.ComponentProps<"span">) {
   );
 }
 
-function AvatarGroup({ className, ...props }: React.ComponentProps<"div">) {
+function AvatarGroup({ className, ...props }: ComponentProps<"div">) {
   return (
     <div
       data-slot="avatar-group"
       className={cn(
-        "group/avatar-group flex -space-x-2 *:data-[slot=avatar]:ring-2 *:data-[slot=avatar]:ring-background",
+        "group/avatar-group flex -space-x-2 *:data-[slot=avatar]:ring-2 *:data-[slot=avatar]:ring-base-100",
         className,
       )}
       {...props}
@@ -88,17 +118,20 @@ function AvatarGroup({ className, ...props }: React.ComponentProps<"div">) {
 
 function AvatarGroupCount({
   className,
+  children,
   ...props
-}: React.ComponentProps<"div">) {
+}: ComponentProps<"div"> & { children?: ReactNode }) {
   return (
     <div
       data-slot="avatar-group-count"
       className={cn(
-        "relative flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-sm text-muted-foreground ring-2 ring-background group-has-data-[size=lg]/avatar-group:size-10 group-has-data-[size=sm]/avatar-group:size-6 [&>svg]:size-4 group-has-data-[size=lg]/avatar-group:[&>svg]:size-5 group-has-data-[size=sm]/avatar-group:[&>svg]:size-3",
+        "relative flex size-8 shrink-0 items-center justify-center rounded-full bg-base-200 text-sm text-base-content ring-2 ring-base-100",
         className,
       )}
       {...props}
-    />
+    >
+      {children}
+    </div>
   );
 }
 

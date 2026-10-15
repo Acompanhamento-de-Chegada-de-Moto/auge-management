@@ -1,5 +1,3 @@
-import dayjs from "dayjs";
-
 export function getArrivalStatus(
   forecastDate: Date | null | undefined,
   arrivalStatus?: string | null,
@@ -19,29 +17,10 @@ export function getArrivalStatus(
     };
   }
 
-  if (!forecastDate) {
-    return {
-      label: "Em Trânsito",
-      color:
-        "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
-    };
-  }
-
-  const hoje = dayjs().startOf("day");
-  const arrival = dayjs(forecastDate).startOf("day");
-
-  if (arrival.isAfter(hoje)) {
-    return {
-      label: "Em Trânsito",
-      color:
-        "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
-    };
-  }
-
   return {
-    label: "Aguardando Confirmação",
+    label: forecastDate ? "Em Trânsito" : "Sem previsão",
     color:
-      "bg-slate-100 text-slate-800 dark:bg-slate-900/30 dark:text-slate-400",
+      "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
   };
 }
 

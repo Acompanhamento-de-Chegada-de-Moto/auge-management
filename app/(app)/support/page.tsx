@@ -1,8 +1,11 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
-
+import { Suspense } from "react";
+import {
+  adminGetAllTickets,
+  managerGetOwnTickets,
+} from "@/app/data/admin/admin-get-tickets";
 import { requireManager } from "@/app/data/admin/require-manager";
-import { adminGetAllTickets, managerGetOwnTickets } from "@/app/data/admin/admin-get-tickets";
+import { Page, PageHeader } from "@/components/layout/Page";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -27,60 +30,43 @@ async function RenderSupport() {
     : await managerGetOwnTickets(session.user.id);
 
   return (
-    <>
-      <Card>
-        <CardHeader className="flex-row items-center justify-between gap-4 space-y-0">
-          <div>
-            <CardTitle className="text-base">
-              {isAdmin ? "Todos os tickets" : "Meus tickets"}
-            </CardTitle>
-            <CardDescription>
-              {tickets.length === 0
-                ? "Nenhum ticket ainda"
-                : `${tickets.length} ticket(s)`}
-            </CardDescription>
-          </div>
+    <Card>
+      <CardHeader className="flex-row flex-wrap items-center justify-between gap-4 space-y-0">
+        <div>
+          <CardTitle className="text-base">
+            {isAdmin ? "Todos os tickets" : "Meus tickets"}
+          </CardTitle>
+          <CardDescription>
+            {tickets.length === 0
+              ? "Nenhum ticket ainda"
+              : `${tickets.length} ticket(s)`}
+          </CardDescription>
+        </div>
+        <div className="flex items-center gap-3">
           <Badge variant="secondary" className="hidden sm:flex">
             {tickets.length} total
           </Badge>
-        </CardHeader>
-        <CardContent>
-          <TicketList tickets={tickets} canManageStatus={isAdmin} />
-        </CardContent>
-      </Card>
-
-      <Card className="h-fit lg:sticky lg:top-20">
-        <CardHeader>
-          <CardTitle className="text-base">Novo ticket</CardTitle>
-          <CardDescription>
-            Abra um chamado para o suporte técnico
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
           <TicketForm />
-        </CardContent>
-      </Card>
-    </>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <TicketList tickets={tickets} canManageStatus={isAdmin} />
+      </CardContent>
+    </Card>
   );
 }
 
-export default async function SupportPage() {
-  await requireManager();
-
+export default function SupportPage() {
   return (
-    <div className="w-full px-4 py-6 sm:px-6 lg:px-8">
-      <div className="mb-6 block md:hidden">
-        <h1 className="text-lg font-bold">Suporte</h1>
-        <p className="text-sm text-muted-foreground">
-          Abra um chamado para o suporte técnico
-        </p>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
-        <Suspense fallback={<SupportSkeleton />}>
-          <RenderSupport />
-        </Suspense>
-      </div>
-    </div>
+    <Page>
+      <PageHeader
+        title="Suporte"
+        eyebrow="Atendimento"
+        description="Abra um chamado e acompanhe as solicitações da equipe."
+      />
+      <Suspense fallback={<SupportSkeleton />}>
+        <RenderSupport />
+      </Suspense>
+    </Page>
   );
 }

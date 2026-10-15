@@ -1,6 +1,7 @@
 import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Page, PageHeader } from "@/components/layout/Page";
 import { buttonVariants } from "@/components/ui/button";
 import { CreateMotorcycleForm } from "../_components/CreateMotorcycleForm";
 
@@ -10,25 +11,25 @@ export const metadata: Metadata = {
 
 export default function NovaMotocicletaPage() {
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-2">
-        <div>
-          <h1 className="text-2xl font-bold">Cadastro de Motocicleta</h1>
-          <p className="text-muted-foreground">
-            Cadastre uma nova motocicleta no estoque.
-          </p>
-        </div>
-        <Link
-          title="voltar"
-          href="/inventory"
-          className={buttonVariants({
-            variant: "secondary",
-          })}
-        >
-          <ArrowLeft className="size-4 mr-2" /> Voltar
-        </Link>
+    <Page>
+      <PageHeader
+        title="Adicionar motocicleta"
+        description={
+          "Cadastre os dados da unidade e acompanhe a previsão de chegada."
+        }
+        actions={
+          <Link
+            href="/inventory"
+            className={buttonVariants({ variant: "outline" })}
+          >
+            <ArrowLeft className="mr-2 size-4" />
+            Voltar ao estoque
+          </Link>
+        }
+      />
+      <div className="mx-auto w-full max-w-4xl">
+        <CreateMotorcycleForm />
       </div>
-      <CreateMotorcycleForm />
-    </div>
+    </Page>
   );
 }
