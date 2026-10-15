@@ -19,7 +19,7 @@ export async function getBdcListing(
   const [paginated, filterOptions, statusCounts] = await Promise.all([
     getClientsPaginated(params),
     getBDCFilterOptions(),
-    getBDCStatusCounts(),
+    getBDCStatusCounts(params),
   ]);
   return { paginated, filterOptions, statusCounts };
 }

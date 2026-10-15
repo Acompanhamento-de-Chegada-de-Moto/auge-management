@@ -51,6 +51,11 @@ export function BDCTable({
             value: "false",
             count: statusCounts.waiting,
           },
+          {
+            label: "Atrasadas",
+            value: "delayed",
+            count: statusCounts.delayed,
+          },
         ]}
       />
 
