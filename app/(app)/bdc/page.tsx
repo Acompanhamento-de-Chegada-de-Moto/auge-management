@@ -63,7 +63,9 @@ async function RenderClients({ searchParams }: BDCPageProps) {
     model: params.model,
     search: params.search,
     arrived:
-      params.arrived === "true" || params.arrived === "false"
+      params.arrived === "true" ||
+      params.arrived === "false" ||
+      params.arrived === "delayed"
         ? params.arrived
         : undefined,
   });

@@ -1,7 +1,11 @@
 import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
+import type { Prisma } from "@/generated/prisma/client";
 import { withArrivalStatus } from "@/lib/arrival";
-import { arrivalArrivedWhere } from "@/lib/data/arrival-status";
+import {
+  arrivalArrivedWhere,
+  arrivalDelayedWhere,
+} from "@/lib/data/arrival-status";
 import { listingCacheTags } from "@/lib/data/listing-cache-tags";
 import { prisma } from "@/lib/db";
 import { normalizeDocument, validateDocument } from "@/lib/document";
@@ -52,85 +56,113 @@ async function getCachedBDCFilterOptions() {
   };
 }
 
+interface BDCFilters {
+  sellerName?: string;
+  city?: string;
+  model?: string;
+  search?: string;
+  arrived?: "true" | "false" | "delayed";
+}
+
+function buildBDCFilters(params: BDCFilters) {
+  const where: Prisma.ClientWhereInput = {};
+  const motorcycleConditions: Prisma.MotorcycleWhereInput[] = [];
+
+  if (params.sellerName)
+    where.sellersName = { equals: params.sellerName, mode: "insensitive" };
+  if (params.city) where.city = { equals: params.city, mode: "insensitive" };
+  if (params.model)
+    motorcycleConditions.push({
+      model: { equals: params.model, mode: "insensitive" },
+    });
+  if (params.arrived === "true")
+    motorcycleConditions.push(arrivalArrivedWhere());
+  if (params.arrived === "false")
+    motorcycleConditions.push({ NOT: arrivalArrivedWhere() });
+  if (params.arrived === "delayed")
+    motorcycleConditions.push(arrivalDelayedWhere());
+
+  const motorcycleFilter: Prisma.MotorcycleWhereInput | undefined =
+    motorcycleConditions.length ? { AND: motorcycleConditions } : undefined;
+  if (motorcycleFilter) where.motorcycles = { some: motorcycleFilter };
+
+  const search = params.search?.trim();
+  let visibleMotorcycles = motorcycleFilter;
+  if (search) {
+    const clientSearch: Prisma.ClientWhereInput[] = [
+      { name: { contains: search, mode: "insensitive" } },
+      {
+        document: {
+          contains: normalizeDocument(search) || search,
+          mode: "insensitive",
+        },
+      },
+    ];
+    const chassisSearch: Prisma.MotorcycleWhereInput = {
+      chassi: { contains: search, mode: "insensitive" },
+    };
+    where.OR = [
+      ...clientSearch,
+      {
+        motorcycles: {
+          some: motorcycleFilter
+            ? { AND: [motorcycleFilter, chassisSearch] }
+            : chassisSearch,
+        },
+      },
+    ];
+    // A name/document match keeps all matching motorcycles for that client;
+    // a chassis-only match keeps just the matching motorcycle.
+    visibleMotorcycles = {
+      AND: [
+        ...(motorcycleFilter ? [motorcycleFilter] : []),
+        { OR: [{ client: { is: { OR: clientSearch } } }, chassisSearch] },
+      ],
+    };
+  }
+  return { where, visibleMotorcycles };
+}
+
+async function countBDCStatuses(params: BDCFilters) {
+  const count = (arrived?: BDCFilters["arrived"]) =>
+    prisma.client.count({
+      where: buildBDCFilters({ ...params, arrived }).where,
+    });
+  const [total, arrived, waiting, delayed] = await Promise.all([
+    count(),
+    count("true"),
+    count("false"),
+    count("delayed"),
+  ]);
+  return { total, arrived, waiting, delayed };
+}
+
 async function getCachedBDCStatusCounts() {
   "use cache";
   cacheLife({ stale: 60, revalidate: 60, expire: 600 });
   cacheTag(listingCacheTags.bdcCounts);
-  const arrivedFilter = { motorcycles: { some: arrivalArrivedWhere() } };
-  const [total, arrived, waiting] = await Promise.all([
-    prisma.client.count(),
-    prisma.client.count({ where: arrivedFilter }),
-    prisma.client.count({ where: { NOT: arrivedFilter } }),
-  ]);
-
-  return { total, arrived, waiting };
+  return countBDCStatuses({});
 }
 
 export function getBDCFilterOptions() {
   return getCachedBDCFilterOptions();
 }
 
-export function getBDCStatusCounts() {
-  return getCachedBDCStatusCounts();
+export function getBDCStatusCounts(params: BDCFilters = {}) {
+  return params.sellerName ||
+    params.city ||
+    params.model ||
+    params.search?.trim()
+    ? countBDCStatuses(params)
+    : getCachedBDCStatusCounts();
 }
-export async function getClientsPaginated(params: {
-  page: number;
-  pageSize: number;
-  sellerName?: string;
-  city?: string;
-  model?: string;
-  search?: string;
-  arrived?: "true" | "false";
-}) {
-  const where: Record<string, unknown> = {};
-
-  if (params.sellerName) {
-    where.sellersName = { contains: params.sellerName, mode: "insensitive" };
-  }
-  if (params.city) {
-    where.city = { contains: params.city, mode: "insensitive" };
-  }
-
-  let motorcycleFilter: Record<string, unknown> | undefined;
-
-  if (params.model) {
-    motorcycleFilter = {
-      model: { contains: params.model, mode: "insensitive" },
-    };
-  }
-
-  if (params.arrived === "true") {
-    const chegou = arrivalArrivedWhere();
-    motorcycleFilter = motorcycleFilter
-      ? { AND: [motorcycleFilter, chegou] }
-      : chegou;
-  }
-
-  if (motorcycleFilter) {
-    where.motorcycles = { some: motorcycleFilter };
-  }
-
-  if (params.arrived === "false") {
-    where.NOT = {
-      motorcycles: {
-        some: arrivalArrivedWhere(),
-      },
-    };
-  }
-
-  if (params.search) {
-    const search = params.search.trim();
-    const documentSearch = normalizeDocument(search) || search;
-    where.OR = [
-      { name: { contains: search, mode: "insensitive" } },
-      { document: { contains: documentSearch, mode: "insensitive" } },
-      {
-        motorcycles: {
-          some: { chassi: { contains: search, mode: "insensitive" } },
-        },
-      },
-    ];
-  }
+export async function getClientsPaginated(
+  params: BDCFilters & {
+    page: number;
+    pageSize: number;
+  },
+) {
+  const { where, visibleMotorcycles } = buildBDCFilters(params);
 
   const [data, total] = await Promise.all([
     prisma.client.findMany({
@@ -145,6 +177,7 @@ export async function getClientsPaginated(params: {
         city: true,
         billingDate: true,
         motorcycles: {
+          where: visibleMotorcycles,
           select: {
             id: true,
             chassi: true,

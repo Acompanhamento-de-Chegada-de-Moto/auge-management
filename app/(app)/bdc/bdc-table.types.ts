@@ -23,6 +23,7 @@ export interface BDCTableProps {
     total: number;
     arrived: number;
     waiting: number;
+    delayed: number;
   };
   filterOptions: BDCFilterOptions;
   activeFilters: BDCActiveFilters;

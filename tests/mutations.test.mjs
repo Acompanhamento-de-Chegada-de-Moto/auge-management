@@ -175,6 +175,161 @@ test("busca BDC encontra CPF com pontuação e preserva consultas por nome e cha
   assert.equal(queryCalls, before);
 });
 
+test("filtros BDC mantêm motos e contadores coerentes em clientes com chegadas mistas", async () => {
+  const arrival = loadServerModule("lib/arrival.ts", {});
+  const arrivalWhere = loadServerModule("lib/data/arrival-status.ts", {
+    "@/lib/arrival": arrival,
+  });
+  const clients = [
+    {
+      id: "mixed",
+      name: "Maria",
+      document: "52998224725",
+      sellersName: "Ana",
+      city: "Natal",
+      motorcycles: [
+        {
+          chassi: "RECEIVED",
+          model: "CG",
+          forecastArrivalStatus: "ARRIVED",
+          arrivedAt: null,
+          forecastArrival: new Date("2020-01-01"),
+        },
+        {
+          chassi: "LATE",
+          model: "Biz",
+          forecastArrivalStatus: "NO_INFORMATION",
+          arrivedAt: null,
+          forecastArrival: new Date("2020-01-01"),
+        },
+        {
+          chassi: "FUTURE",
+          model: "CG",
+          forecastArrivalStatus: "NO_INFORMATION",
+          arrivedAt: null,
+          forecastArrival: new Date("2099-01-01"),
+        },
+      ],
+    },
+    {
+      id: "similar",
+      name: "Outra",
+      document: "04252011000110",
+      sellersName: "Mariana",
+      city: "Natalândia",
+      motorcycles: [
+        {
+          chassi: "OTHER",
+          model: "CG 160",
+          forecastArrivalStatus: "NO_INFORMATION",
+          arrivedAt: null,
+          forecastArrival: null,
+        },
+      ],
+    },
+    {
+      id: "empty",
+      name: "Sem moto",
+      document: "",
+      sellersName: "Ana",
+      city: "Natal",
+      motorcycles: [],
+    },
+  ];
+  // Evaluate the Prisma predicates against fixtures to check observable results.
+  function matches(record, where = {}) {
+    return Object.entries(where).every(([key, condition]) => {
+      if (key === "AND")
+        return condition.every((item) => matches(record, item));
+      if (key === "OR") return condition.some((item) => matches(record, item));
+      if (key === "NOT") return !matches(record, condition);
+      if (key === "motorcycles")
+        return record.motorcycles.some((moto) =>
+          matches({ ...moto, client: record }, condition.some),
+        );
+      if (key === "client") return matches(record.client, condition.is);
+      const value = record[key];
+      if (condition === null || typeof condition !== "object")
+        return value === condition;
+      if ("not" in condition) return value !== condition.not;
+      if ("lt" in condition) return value !== null && value < condition.lt;
+      const actual = String(value).toLowerCase();
+      if ("equals" in condition)
+        return actual === condition.equals.toLowerCase();
+      if ("contains" in condition)
+        return actual.includes(condition.contains.toLowerCase());
+      throw new Error(`Unsupported predicate: ${key}`);
+    });
+  }
+  const queries = loadServerModule("lib/data/clients/client-queries.ts", {
+    "next/cache": { cacheLife() {}, cacheTag() {} },
+    "@/lib/arrival": arrival,
+    "@/lib/document": documents,
+    "@/lib/data/arrival-status": arrivalWhere,
+    "@/lib/data/listing-cache-tags": { listingCacheTags: {} },
+    "@/lib/db": {
+      prisma: {
+        client: {
+          count: async ({ where }) =>
+            clients.filter((client) => matches(client, where)).length,
+          findMany: async ({ where, select, skip, take }) =>
+            clients
+              .filter((client) => matches(client, where))
+              .slice(skip, skip + take)
+              .map((client) => ({
+                ...client,
+                motorcycles: client.motorcycles.filter((moto) =>
+                  matches({ ...moto, client }, select.motorcycles.where),
+                ),
+              })),
+        },
+      },
+    },
+  });
+  const list = (filters) =>
+    queries.getClientsPaginated({ page: 1, pageSize: 20, ...filters });
+  const chassis = (result) =>
+    Array.from(
+      result.clients.flatMap((client) =>
+        client.motorcycles.map((moto) => moto.chassi),
+      ),
+    );
+  assert.deepEqual(
+    chassis(await list({ sellerName: "Ana", arrived: "false" })),
+    ["LATE", "FUTURE"],
+  );
+  assert.deepEqual(chassis(await list({ arrived: "delayed" })), ["LATE"]);
+  assert.deepEqual(chassis(await list({ arrived: "true" })), ["RECEIVED"]);
+  assert.deepEqual(chassis(await list({ model: "CG" })), [
+    "RECEIVED",
+    "FUTURE",
+  ]);
+  assert.equal((await list({ city: "Natal" })).total, 2);
+  assert.deepEqual(
+    chassis(await list({ search: "RECEIVED", arrived: "false" })),
+    [],
+  );
+  assert.deepEqual(chassis(await list({ search: "LATE", model: "CG" })), []);
+  assert.deepEqual(chassis(await list({ search: "LATE" })), ["LATE"]);
+  assert.deepEqual(
+    chassis(await list({ search: "529.982.247-25", arrived: "false" })),
+    ["LATE", "FUTURE"],
+  );
+  const counts = await queries.getBDCStatusCounts({
+    model: "CG",
+    arrived: "delayed",
+  });
+  assert.equal(counts.total, 1);
+  assert.equal(counts.arrived, 1);
+  assert.equal(counts.waiting, 1);
+  assert.equal(counts.delayed, 0);
+  assert.equal(
+    (await list({ sellerName: "Ana", arrived: "false", page: 2, pageSize: 1 }))
+      .clients.length,
+    0,
+  );
+});
+
 test("importação preserva CNPJ alfanumérico, CPF e TEMP existentes; documento inválido é ignorado", async () => {
   const clients = [
     { id: "cpf", document: "52998224725", billingDate: null },
