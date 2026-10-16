@@ -15,9 +15,8 @@ async function getCachedEstoqueFilterOptions() {
   "use cache";
   cacheLife({ stale: 300, revalidate: 300, expire: 3000 });
   cacheTag(listingCacheTags.inventoryFilters);
-  const models = await prisma.motorcycle.findMany({
-    select: { model: true },
-    distinct: ["model"],
+  const models = await prisma.motorcycle.groupBy({
+    by: ["model"],
     where: { model: { not: "" } },
     orderBy: { model: "asc" },
   });

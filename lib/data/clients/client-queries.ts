@@ -30,21 +30,18 @@ async function getCachedBDCFilterOptions() {
   cacheLife({ stale: 300, revalidate: 300, expire: 3000 });
   cacheTag(listingCacheTags.bdcFilters);
   const [sellers, cities, models] = await Promise.all([
-    prisma.client.findMany({
-      select: { sellersName: true },
-      distinct: ["sellersName"],
+    prisma.client.groupBy({
+      by: ["sellersName"],
       where: { sellersName: { not: "" } },
       orderBy: { sellersName: "asc" },
     }),
-    prisma.client.findMany({
-      select: { city: true },
-      distinct: ["city"],
+    prisma.client.groupBy({
+      by: ["city"],
       where: { city: { not: "" } },
       orderBy: { city: "asc" },
     }),
-    prisma.motorcycle.findMany({
-      select: { model: true },
-      distinct: ["model"],
+    prisma.motorcycle.groupBy({
+      by: ["model"],
       where: { model: { not: "" } },
       orderBy: { model: "asc" },
     }),
