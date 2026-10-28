@@ -325,7 +325,14 @@ export function EditClientForm({
             <Button
               type="button"
               variant="outline"
-              onClick={() => setShowNewMotorcycle(!showNewMotorcycle)}
+              onClick={() => {
+                if (showNewMotorcycle) {
+                  form.resetField("newChassis");
+                  form.resetField("newModel");
+                  form.resetField("newForecastDate");
+                }
+                setShowNewMotorcycle(!showNewMotorcycle);
+              }}
               className="w-full"
             >
               <Plus className="size-4 mr-2" />

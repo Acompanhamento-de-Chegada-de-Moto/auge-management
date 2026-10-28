@@ -572,6 +572,75 @@ test("BDC salva status e data na moto selecionada e em moto existente no cadastr
   assert.equal(writes[0].data.registrationDate, null);
 });
 
+test("BDC vincula moto do estoque a cliente sem moto e inclui uma segunda moto", async () => {
+  for (const additionalExists of [false, true]) {
+    const stock = { id: "stock", chassi: "ABC", clientId: null };
+    const additional = { id: "additional", chassi: "DEF", clientId: null };
+    const writes = [];
+    const tx = {
+      client: {
+        findUnique: async () => ({ id: "client", motorcycles: [] }),
+        findFirst: async () => null,
+        update: async () => ({}),
+      },
+      motorcycle: {
+        findUnique: async ({ where }) =>
+          where.chassi === "ABC" ? stock : additionalExists ? additional : null,
+        update: async (query) => writes.push({ kind: "update", ...query }),
+        create: async (query) => {
+          writes.push({ kind: "create", ...query });
+          return additional;
+        },
+      },
+    };
+    const dal = loadServerModule("lib/data/clients/bdc-mutations.ts", {
+      "@/lib/document": documents,
+      "@/lib/db": { prisma: { $transaction: (callback) => callback(tx) } },
+      "@/lib/data/record-staff-arrival": { recordStaffArrival: async () => {} },
+    });
+    const input = {
+      clientId: "client",
+      motorcycleId: null,
+      document: "52998224725",
+      name: "Cliente",
+      sellerName: "Vendedor",
+      city: "Cidade",
+      motorcycle: {
+        chassis: "ABC",
+        model: "Moto",
+        arrivalStatus: "NO_INFORMATION",
+        registrationStatus: "NO_PLATE",
+      },
+      additionalMotorcycle: { chassis: "DEF", model: "Outra moto" },
+    };
+    assert.equal(await dal.updateBDCClient(input), null);
+    assert.equal(writes.length, 2);
+    assert.equal(writes[0].kind, "update");
+    assert.equal(writes[0].where.id, "stock");
+    assert.equal(writes[0].data.clientId, "client");
+    assert.equal(writes[1].kind, additionalExists ? "update" : "create");
+    assert.equal(writes[1].data.clientId, "client");
+
+    writes.length = 0;
+    // Once assigned, the original motorcycle must remain selected and linked.
+    stock.clientId = "client";
+    tx.client.findUnique = async () => ({ id: "client", motorcycles: [stock] });
+    assert.equal(
+      await dal.updateBDCClient({ ...input, motorcycleId: "stock" }),
+      null,
+    );
+    assert.equal(writes.length, 2);
+    assert.equal(writes[0].where.id, "stock");
+    assert.equal(writes[1].data.clientId, "client");
+
+    writes.length = 0;
+    stock.clientId = "other-client";
+    tx.client.findUnique = async () => ({ id: "client", motorcycles: [] });
+    assert.match(await dal.updateBDCClient(input), /outro cliente/);
+    assert.equal(writes.length, 0);
+  }
+});
+
 test("BDC exige data de emplacamento e normaliza a data REST antes de salvar", async () => {
   const document = loadServerModule("lib/document.ts", {
     "./cpf": loadServerModule("lib/cpf.ts", {}),

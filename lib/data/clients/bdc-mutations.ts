@@ -145,7 +145,8 @@ export async function updateBDCClient(
     });
     if (
       existingMainChassis &&
-      existingMainChassis.id !== currentMotorcycle?.id
+      existingMainChassis.id !== currentMotorcycle?.id &&
+      (currentMotorcycle || existingMainChassis.clientId !== null)
     ) {
       return existingMainChassis.clientId &&
         existingMainChassis.clientId !== input.clientId
@@ -159,7 +160,7 @@ export async function updateBDCClient(
         })
       : null;
 
-    if (existingAdditional && existingAdditional.id === currentMotorcycle?.id) {
+    if (input.additionalMotorcycle?.chassis === input.motorcycle.chassis) {
       return "A motocicleta adicional nÃ£o pode ser a mesma do cadastro principal.";
     }
     if (
@@ -189,14 +190,15 @@ export async function updateBDCClient(
       clientId: input.clientId,
     };
 
-    if (currentMotorcycle) {
+    const mainMotorcycle = currentMotorcycle ?? existingMainChassis;
+    if (mainMotorcycle) {
       await tx.motorcycle.update({
-        where: { id: currentMotorcycle.id },
+        where: { id: mainMotorcycle.id },
         data: motorcycleData,
       });
       await recordStaffArrival(
         tx,
-        currentMotorcycle.id,
+        mainMotorcycle.id,
         input.motorcycle.arrivalStatus === "ARRIVED",
         actorLabel,
       );
