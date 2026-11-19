@@ -158,6 +158,9 @@ export async function updateMotorcycleSafely(
         chassi: data.chassi,
         model: data.model,
         forecastArrival: data.forecastArrival ?? null,
+        forecastArrivalStatus: data.forecastArrivalStatus,
+        arrivedAt:
+          data.forecastArrivalStatus === "NO_INFORMATION" ? null : undefined,
       },
     });
     await recordStaffArrival(

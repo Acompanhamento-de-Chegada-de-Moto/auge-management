@@ -194,9 +194,6 @@ export function MotorcycleForm({
                       <Select
                         onValueChange={field.onChange}
                         value={field.value}
-                        disabled={
-                          initialValues?.forecastArrivalStatus === "ARRIVED"
-                        }
                       >
                         <FormControl>
                           <SelectTrigger>
